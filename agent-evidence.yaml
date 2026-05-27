@@ -1,0 +1,134 @@
+task_id: flux-behaviour-repository-foundation
+mode: repo-instantiate
+repository: kevinrapley/flux-behaviour
+risk_level: high
+files_read:
+  - uploaded GitHub Diamond Standard bundle README.md
+  - uploaded GitHub Diamond Standard bundle prompt.body.xml
+  - uploaded GitHub Diamond Standard bundle modes/repo-instantiate.xml
+  - kevinrapley/flux-behaviour README.md
+  - kevinrapley/flux-behavioural-analytics README.md
+  - kevinrapley/flux-behavioural-analytics package.json
+  - kevinrapley/flux-behavioural-analytics tsconfig.json
+  - kevinrapley/flux-behavioural-analytics wrangler.toml
+  - kevinrapley/flux-behavioural-analytics workers/collector_worker.ts
+  - kevinrapley/flux-behavioural-analytics public/flux_instrumentation_guide_v6.md
+  - kevinrapley/flux-behavioural-analytics public/governance_pack/README.md
+files_changed:
+  - README.md
+  - AGENTS.md
+  - RECENT_LEARNINGS.md
+  - CONTRIBUTING.md
+  - SECURITY.md
+  - CODEOWNERS
+  - .github/CODEOWNERS
+  - .github/PULL_REQUEST_TEMPLATE.md
+  - .github/ISSUE_TEMPLATE/bug_report.yml
+  - .github/ISSUE_TEMPLATE/feature_request.yml
+  - .github/dependabot.yml
+  - .github/workflows/ci-accessibility.yml
+  - .github/workflows/ci-conformance.yml
+  - .github/workflows/ci-docs-quality.yml
+  - .github/workflows/ci-node.yml
+  - .github/workflows/ci-performance.yml
+  - .github/workflows/codeql.yml
+  - .github/workflows/dependency-review.yml
+  - .github/workflows/file-inventory.yml
+  - .github/workflows/sbom-cyclonedx.yml
+  - package.json
+  - scripts/check-required-files.mjs
+  - scripts/secret-pattern-scan.mjs
+  - scripts/generate-minimal-sbom.mjs
+  - tests/governance.test.mjs
+  - repository-contract.yaml
+  - github-settings.yaml
+  - conformance-matrix.yaml
+  - gap-register.yaml
+  - harm-register.yaml
+  - accessibility-evidence.md
+  - docs/product/product-charter.md
+  - docs/architecture/architecture-decision-record.md
+  - docs/migration/source-inventory.md
+  - docs/governance/assurance-case.md
+  - docs/governance/data-protection.md
+  - docs/security/secret-handling.md
+commands_run:
+  - command: npm test
+    status: passed
+    evidence: 3 Node test assertions passed locally.
+  - command: npm run validate
+    status: passed
+    evidence: Required governance files present.
+  - command: npm run security:secrets
+    status: passed
+    evidence: Secret pattern sanity scan passed.
+  - command: npm run sbom
+    status: passed
+    evidence: Minimal CycloneDX SBOM generation passed.
+contracts_validated:
+  - repository-contract.schema.json
+  - github-settings.schema.json
+  - conformance-record.schema.json
+  - gap-register.schema.json
+  - harm-register.schema.json
+  - agent-evidence.schema.json
+tests_run:
+  - name: npm test
+    status: passed
+    evidence: Node test suite passed.
+  - name: npm run validate
+    status: passed
+    evidence: Repository file check passed.
+  - name: npm run security:secrets
+    status: passed
+    evidence: Secret sanity scan passed.
+gaps_recorded:
+  - GAP-001
+  - GAP-002
+  - GAP-003
+waivers_recorded: []
+artifacts_created:
+  - repository-contract.yaml
+  - github-settings.yaml
+  - conformance-matrix.yaml
+  - gap-register.yaml
+  - harm-register.yaml
+  - accessibility-evidence.md
+recent_learnings:
+  read: true
+  updated: true
+  entry: Prototype source is lineage, Cloudflare configuration must be sanitised, and public-service analytics requires a harm register.
+github_settings:
+  desired_state:
+    default_branch: main
+    branch_protection: required
+    codeowners_review: required
+  observed_state:
+    live_settings_api_verification: not-performed
+  verification_method: mixed
+security:
+  no_secrets_committed: true
+accessibility:
+  required: true
+  automated_checks:
+    - Not run yet; no UI has been promoted.
+  keyboard_checks:
+    - Not run yet; no UI has been promoted.
+  focus_checks:
+    - Not run yet; no UI has been promoted.
+  screen_reader_smoke_checks:
+    - Not run yet; no UI has been promoted.
+  known_defects:
+    - No UI has been promoted yet.
+  release_decision: fail
+  manual_requirements_covered: false
+  automated_requirements_covered: false
+  evidence_file: accessibility-evidence.md
+harms:
+  - HARM-001
+  - HARM-002
+claims:
+  - Repository foundation created for high-assurance public-service product development.
+risks:
+  - Live GitHub settings still need API verification.
+  - Runtime product code requires reviewed promotion.

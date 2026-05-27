@@ -1,0 +1,22 @@
+name: CI (Accessibility)
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955
+      - name: Run check
+        run: |
+          test -f accessibility-evidence.md
+          grep -qi "release decision" accessibility-evidence.md
+          grep -qi "keyboard" accessibility-evidence.md

@@ -1,0 +1,24 @@
+name: Feature request
+description: Propose a product, governance or repository improvement
+title: "[Feature]: "
+labels: ["type:feature", "needs:triage"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+    validations:
+      required: true
+  - type: textarea
+    id: assurance
+    attributes:
+      label: Assurance impact
+      description: Privacy, accessibility, ethics, security, performance and governance considerations.
+    validations:
+      required: true

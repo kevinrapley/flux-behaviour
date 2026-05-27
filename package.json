@@ -1,0 +1,16 @@
+{
+  "name": "flux-behaviour",
+  "version": "0.0.0-foundation",
+  "private": true,
+  "type": "module",
+  "description": "Governed foundation for consent-based behavioural analytics in digital services.",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "validate": "node scripts/check-required-files.mjs",
+    "security:secrets": "node scripts/secret-pattern-scan.mjs",
+    "sbom": "node scripts/generate-minimal-sbom.mjs"
+  }
+}

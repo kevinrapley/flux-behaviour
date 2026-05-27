@@ -1,0 +1,20 @@
+name: flux-behaviour
+archetype: web-app public-service behavioural-analytics
+owners:
+  - kevinrapley
+license: not-yet-selected
+risk_level: high
+quality_gates:
+  - pull-request-review
+  - codeowners-review
+  - CI (Accessibility)
+  - CI (Conformance)
+  - CI (Documentation Quality)
+  - CI (Node)
+  - CI (Performance)
+  - CodeQL
+  - Dependency Review
+  - File Inventory
+  - CycloneDX SBOM
+  - harm-register-review-before-release
+  - release-gate-before-production

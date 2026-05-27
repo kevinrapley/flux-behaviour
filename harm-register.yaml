@@ -1,0 +1,28 @@
+harms:
+  - id: HARM-001
+    harm: Behavioural analytics could be interpreted as judgement about a user rather than evidence about service friction.
+    affected_groups:
+      - Disabled users
+      - Neurodivergent users
+      - Users with low digital confidence
+      - Users under stress
+    likelihood: medium
+    severity: high
+    mitigation: Use dual interpretations, human review, plain-English explanations and governance copy that frames signals as service-improvement evidence.
+    residual_risk: medium
+    owner: governance-lead
+    escalation_route: Product owner and ethics reviewer
+    release_decision: blocked
+  - id: HARM-002
+    harm: Interaction telemetry could expose personal data if content, identifiers or free text are collected.
+    affected_groups:
+      - All service users
+      - Vulnerable users
+      - Users completing high-stakes forms
+    likelihood: medium
+    severity: critical
+    mitigation: Enforce consent first, metadata-only collection, no text values and collector schema tests.
+    residual_risk: high
+    owner: security-lead
+    escalation_route: Product owner and data protection lead
+    release_decision: blocked

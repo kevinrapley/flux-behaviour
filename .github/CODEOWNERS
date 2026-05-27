@@ -1,0 +1,8 @@
+* @kevinrapley
+.github/ @kevinrapley
+contracts/ @kevinrapley
+docs/governance/ @kevinrapley
+docs/security/ @kevinrapley
+scripts/ @kevinrapley
+*.yaml @kevinrapley
+*.yml @kevinrapley
