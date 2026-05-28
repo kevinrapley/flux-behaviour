@@ -19,8 +19,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@7187b6ecc784d4ddaf78c4be2e5d2708a8e4f5e6
+        uses: github/codeql-action/init@115001ba8d0198846992657731666b08686c8ded
         with:
           languages: javascript-typescript
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@7187b6ecc784d4ddaf78c4be2e5d2708a8e4f5e6
+        uses: github/codeql-action/analyze@115001ba8d0198846992657731666b08686c8ded
