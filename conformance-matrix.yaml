@@ -23,3 +23,15 @@ records:
     actual_evidence: harm-register.yaml created with release blocked at foundation stage
     status: present
     owner: governance-lead
+  - id: CONF-005
+    rule: Event capture must be governed by a metadata-only schema before collector promotion
+    expected_evidence: contracts/events/flux-event.schema.json and tests/event-schema.test.mjs exist
+    actual_evidence: Baseline event schema and schema tests added on chore/governance-event-schema-baseline
+    status: present
+    owner: product-lead
+  - id: CONF-006
+    rule: Scoring configuration must be preserved as reference lineage before runtime scoring promotion
+    expected_evidence: config/scoring/flux-scoring-config.v6.10.reference.json and tests/scoring-config.test.mjs exist
+    actual_evidence: Reference-only scoring baseline and validation tests added on chore/governance-event-schema-baseline
+    status: present
+    owner: governance-lead

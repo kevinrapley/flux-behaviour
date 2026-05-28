@@ -1,0 +1,75 @@
+{
+  "meta": {
+    "name": "Flux Scoring Config",
+    "version": "v6.10",
+    "status": "reference-only",
+    "source_repository": "kevinrapley/flux-behavioural-analytics",
+    "source_path": "config/flux_scoring_config_v6.10.json",
+    "source_status": "draft",
+    "promoted_as": "governed reference baseline",
+    "runtime_ready": false,
+    "description": "Reference extract of the Flux v6.10 scoring model. This file preserves model lineage for review and schema validation. It is not executable scoring logic."
+  },
+  "provenance": {
+    "derived_from": [
+      "flux_scoring_config_v6.10.json",
+      "flux_instrumentation_guide_v15.md",
+      "flux_transparency_pack_v1.1.md"
+    ],
+    "source_notes": [
+      "The source config described a two-tier model of core and extended dimensions.",
+      "The source config retained SKOS and Open Annotation concepts.",
+      "The source config required dual interpretations so behaviour is not pathologised."
+    ]
+  },
+  "engine_reference": {
+    "neutral": 50,
+    "bounds": [0, 100],
+    "delta_ema_alpha": 0.25,
+    "median_window_k": 5,
+    "max_change_per_second": 6,
+    "decay_per_second_toward_neutral": 0.12,
+    "deadband_abs": 0.2
+  },
+  "ui_score_bands": {
+    "green_min": 70,
+    "amber_min": 40,
+    "notes": "Colouring for 0-100 scores. Bands support review, not automated decisions."
+  },
+  "interpretation_policy": {
+    "service_improvement_only": true,
+    "dual_interpretation_required": true,
+    "no_user_judgement": true,
+    "human_review_required_for_high_impact_use": true
+  },
+  "dimensions": [
+    { "id": "flux:Efficiency", "key": "eff", "label": "Efficiency", "tier": "core", "description": "Directness and precision of motion to target." },
+    { "id": "flux:Wayfinding", "key": "nav", "label": "Wayfinding", "tier": "core", "description": "Locate and select the right control with minimal false starts." },
+    { "id": "flux:Proficiency", "key": "prof", "label": "Proficiency", "tier": "core", "description": "Fluency and control during interaction." },
+    { "id": "flux:Engagement", "key": "eng", "label": "Engagement", "tier": "core", "description": "Attentiveness and productive momentum." },
+    { "id": "flux:Frustration", "key": "frustration", "label": "Frustration", "tier": "extended", "description": "Micro-signals of possible struggle such as rage-clicks, idle bursts or undo bursts." },
+    { "id": "flux:TrustAlignment", "key": "trust_align", "label": "Trust Alignment", "tier": "extended", "description": "Alignment between actions and trust or assurance cues." },
+    { "id": "flux:CognitiveLoad", "key": "cogload", "label": "Cognitive Load", "tier": "extended", "description": "Effort proxy from dwell, re-reads and backtracks." },
+    { "id": "flux:Collaboration", "key": "collaboration", "label": "Collaboration", "tier": "extended", "description": "Teamwork and handoffs that strengthen decisions." },
+    { "id": "flux:Sustainability", "key": "sustainability", "label": "Sustainability", "tier": "extended", "description": "Steady practice over time, low rework and efficient patterns." },
+    { "id": "flux:Ethics", "key": "ethics", "label": "Ethical Alignment", "tier": "extended", "description": "Adherence to ethical norms and fairness commitments." },
+    { "id": "flux:Stability", "key": "stability", "label": "Stability", "tier": "extended", "description": "Consistency and resilience in interaction patterns." },
+    { "id": "flux:Adaptability", "key": "adaptability", "label": "Adaptability", "tier": "extended", "description": "Capacity to recover, switch strategy or use support effectively." },
+    { "id": "flux:CognitiveBiasSensitivity", "key": "bias_sensitivity", "label": "Cognitive Bias Sensitivity", "tier": "extended", "description": "Exploratory indicator for bias-sensitive interaction patterns." },
+    { "id": "flux:EpistemicConfidence", "key": "epistemic_confidence", "label": "Epistemic Confidence", "tier": "extended", "description": "Exploratory indicator for confidence, checking and uncertainty signals." },
+    { "id": "flux:RitualConsistency", "key": "ritual_consistency", "label": "Ritual Consistency", "tier": "extended", "description": "Exploratory indicator for repeated structured patterns and routines." },
+    { "id": "flux:SocialTrustResonance", "key": "social_trust_resonance", "label": "Social Trust Resonance", "tier": "extended", "description": "Exploratory indicator for trust relationship cues in service interaction." }
+  ],
+  "composites": [
+    { "key": "momentum", "label": "Momentum", "dimensions": ["eff", "eng", "nav"] },
+    { "key": "skill", "label": "Skill", "dimensions": ["prof", "eff", "nav"] },
+    { "key": "confidence_trust", "label": "Confidence and Trust", "dimensions": ["trust_align", "frustration"] },
+    { "key": "resilience_adaptability", "label": "Resilience and Adaptability", "dimensions": ["stability", "adaptability", "cogload"] },
+    { "key": "governance_integrity", "label": "Governance and Integrity", "dimensions": ["collaboration", "sustainability", "ethics"] }
+  ],
+  "references": [
+    "https://www.gov.uk/service-manual",
+    "https://www.iso.org/standard/63500.html",
+    "https://www.w3.org/TR/WCAG22/"
+  ]
+}

@@ -11,3 +11,7 @@ The prototype `wrangler.toml` pattern includes environment-specific configuratio
 ## 2026-05-27 — Public-service analytics requires a harm register
 
 Flux concerns public-service journeys, behavioural signals, accessibility and potentially vulnerable users. Keep `harm-register.yaml` active.
+
+## 2026-05-28 — Promote product meaning and contracts before runtime code
+
+The next safe promotion step is governance documentation, event contracts and reference scoring lineage. Runtime collector, SDK and dashboard code should wait until consent, no-PII schema and scoring reference tests are in place.
