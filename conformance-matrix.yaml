@@ -1,0 +1,25 @@
+records:
+  - id: CONF-001
+    rule: Security policy exists
+    expected_evidence: SECURITY.md exists
+    actual_evidence: SECURITY.md created
+    status: present
+    owner: maintainer
+  - id: CONF-002
+    rule: Local agent instructions exist
+    expected_evidence: AGENTS.md exists
+    actual_evidence: AGENTS.md created
+    status: present
+    owner: maintainer
+  - id: CONF-003
+    rule: Prototype promotion is controlled
+    expected_evidence: Migration docs exist
+    actual_evidence: docs/migration/source-inventory.md created
+    status: present
+    owner: product-lead
+  - id: CONF-004
+    rule: Public-service harm register exists
+    expected_evidence: harm-register.yaml exists
+    actual_evidence: harm-register.yaml created with release blocked at foundation stage
+    status: present
+    owner: governance-lead

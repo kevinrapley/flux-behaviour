@@ -1,0 +1,11 @@
+budgets:
+  - id: PERF-001
+    target: public dashboard initial load
+    metric: largest-contentful-paint-ms
+    threshold: 2500
+    status: planned
+  - id: PERF-002
+    target: collector ingestion
+    metric: p95-response-ms
+    threshold: 250
+    status: planned

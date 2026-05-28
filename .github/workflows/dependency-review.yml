@@ -1,0 +1,49 @@
+name: Dependency Review
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  dependency-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955
+      - name: Detect dependency-bearing manifests
+        id: dependency-manifests
+        shell: bash
+        run: |
+          node <<'NODE' >> "$GITHUB_OUTPUT"
+          const fs = require('node:fs');
+          const manifests = ['package.json'];
+          const dependencyKeys = [
+            'dependencies',
+            'devDependencies',
+            'optionalDependencies',
+            'peerDependencies'
+          ];
+          let hasDependencies = false;
+          for (const manifest of manifests) {
+            if (!fs.existsSync(manifest)) continue;
+            const parsed = JSON.parse(fs.readFileSync(manifest, 'utf8'));
+            hasDependencies ||= dependencyKeys.some((key) => {
+              return parsed[key] && Object.keys(parsed[key]).length > 0;
+            });
+          }
+          console.log(`has_dependencies=${hasDependencies ? 'true' : 'false'}`);
+          NODE
+      - name: Dependency Review
+        if: steps.dependency-manifests.outputs.has_dependencies == 'true'
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294
+        with:
+          fail-on-severity: high
+          retry-on-snapshot-warnings: true
+          retry-on-snapshot-warnings-timeout: 300
+      - name: Dependency Review skipped
+        if: steps.dependency-manifests.outputs.has_dependencies != 'true'
+        run: echo "No dependency-bearing manifests found; dependency review will run once dependencies are introduced."

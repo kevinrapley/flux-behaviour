@@ -1,0 +1,28 @@
+gaps:
+  - id: GAP-001
+    title: GitHub branch protection and security settings require API verification
+    severity: high
+    observed_state: Desired state is documented, but live enforcement has not been API-verified.
+    expected_state: Main branch requires pull requests, CODEOWNERS review, status checks and blocks force pushes.
+    risk: Documented posture may not match enforced posture.
+    action: Configure and verify GitHub settings after the foundation PR is open.
+    owner: maintainer
+    status: open
+  - id: GAP-002
+    title: Runtime product code is not yet promoted
+    severity: medium
+    observed_state: Foundation exists without production collector, SDK, scoring engine or dashboard.
+    expected_state: Runtime code promoted through reviewed PRs.
+    risk: Repository is not a working product yet.
+    action: Promote source artefacts one by one using migration controls.
+    owner: product-lead
+    status: open
+  - id: GAP-003
+    title: DPIA and accessibility evidence are not complete
+    severity: high
+    observed_state: Starter records exist only.
+    expected_state: DPIA and full accessibility evidence completed before live processing or UI release.
+    risk: Public-service deployment may be unsafe or non-compliant.
+    action: Complete governance and accessibility evidence before release.
+    owner: governance-lead
+    status: open
