@@ -9,6 +9,7 @@ import {
 
 const eventSchema = loadEventSchema();
 const MAX_DETAILS = 10;
+const MAX_EVENT_PROPERTIES = Object.keys(eventSchema.properties).length;
 
 export async function handleCollectorRequest(request) {
   const url = new URL(request.url);
@@ -50,6 +51,14 @@ async function handleCollect(request) {
     return invalidJsonResponse();
   }
 
+  if (hasTooManyProperties(event)) {
+    return validationFailedResponse([{
+      code: 'additional_property',
+      field: null,
+      message: 'An additional field is not allowed by the event contract.'
+    }]);
+  }
+
   const validation = validateEvent(event, eventSchema);
 
   if (!validation.valid) {
@@ -65,4 +74,9 @@ async function handleCollect(request) {
   }, {
     status: 202
   });
+}
+
+function hasTooManyProperties(event) {
+  if (!event || typeof event !== 'object' || Array.isArray(event)) return false;
+  return Object.keys(event).length > MAX_EVENT_PROPERTIES;
 }
