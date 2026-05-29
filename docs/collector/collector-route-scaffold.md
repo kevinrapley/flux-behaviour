@@ -24,6 +24,19 @@ A valid event receives `202 Accepted` with `stored: false`.
 
 Invalid events receive `400 Bad Request` with safe structured validation errors.
 
+## Validation response bounds
+
+The collector route is an external boundary.
+
+It must not create large error responses for oversized invalid events.
+
+The scaffold therefore:
+
+- rejects objects with more properties than the event schema permits before running full validation;
+- caps returned validation detail entries to 10;
+- keeps additional-property errors field-redacted;
+- never echoes typed values, raw payloads or untrusted property names.
+
 ## Explicit exclusions
 
 This scaffold does not add:
