@@ -35,7 +35,7 @@ harms:
       - Service teams relying on telemetry evidence
     likelihood: medium
     severity: high
-    mitigation: Keep adapter storage disabled; do not add deployment configuration, routes or storage bindings until CORS, rate limits, retention, deletion and incident controls are reviewed.
+    mitigation: Keep adapter storage disabled; add boundary controls for CORS, preflight, allowed headers, request body size and rate-limit interfaces before any deployment or storage binding. Production rate limiting, retention, deletion and incident controls still require review.
     residual_risk: medium
     owner: product-lead
     escalation_route: Product owner and security lead
