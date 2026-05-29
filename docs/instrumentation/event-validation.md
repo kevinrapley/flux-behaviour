@@ -34,8 +34,8 @@ Returns:
   errors: [
     {
       code: 'additional_property',
-      field: 'value',
-      message: 'Field is not allowed by the event contract.'
+      field: null,
+      message: 'An additional field is not allowed by the event contract.'
     }
   ]
 }
@@ -48,7 +48,7 @@ Validation errors must not echo submitted values.
 Errors may include:
 
 - rule code;
-- field name;
+- safe schema field name for known schema fields;
 - safe message.
 
 Errors must not include:
@@ -58,7 +58,10 @@ Errors must not include:
 - file names;
 - passwords;
 - free-text values;
-- raw event payloads.
+- raw event payloads;
+- untrusted additional-property names.
+
+Additional-property errors use `field: null` because the submitted property name is untrusted input.
 
 ## Current validation coverage
 
