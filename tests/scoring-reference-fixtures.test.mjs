@@ -13,6 +13,12 @@ const prohibitedInferences = new Set([
   'user fault',
   'fraud risk',
   'low ability',
+  'dependency',
+  'low confidence',
+  'access need',
+  'confusion',
+  'lack of skill',
+  'risk',
   'disability',
   'assistive technology identity'
 ]);
