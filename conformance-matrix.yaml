@@ -47,3 +47,9 @@ records:
     actual_evidence: Reference scoring cases and fixture checks added on test/validation-fixture-baseline
     status: present
     owner: governance-lead
+  - id: CONF-009
+    rule: Runtime collector and SDK code must use a shared event validation module
+    expected_evidence: src/events/validate-event.mjs, src/events/event-validation-errors.mjs and tests/event-validation.test.mjs exist
+    actual_evidence: Runtime-neutral event validation module added on feature/event-validation-module
+    status: present
+    owner: product-lead
