@@ -65,3 +65,9 @@ records:
     actual_evidence: Cloudflare Worker adapter added on feature/cloudflare-worker-adapter with storage disabled
     status: present
     owner: product-lead
+  - id: CONF-012
+    rule: Public collector boundary must define CORS, request-size and rate-limit controls before storage is introduced
+    expected_evidence: src/collector/boundary-controls.mjs, tests/collector-boundary-controls.test.mjs and docs/collector/boundary-controls.md exist
+    actual_evidence: Boundary control scaffold added on feature/collector-boundary-controls with storage still disabled
+    status: present
+    owner: product-lead
