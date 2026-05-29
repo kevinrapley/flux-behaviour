@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.0.0",
+  "session_id": "session-valid-006",
+  "consent": "yes",
+  "origin": "formkit",
+  "event_class": "env",
+  "action": "env.net.offline",
+  "role": "environment",
+  "element_key": "network.status",
+  "timestamp_ms": 1760000007200
+}

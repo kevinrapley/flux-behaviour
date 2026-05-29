@@ -137,7 +137,7 @@ evidence_records:
     mode: docs-and-contract-promotion
     repository: kevinrapley/flux-behaviour
     risk_level: high
-    base_branch: chore/repository-foundation
+    base_branch: main
     working_branch: chore/governance-event-schema-baseline
     files_read:
       - README.md
@@ -188,9 +188,6 @@ evidence_records:
       - command: GitHub connector file writes
         status: passed
         evidence: Branch chore/governance-event-schema-baseline updated with docs, contracts and tests.
-      - command: GitHub Actions
-        status: pending
-        evidence: Workflows may not trigger until stacked PR is opened and base branch state is available.
     tests_added:
       - tests/event-schema.test.mjs
       - tests/scoring-config.test.mjs
@@ -217,4 +214,90 @@ evidence_records:
     risks:
       - Event schema is baseline only and still needs runtime validator integration.
       - Scoring config is reference-only and still needs full schema and engine validation before runtime use.
-      - PR is stacked on PR #1 until the foundation branch is merged.
+  - task_id: flux-behaviour-validation-fixture-baseline
+    mode: fixture-and-validation-baseline
+    repository: kevinrapley/flux-behaviour
+    risk_level: high
+    base_branch: main
+    working_branch: test/validation-fixture-baseline
+    files_read:
+      - README.md
+      - AGENTS.md
+      - RECENT_LEARNINGS.md
+      - contracts/events/flux-event.schema.json
+      - config/scoring/flux-scoring-config.v6.10.reference.json
+      - tests/event-schema.test.mjs
+      - tests/scoring-config.test.mjs
+      - kevinrapley/flux-behavioural-analytics README.md
+      - kevinrapley/flux-behavioural-analytics R/golden_corpus_validator.R
+      - kevinrapley/flux-behavioural-analytics tests/testthat/test_golden_corpus.R
+      - kevinrapley/flux-behavioural-analytics .github/workflows/r-golden.yml
+    files_changed:
+      - fixtures/events/valid/focus-enter.json
+      - fixtures/events/valid/focus-dwell.json
+      - fixtures/events/valid/navigation-next.json
+      - fixtures/events/valid/assist-help-toggle.json
+      - fixtures/events/valid/a11y-skiplink.json
+      - fixtures/events/valid/trust-password-reveal.json
+      - fixtures/events/valid/environment-offline.json
+      - fixtures/events/invalid/consent-no.json
+      - fixtures/events/invalid/typed-value.json
+      - fixtures/events/invalid/password-field.json
+      - fixtures/events/invalid/email-field.json
+      - fixtures/events/invalid/clipboard-text.json
+      - fixtures/events/invalid/file-name.json
+      - fixtures/events/invalid/unknown-event-class.json
+      - fixtures/scoring/reference-cases/scoring-reference-cases.json
+      - tests/event-fixtures.test.mjs
+      - tests/scoring-reference-fixtures.test.mjs
+      - docs/validation/golden-corpus-plan.md
+      - contracts/events/README.md
+      - conformance-matrix.yaml
+      - RECENT_LEARNINGS.md
+      - agent-evidence.yaml
+    promotion_decisions:
+      - source: prototype golden corpus validation approach
+        decision: promote concept only through language-neutral fixtures and Node tests
+        runtime_code: false
+      - source: R golden corpus workflow
+        decision: not promoted in this PR
+        runtime_code: false
+      - source: collector worker
+        decision: not promoted in this PR
+        runtime_code: false
+    commands_run:
+      - command: GitHub connector file writes
+        status: passed
+        evidence: Branch test/validation-fixture-baseline updated with fixtures, docs and tests.
+      - command: npm test
+        status: pending
+        evidence: Will be run by CI after PR creation.
+    tests_added:
+      - tests/event-fixtures.test.mjs
+      - tests/scoring-reference-fixtures.test.mjs
+    fixtures_added:
+      valid_event_fixtures: 7
+      invalid_event_fixtures: 7
+      scoring_reference_cases: 5
+    conformance_updates:
+      - CONF-007
+      - CONF-008
+    recent_learnings:
+      read: true
+      updated: true
+      entry: Fixture baselines should precede runtime validation modules.
+    security:
+      runtime_code_promoted: false
+      secrets_promoted: false
+      direct_wrangle_configuration_copy: false
+    privacy:
+      valid_fixtures_are_metadata_only: true
+      invalid_fixtures_cover_content_bearing_fields: true
+      invalid_fixtures_cover_no_consent: true
+    accessibility:
+      product_ui_promoted: false
+      accessibility_release_decision: not-applicable
+    risks:
+      - Event fixture validation uses a small local validator and should later be replaced or supplemented by a formal JSON Schema validator.
+      - Scoring fixtures are reference cases only and do not implement scoring logic.
+      - No runtime collector, SDK or storage code is promoted.

@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.0.0",
+  "session_id": "session-invalid-006",
+  "consent": "yes",
+  "origin": "formkit",
+  "event_class": "file",
+  "action": "file.selected",
+  "role": "control",
+  "element_key": "application.upload",
+  "timestamp_ms": 1760000016000,
+  "file_name": ""
+}

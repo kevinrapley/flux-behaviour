@@ -1,0 +1,90 @@
+{
+  "schema_version": "1.0.0",
+  "purpose": "Reference scoring cases for future Flux Behaviour scoring validation. These are not runtime outputs.",
+  "cases": [
+    {
+      "id": "balanced-journey",
+      "label": "Balanced journey",
+      "description": "A consented journey with forward navigation, low dwell, no unsafe content and no high-friction signals.",
+      "signals": {
+        "path_efficiency": 0.82,
+        "submovements": 12,
+        "misses_per_target": 0,
+        "help_views": 0,
+        "revisit_rate": 0.08
+      },
+      "expected_interpretation": {
+        "primary": "steady progress",
+        "must_not_infer": ["user competence", "eligibility", "protected characteristics"]
+      }
+    },
+    {
+      "id": "high-friction-journey",
+      "label": "High-friction journey",
+      "description": "A consented journey with repeated revisits, longer dwell and rage-click candidate signals.",
+      "signals": {
+        "path_efficiency": 0.31,
+        "submovements": 46,
+        "misses_per_target": 3,
+        "help_views": 2,
+        "revisit_rate": 0.42
+      },
+      "expected_interpretation": {
+        "primary": "possible service friction",
+        "secondary": "needs research follow-up",
+        "must_not_infer": ["user fault", "fraud risk", "low ability"]
+      }
+    },
+    {
+      "id": "assistive-help-seeking-journey",
+      "label": "Assistive/help-seeking journey",
+      "description": "A consented journey where help is used effectively and completion support appears beneficial.",
+      "signals": {
+        "path_efficiency": 0.66,
+        "submovements": 24,
+        "misses_per_target": 1,
+        "help_views": 4,
+        "revisit_rate": 0.18
+      },
+      "expected_interpretation": {
+        "primary": "support use",
+        "secondary": "review help content effectiveness",
+        "must_not_infer": ["dependency", "low confidence", "access need"]
+      }
+    },
+    {
+      "id": "careful-checking-journey",
+      "label": "Careful-checking journey",
+      "description": "A consented journey with repeated checking that may indicate caution, stakes or conscientious behaviour.",
+      "signals": {
+        "path_efficiency": 0.58,
+        "submovements": 28,
+        "misses_per_target": 0,
+        "help_views": 1,
+        "revisit_rate": 0.35
+      },
+      "expected_interpretation": {
+        "primary": "possible careful checking",
+        "secondary": "avoid deficit framing",
+        "must_not_infer": ["confusion", "lack of skill", "risk"]
+      }
+    },
+    {
+      "id": "accessibility-adjacent-journey",
+      "label": "Accessibility-adjacent journey",
+      "description": "A consented journey with keyboard-only and skip-link signals that should prompt accessibility review, not user profiling.",
+      "signals": {
+        "path_efficiency": 0.71,
+        "submovements": 18,
+        "misses_per_target": 0,
+        "help_views": 1,
+        "revisit_rate": 0.12
+      },
+      "expected_interpretation": {
+        "primary": "accessibility-adjacent interaction pattern",
+        "secondary": "review service accessibility evidence",
+        "must_not_infer": ["disability", "assistive technology identity", "protected characteristics"]
+      }
+    }
+  ]
+}

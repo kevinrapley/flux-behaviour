@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.0.0",
+  "session_id": "session-invalid-001",
+  "consent": "no",
+  "origin": "formkit",
+  "event_class": "focus",
+  "action": "focus.enter",
+  "role": "field",
+  "element_key": "application.reference-number",
+  "timestamp_ms": 1760000010000
+}

@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.0.0",
+  "session_id": "session-valid-004",
+  "consent": "yes",
+  "origin": "formkit",
+  "event_class": "a11y",
+  "action": "a11y.skiplink.used",
+  "role": "page",
+  "element_key": "page.skip-to-main-content",
+  "timestamp_ms": 1760000004800,
+  "pointer_type": "keyboard"
+}
