@@ -4,6 +4,10 @@ Recent learnings created by the LLM agent in reverse-chronological order (most r
 
 ---
 
+## 2026-05-29 — Boundary controls should precede storage bindings
+
+Before introducing storage, the collector boundary needs explicit controls for CORS, preflight, allowed methods and headers, request body limits and rate-limit interfaces. These controls reduce exposure risk but do not replace production deployment review.
+
 ## 2026-05-29 - Worker adapter imports must avoid Node-only modules
 
 The worker adapter imports must avoid Node-only modules. Importable schema modules and drift tests preserve the JSON contract without pulling filesystem APIs into the Worker runtime.
