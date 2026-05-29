@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.0.0",
+  "session_id": "session-invalid-007",
+  "consent": "yes",
+  "origin": "formkit",
+  "event_class": "profile",
+  "action": "profile.infer",
+  "role": "field",
+  "element_key": "application.reference-number",
+  "timestamp_ms": 1760000017200
+}
