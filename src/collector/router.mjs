@@ -8,6 +8,7 @@ import {
 } from './responses.mjs';
 
 const eventSchema = loadEventSchema();
+const MAX_DETAILS = 10;
 
 export async function handleCollectorRequest(request) {
   const url = new URL(request.url);
@@ -52,7 +53,8 @@ async function handleCollect(request) {
   const validation = validateEvent(event, eventSchema);
 
   if (!validation.valid) {
-    return validationFailedResponse(validation.errors);
+    const bounded = validation['errors'].slice(0, MAX_DETAILS);
+    return validationFailedResponse(bounded);
   }
 
   return jsonResponse({
