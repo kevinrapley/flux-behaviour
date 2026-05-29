@@ -36,8 +36,8 @@ export function validateEvent(event, schema = loadEventSchema()) {
       if (!Object.hasOwn(schema.properties ?? {}, field)) {
         errors.push(createValidationError(
           EVENT_VALIDATION_ERROR_CODES.ADDITIONAL_PROPERTY,
-          field,
-          'Field is not allowed by the event contract.'
+          null,
+          'An additional field is not allowed by the event contract.'
         ));
       }
     }
