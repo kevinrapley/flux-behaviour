@@ -35,3 +35,15 @@ records:
     actual_evidence: Reference-only scoring baseline and validation tests added on chore/governance-event-schema-baseline
     status: present
     owner: governance-lead
+  - id: CONF-007
+    rule: Event schema must be tested against valid and invalid fixtures before collector promotion
+    expected_evidence: fixtures/events/valid, fixtures/events/invalid and tests/event-fixtures.test.mjs exist
+    actual_evidence: Valid and invalid event fixtures added on test/validation-fixture-baseline
+    status: present
+    owner: product-lead
+  - id: CONF-008
+    rule: Scoring interpretation must have reference cases before scoring engine promotion
+    expected_evidence: fixtures/scoring/reference-cases and tests/scoring-reference-fixtures.test.mjs exist
+    actual_evidence: Reference scoring cases and fixture checks added on test/validation-fixture-baseline
+    status: present
+    owner: governance-lead
