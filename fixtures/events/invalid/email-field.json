@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.0.0",
+  "session_id": "session-invalid-004",
+  "consent": "yes",
+  "origin": "formkit",
+  "event_class": "input",
+  "action": "input.change",
+  "role": "field",
+  "element_key": "account.email",
+  "timestamp_ms": 1760000013600,
+  "email": "redacted"
+}
