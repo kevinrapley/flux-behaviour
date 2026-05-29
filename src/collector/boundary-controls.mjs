@@ -63,12 +63,17 @@ export async function applyCollectorBoundary(request, policy, next) {
     return withCors(boundaryJsonResponse('request_too_large', 'Request body is larger than allowed.', 413), request, policy);
   }
 
+  const bodyDecision = await readBoundedBody(request, policy.maxBodyBytes);
+  if (!bodyDecision.allowed) {
+    return withCors(boundaryJsonResponse('request_too_large', 'Request body is larger than allowed.', 413), request, policy);
+  }
+
   const rateLimitDecision = await policy.rateLimiter.check(request);
   if (!rateLimitDecision.allowed) {
     return withCors(boundaryJsonResponse('rate_limited', 'Request rate limit exceeded.', 429), request, policy);
   }
 
-  return withCors(await next(request), request, policy);
+  return withCors(await next(bodyDecision.request), request, policy);
 }
 
 function handlePreflight(request, policy) {
@@ -118,6 +123,55 @@ function checkContentLength(request, policy) {
   return {
     allowed: contentLength <= policy.maxBodyBytes
   };
+}
+
+async function readBoundedBody(request, maxBodyBytes) {
+  if (!request.body) {
+    return {
+      allowed: true,
+      request
+    };
+  }
+
+  const reader = request.body.getReader();
+  const chunks = [];
+  let totalBytes = 0;
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    totalBytes += value.byteLength;
+    if (totalBytes > maxBodyBytes) {
+      return { allowed: false };
+    }
+
+    chunks.push(value);
+  }
+
+  const headers = new Headers(request.headers);
+  headers.delete('content-length');
+
+  return {
+    allowed: true,
+    request: new Request(request.url, {
+      method: request.method,
+      headers,
+      body: concatenateChunks(chunks, totalBytes)
+    })
+  };
+}
+
+function concatenateChunks(chunks, totalBytes) {
+  const body = new Uint8Array(totalBytes);
+  let offset = 0;
+
+  for (const chunk of chunks) {
+    body.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+
+  return body;
 }
 
 function withCors(response, request, policy) {
