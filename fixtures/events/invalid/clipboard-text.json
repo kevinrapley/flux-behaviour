@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.0.0",
+  "session_id": "session-invalid-005",
+  "consent": "yes",
+  "origin": "formkit",
+  "event_class": "clipboard",
+  "action": "clipboard.paste",
+  "role": "field",
+  "element_key": "application.notes",
+  "timestamp_ms": 1760000014800,
+  "clipboard_text": "redacted"
+}
