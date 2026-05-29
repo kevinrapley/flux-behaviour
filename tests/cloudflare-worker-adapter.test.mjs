@@ -25,6 +25,9 @@ test('Cloudflare Worker adapter accepts valid collect requests without storage',
   const event = JSON.parse(readFileSync('fixtures/events/valid/focus-enter.json', 'utf8'));
   const response = await worker.fetch(request('/collect', {
     method: 'POST',
+    headers: {
+      'content-type': 'application/json'
+    },
     body: JSON.stringify(event)
   }), {}, {});
   const body = await json(response);
@@ -39,6 +42,9 @@ test('Cloudflare Worker adapter rejects invalid collect requests safely', async 
   const event = JSON.parse(readFileSync('fixtures/events/invalid/typed-value.json', 'utf8'));
   const response = await worker.fetch(request('/collect', {
     method: 'POST',
+    headers: {
+      'content-type': 'application/json'
+    },
     body: JSON.stringify(event)
   }), {}, {});
   const body = await json(response);
