@@ -1,4 +1,5 @@
-import { loadEventSchema, validateEvent } from '../events/index.mjs';
+import { validateEvent } from '../events/index.mjs';
+import { fluxEventSchema } from '../events/flux-event-schema.mjs';
 import {
   invalidJsonResponse,
   jsonResponse,
@@ -7,9 +8,8 @@ import {
   validationFailedResponse
 } from './responses.mjs';
 
-const eventSchema = loadEventSchema();
 const MAX_DETAILS = 10;
-const MAX_EVENT_PROPERTIES = Object.keys(eventSchema.properties).length;
+const MAX_EVENT_PROPERTIES = Object.keys(fluxEventSchema.properties).length;
 
 export async function handleCollectorRequest(request) {
   const url = new URL(request.url);
@@ -59,7 +59,7 @@ async function handleCollect(request) {
     }]);
   }
 
-  const validation = validateEvent(event, eventSchema);
+  const validation = validateEvent(event, fluxEventSchema);
 
   if (!validation.valid) {
     const bounded = validation['errors'].slice(0, MAX_DETAILS);
