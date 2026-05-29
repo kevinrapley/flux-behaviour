@@ -15,3 +15,7 @@ Flux concerns public-service journeys, behavioural signals, accessibility and po
 ## 2026-05-28 — Promote product meaning and contracts before runtime code
 
 The next safe promotion step is governance documentation, event contracts and reference scoring lineage. Runtime collector, SDK and dashboard code should wait until consent, no-PII schema and scoring reference tests are in place.
+
+## 2026-05-29 — Fixture baselines should precede runtime validation modules
+
+Before adding a collector or SDK, add valid and invalid event fixtures plus scoring-reference cases. Fixtures make privacy, consent and interpretation boundaries concrete and testable before runtime code exists.
