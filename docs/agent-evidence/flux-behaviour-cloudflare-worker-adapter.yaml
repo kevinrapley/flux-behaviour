@@ -1,0 +1,84 @@
+task_id: flux-behaviour-cloudflare-worker-adapter
+mode: cloudflare-worker-adapter
+repository: kevinrapley/flux-behaviour
+risk_level: high
+base_branch: main
+working_branch: feature/cloudflare-worker-adapter
+files_read:
+  - README.md
+  - AGENTS.md
+  - RECENT_LEARNINGS.md
+  - src/collector/router.mjs
+  - src/collector/responses.mjs
+  - src/events/index.mjs
+  - src/events/validate-event.mjs
+  - contracts/events/flux-event.schema.json
+  - gap-register.yaml
+  - harm-register.yaml
+  - agent-evidence.yaml
+files_changed:
+  - src/cloudflare/worker.mjs
+  - src/events/flux-event-schema.mjs
+  - src/events/load-event-schema.mjs
+  - src/events/validate-event-runtime.mjs
+  - src/collector/router.mjs
+  - tests/cloudflare-worker-adapter.test.mjs
+  - tests/flux-event-schema-module.test.mjs
+  - docs/cloudflare/worker-adapter.md
+  - conformance-matrix.yaml
+  - gap-register.yaml
+  - harm-register.yaml
+promotion_decisions:
+  - source: collector route scaffold
+    decision: expose through Cloudflare Worker fetch adapter
+    runtime_code: true
+  - source: Cloudflare deployment configuration
+    decision: not introduced in this PR
+    runtime_code: false
+  - source: storage bindings
+    decision: not introduced in this PR
+    runtime_code: false
+  - source: prototype wrangler configuration
+    decision: not copied
+    runtime_code: false
+commands_run:
+  - command: GitHub connector file writes
+    status: passed
+    evidence: Branch feature/cloudflare-worker-adapter updated with Worker adapter, runtime-safe schema module, tests and docs.
+  - command: npm test
+    status: pending
+    evidence: Will be run by CI after PR creation and review fixes.
+tests_added:
+  - tests/cloudflare-worker-adapter.test.mjs
+  - tests/flux-event-schema-module.test.mjs
+modules_added:
+  - src/cloudflare/worker.mjs
+  - src/events/flux-event-schema.mjs
+  - src/events/load-event-schema.mjs
+  - src/events/validate-event-runtime.mjs
+conformance_updates:
+  - CONF-011
+gaps_recorded:
+  - GAP-004
+harms_recorded:
+  - HARM-003
+recent_learnings:
+  read: true
+  updated: true
+  entry: Worker adapters must avoid Node-only imports.
+security:
+  storage_promoted: false
+  cloudflare_config_promoted: false
+  deployment_workflow_promoted: false
+  account_specific_values_promoted: false
+privacy:
+  route_uses_worker_safe_validator: true
+  accepted_events_are_not_stored: true
+  schema_drift_test_added: true
+accessibility:
+  product_ui_promoted: false
+  accessibility_release_decision: not-applicable
+risks:
+  - Worker adapter is not deployed and has no wrangler configuration.
+  - CORS, rate limiting, retention and storage policy remain future work.
+  - Root agent-evidence.yaml still needs this record appended through a safe non-destructive update.
