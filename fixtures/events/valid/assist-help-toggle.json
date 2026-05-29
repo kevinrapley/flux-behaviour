@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.0.0",
+  "session_id": "session-valid-003",
+  "consent": "yes",
+  "origin": "formkit",
+  "event_class": "assist",
+  "action": "assist.help.toggle",
+  "role": "control",
+  "element_key": "application.help.residency",
+  "timestamp_ms": 1760000003600,
+  "reason": "help_requested"
+}
