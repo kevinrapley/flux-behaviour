@@ -82,6 +82,25 @@ test('collector collect route returns safe validation errors', async () => {
   assert.equal(JSON.stringify(body).includes('value'), false);
 });
 
+test('collector collect route caps validation detail responses', async () => {
+  const event = JSON.parse(readFileSync('fixtures/events/valid/focus-enter.json', 'utf8'));
+
+  for (let index = 0; index < 25; index += 1) {
+    event[`extra_${index}`] = '';
+  }
+
+  const response = await handleCollectorRequest(request('/collect', {
+    method: 'POST',
+    body: JSON.stringify(event)
+  }));
+  const body = await json(response);
+
+  assert.equal(response.status, 400);
+  assert.equal(body.error.code, 'validation_failed');
+  assert.ok(body.error.details.length <= 10);
+  assert.equal(JSON.stringify(body).includes('extra_24'), false);
+});
+
 test('collector returns not found for unknown routes', async () => {
   const response = await handleCollectorRequest(request('/missing'));
   const body = await json(response);
