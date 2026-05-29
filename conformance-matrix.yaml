@@ -53,3 +53,9 @@ records:
     actual_evidence: Runtime-neutral event validation module added on feature/event-validation-module
     status: present
     owner: product-lead
+  - id: CONF-010
+    rule: Collector route handling must validate events before any storage binding is introduced
+    expected_evidence: src/collector/router.mjs, src/collector/responses.mjs and tests/collector-router.test.mjs exist
+    actual_evidence: Collector route scaffold added on feature/collector-route-scaffold with storage disabled
+    status: present
+    owner: product-lead
