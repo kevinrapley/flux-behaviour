@@ -59,3 +59,9 @@ records:
     actual_evidence: Collector route scaffold added on feature/collector-route-scaffold with storage disabled
     status: present
     owner: product-lead
+  - id: CONF-011
+    rule: Cloudflare adapter must delegate to collector routes without adding storage or deployment configuration
+    expected_evidence: src/cloudflare/worker.mjs, tests/cloudflare-worker-adapter.test.mjs and docs/cloudflare/worker-adapter.md exist
+    actual_evidence: Cloudflare Worker adapter added on feature/cloudflare-worker-adapter with storage disabled
+    status: present
+    owner: product-lead

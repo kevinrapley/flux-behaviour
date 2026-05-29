@@ -26,3 +26,12 @@ gaps:
     action: Complete governance and accessibility evidence before release.
     owner: governance-lead
     status: open
+  - id: GAP-004
+    title: Cloudflare Worker adapter lacks deployment controls
+    severity: high
+    observed_state: Worker-compatible adapter exists without wrangler configuration, routes, CORS policy, rate limits, retention policy or storage bindings.
+    expected_state: Deployment controls, request limits, CORS policy and retention decisions are reviewed before any public route is exposed.
+    risk: A collector boundary could be exposed before operational safeguards are complete.
+    action: Add and review Cloudflare deployment posture, CORS, rate limits and storage policy before enabling live collection.
+    owner: product-lead
+    status: open

@@ -1,441 +1,51 @@
-evidence_records:
-  - task_id: flux-behaviour-repository-foundation
-    mode: repo-instantiate
-    repository: kevinrapley/flux-behaviour
-    risk_level: high
-    files_read:
-      - uploaded GitHub Diamond Standard bundle README.md
-      - uploaded GitHub Diamond Standard bundle prompt.body.xml
-      - uploaded GitHub Diamond Standard bundle modes/repo-instantiate.xml
-      - kevinrapley/flux-behaviour README.md
-      - kevinrapley/flux-behavioural-analytics README.md
-      - kevinrapley/flux-behavioural-analytics package.json
-      - kevinrapley/flux-behavioural-analytics tsconfig.json
-      - kevinrapley/flux-behavioural-analytics wrangler.toml
-      - kevinrapley/flux-behavioural-analytics workers/collector_worker.ts
-      - kevinrapley/flux-behavioural-analytics public/flux_instrumentation_guide_v6.md
-      - kevinrapley/flux-behavioural-analytics public/governance_pack/README.md
-    files_changed:
-      - README.md
-      - AGENTS.md
-      - RECENT_LEARNINGS.md
-      - CONTRIBUTING.md
-      - SECURITY.md
-      - CODEOWNERS
-      - .github/CODEOWNERS
-      - .github/PULL_REQUEST_TEMPLATE.md
-      - .github/ISSUE_TEMPLATE/bug_report.yml
-      - .github/ISSUE_TEMPLATE/feature_request.yml
-      - .github/dependabot.yml
-      - .github/workflows/ci-accessibility.yml
-      - .github/workflows/ci-conformance.yml
-      - .github/workflows/ci-docs-quality.yml
-      - .github/workflows/ci-node.yml
-      - .github/workflows/ci-performance.yml
-      - .github/workflows/codeql.yml
-      - .github/workflows/dependency-review.yml
-      - .github/workflows/file-inventory.yml
-      - .github/workflows/sbom-cyclonedx.yml
-      - package.json
-      - scripts/check-required-files.mjs
-      - scripts/secret-pattern-scan.mjs
-      - scripts/generate-minimal-sbom.mjs
-      - tests/governance.test.mjs
-      - repository-contract.yaml
-      - github-settings.yaml
-      - conformance-matrix.yaml
-      - gap-register.yaml
-      - harm-register.yaml
-      - accessibility-evidence.md
-      - docs/product/product-charter.md
-      - docs/architecture/architecture-decision-record.md
-      - docs/migration/source-inventory.md
-      - docs/governance/assurance-case.md
-      - docs/governance/data-protection.md
-      - docs/security/secret-handling.md
-    commands_run:
-      - command: npm test
-        status: passed
-        evidence: 3 Node test assertions passed locally.
-      - command: npm run validate
-        status: passed
-        evidence: Required governance files present.
-      - command: npm run security:secrets
-        status: passed
-        evidence: Secret pattern sanity scan passed.
-      - command: npm run sbom
-        status: passed
-        evidence: Minimal CycloneDX SBOM generation passed.
-    contracts_validated:
-      - repository-contract.schema.json
-      - github-settings.schema.json
-      - conformance-record.schema.json
-      - gap-register.schema.json
-      - harm-register.schema.json
-      - agent-evidence.schema.json
-    tests_run:
-      - name: npm test
-        status: passed
-        evidence: Node test suite passed.
-      - name: npm run validate
-        status: passed
-        evidence: Repository file check passed.
-      - name: npm run security:secrets
-        status: passed
-        evidence: Secret sanity scan passed.
-    gaps_recorded:
-      - GAP-001
-      - GAP-002
-      - GAP-003
-    waivers_recorded: []
-    artifacts_created:
-      - repository-contract.yaml
-      - github-settings.yaml
-      - conformance-matrix.yaml
-      - gap-register.yaml
-      - harm-register.yaml
-      - accessibility-evidence.md
-    recent_learnings:
-      read: true
-      updated: true
-      entry: Prototype source is lineage, Cloudflare configuration must be sanitised, and public-service analytics requires a harm register.
-    github_settings:
-      desired_state:
-        default_branch: main
-        branch_protection: required
-        codeowners_review: required
-      observed_state:
-        live_settings_api_verification: not-performed
-      verification_method: mixed
-    security:
-      no_secrets_committed: true
-    accessibility:
-      required: true
-      automated_checks:
-        - Not run yet; no UI has been promoted.
-      keyboard_checks:
-        - Not run yet; no UI has been promoted.
-      focus_checks:
-        - Not run yet; no UI has been promoted.
-      screen_reader_smoke_checks:
-        - Not run yet; no UI has been promoted.
-      known_defects:
-        - No UI has been promoted yet.
-      release_decision: fail
-      manual_requirements_covered: false
-      automated_requirements_covered: false
-      evidence_file: accessibility-evidence.md
-    harms:
-      - HARM-001
-      - HARM-002
-    claims:
-      - Repository foundation created for high-assurance public-service product development.
-    risks:
-      - Live GitHub settings still need API verification.
-      - Runtime product code requires reviewed promotion.
-  - task_id: flux-behaviour-governance-event-schema-baseline
-    mode: docs-and-contract-promotion
-    repository: kevinrapley/flux-behaviour
-    risk_level: high
-    base_branch: main
-    working_branch: chore/governance-event-schema-baseline
-    files_read:
-      - README.md
-      - AGENTS.md
-      - RECENT_LEARNINGS.md
-      - docs/migration/source-inventory.md
-      - docs/governance/assurance-case.md
-      - kevinrapley/flux-behavioural-analytics README.md
-      - kevinrapley/flux-behavioural-analytics public/governance_pack/README.md
-      - kevinrapley/flux-behavioural-analytics public/governance_pack/flux_plain_english_onepager.md
-      - kevinrapley/flux-behavioural-analytics public/governance_pack/flux_ethics_impact.md
-      - kevinrapley/flux-behavioural-analytics public/governance_pack/flux_service_standard_mapping.md
-      - kevinrapley/flux-behavioural-analytics public/governance_pack/flux_governance_playbook.md
-      - kevinrapley/flux-behavioural-analytics public/governance_pack/flux_inclusivity_testing_plan.md
-      - kevinrapley/flux-behavioural-analytics public/flux_instrumentation_guide_v6.md
-      - kevinrapley/flux-behavioural-analytics config/flux_scoring_config_v6.10.json
-    files_changed:
-      - docs/product/what-flux-is.md
-      - docs/governance/ethics-impact.md
-      - docs/governance/service-standard-mapping.md
-      - docs/governance/inclusivity-testing-plan.md
-      - docs/governance/governance-playbook.md
-      - docs/instrumentation/event-taxonomy.md
-      - contracts/events/flux-event.schema.json
-      - config/scoring/flux-scoring-config.v6.10.reference.json
-      - tests/event-schema.test.mjs
-      - tests/scoring-config.test.mjs
-      - conformance-matrix.yaml
-      - RECENT_LEARNINGS.md
-      - agent-evidence.yaml
-    promotion_decisions:
-      - source: governance pack
-        decision: rewrite as maintained product and governance docs
-        runtime_code: false
-      - source: instrumentation guide
-        decision: promote as metadata-only event contract and taxonomy
-        runtime_code: false
-      - source: scoring config v6.10
-        decision: promote as reference-only config extract with tests
-        runtime_code: false
-      - source: collector worker
-        decision: not promoted in this PR
-        runtime_code: false
-      - source: wrangler.toml
-        decision: blocked from direct copy
-        runtime_code: false
-    commands_run:
-      - command: GitHub connector file writes
-        status: passed
-        evidence: Branch chore/governance-event-schema-baseline updated with docs, contracts and tests.
-    tests_added:
-      - tests/event-schema.test.mjs
-      - tests/scoring-config.test.mjs
-    contracts_added:
-      - contracts/events/flux-event.schema.json
-      - config/scoring/flux-scoring-config.v6.10.reference.json
-    conformance_updates:
-      - CONF-005
-      - CONF-006
-    recent_learnings:
-      read: true
-      updated: true
-      entry: Promote product meaning and contracts before runtime code.
-    security:
-      runtime_code_promoted: false
-      secrets_promoted: false
-      direct_wrangle_configuration_copy: false
-    privacy:
-      event_schema_requires_consent_yes: true
-      content_bearing_fields_excluded: true
-    accessibility:
-      product_ui_promoted: false
-      accessibility_release_decision: not-applicable
-    risks:
-      - Event schema is baseline only and still needs runtime validator integration.
-      - Scoring config is reference-only and still needs full schema and engine validation before runtime use.
-  - task_id: flux-behaviour-validation-fixture-baseline
-    mode: fixture-and-validation-baseline
-    repository: kevinrapley/flux-behaviour
-    risk_level: high
-    base_branch: main
-    working_branch: test/validation-fixture-baseline
-    files_read:
-      - README.md
-      - AGENTS.md
-      - RECENT_LEARNINGS.md
-      - contracts/events/flux-event.schema.json
-      - config/scoring/flux-scoring-config.v6.10.reference.json
-      - tests/event-schema.test.mjs
-      - tests/scoring-config.test.mjs
-      - kevinrapley/flux-behavioural-analytics README.md
-      - kevinrapley/flux-behavioural-analytics R/golden_corpus_validator.R
-      - kevinrapley/flux-behavioural-analytics tests/testthat/test_golden_corpus.R
-      - kevinrapley/flux-behavioural-analytics .github/workflows/r-golden.yml
-    files_changed:
-      - fixtures/events/valid/focus-enter.json
-      - fixtures/events/valid/focus-dwell.json
-      - fixtures/events/valid/navigation-next.json
-      - fixtures/events/valid/assist-help-toggle.json
-      - fixtures/events/valid/a11y-skiplink.json
-      - fixtures/events/valid/trust-password-reveal.json
-      - fixtures/events/valid/environment-offline.json
-      - fixtures/events/invalid/consent-no.json
-      - fixtures/events/invalid/typed-value.json
-      - fixtures/events/invalid/password-field.json
-      - fixtures/events/invalid/email-field.json
-      - fixtures/events/invalid/clipboard-text.json
-      - fixtures/events/invalid/file-name.json
-      - fixtures/events/invalid/unknown-event-class.json
-      - fixtures/scoring/reference-cases/scoring-reference-cases.json
-      - tests/event-fixtures.test.mjs
-      - tests/scoring-reference-fixtures.test.mjs
-      - docs/validation/golden-corpus-plan.md
-      - contracts/events/README.md
-      - conformance-matrix.yaml
-      - RECENT_LEARNINGS.md
-      - agent-evidence.yaml
-    promotion_decisions:
-      - source: prototype golden corpus validation approach
-        decision: promote concept only through language-neutral fixtures and Node tests
-        runtime_code: false
-      - source: R golden corpus workflow
-        decision: not promoted in this PR
-        runtime_code: false
-      - source: collector worker
-        decision: not promoted in this PR
-        runtime_code: false
-    commands_run:
-      - command: GitHub connector file writes
-        status: passed
-        evidence: Branch test/validation-fixture-baseline updated with fixtures, docs and tests.
-      - command: npm test
-        status: passed
-        evidence: CI passed after PR creation and review fixes.
-    tests_added:
-      - tests/event-fixtures.test.mjs
-      - tests/scoring-reference-fixtures.test.mjs
-    fixtures_added:
-      valid_event_fixtures: 7
-      invalid_event_fixtures: 7
-      scoring_reference_cases: 5
-    conformance_updates:
-      - CONF-007
-      - CONF-008
-    recent_learnings:
-      read: true
-      updated: true
-      entry: Fixture baselines should precede runtime validation modules.
-    security:
-      runtime_code_promoted: false
-      secrets_promoted: false
-      direct_wrangle_configuration_copy: false
-    privacy:
-      valid_fixtures_are_metadata_only: true
-      invalid_fixtures_cover_content_bearing_fields: true
-      invalid_fixtures_cover_no_consent: true
-    accessibility:
-      product_ui_promoted: false
-      accessibility_release_decision: not-applicable
-    risks:
-      - Event fixture validation uses a small local validator and should later be replaced or supplemented by a formal JSON Schema validator.
-      - Scoring fixtures are reference cases only and do not implement scoring logic.
-      - No runtime collector, SDK or storage code is promoted.
-  - task_id: flux-behaviour-event-validation-module
-    mode: runtime-neutral-validation-module
-    repository: kevinrapley/flux-behaviour
-    risk_level: high
-    base_branch: main
-    working_branch: feature/event-validation-module
-    files_read:
-      - README.md
-      - AGENTS.md
-      - RECENT_LEARNINGS.md
-      - contracts/events/flux-event.schema.json
-      - tests/event-fixtures.test.mjs
-      - fixtures/events/valid/*.json
-      - fixtures/events/invalid/*.json
-    files_changed:
-      - src/events/event-validation-errors.mjs
-      - src/events/validate-event.mjs
-      - src/events/index.mjs
-      - tests/event-validation.test.mjs
-      - docs/instrumentation/event-validation.md
-      - conformance-matrix.yaml
-      - RECENT_LEARNINGS.md
-      - agent-evidence.yaml
-    promotion_decisions:
-      - source: event schema and fixture tests
-        decision: extract reusable runtime-neutral validator
-        runtime_code: true
-      - source: collector worker
-        decision: not promoted in this PR
-        runtime_code: false
-      - source: SDK/browser instrumentation
-        decision: not promoted in this PR
-        runtime_code: false
-      - source: Cloudflare configuration
-        decision: not promoted in this PR
-        runtime_code: false
-    commands_run:
-      - command: GitHub connector file writes
-        status: passed
-        evidence: Branch feature/event-validation-module updated with validation module, tests and docs.
-      - command: npm test
-        status: passed
-        evidence: CI passed after PR creation and review fixes.
-    tests_added:
-      - tests/event-validation.test.mjs
-    modules_added:
-      - src/events/event-validation-errors.mjs
-      - src/events/validate-event.mjs
-      - src/events/index.mjs
-    conformance_updates:
-      - CONF-009
-    recent_learnings:
-      read: true
-      updated: true
-      entry: Runtime validation should come before collector or SDK implementation.
-    security:
-      collector_promoted: false
-      sdk_promoted: false
-      cloudflare_config_promoted: false
-      storage_promoted: false
-    privacy:
-      validator_reuses_event_contract: true
-      validation_errors_do_not_echo_submitted_values: true
-      validation_errors_do_not_echo_additional_property_names: true
-    accessibility:
-      product_ui_promoted: false
-      accessibility_release_decision: not-applicable
-    risks:
-      - Validator supports the current schema subset only and is not a full JSON Schema implementation.
-      - Future collector and SDK work must use this module or an explicitly superseding validator.
-  - task_id: flux-behaviour-collector-route-scaffold
-    mode: collector-route-scaffold
-    repository: kevinrapley/flux-behaviour
-    risk_level: high
-    base_branch: main
-    working_branch: feature/collector-route-scaffold
-    files_read:
-      - README.md
-      - AGENTS.md
-      - RECENT_LEARNINGS.md
-      - src/events/index.mjs
-      - contracts/events/flux-event.schema.json
-      - fixtures/events/valid/focus-enter.json
-      - fixtures/events/invalid/typed-value.json
-    files_changed:
-      - src/collector/responses.mjs
-      - src/collector/router.mjs
-      - tests/collector-router.test.mjs
-      - docs/collector/collector-route-scaffold.md
-      - conformance-matrix.yaml
-      - RECENT_LEARNINGS.md
-      - agent-evidence.yaml
-    promotion_decisions:
-      - source: event validation module
-        decision: use shared validator in route scaffold
-        runtime_code: true
-      - source: collector worker from prototype
-        decision: not promoted in this PR
-        runtime_code: false
-      - source: Cloudflare configuration
-        decision: not promoted in this PR
-        runtime_code: false
-      - source: storage bindings
-        decision: not introduced in this PR
-        runtime_code: false
-    commands_run:
-      - command: GitHub connector file writes
-        status: passed
-        evidence: Branch feature/collector-route-scaffold updated with scaffold routes, tests and docs.
-      - command: npm test
-        status: pending
-        evidence: Will be run by CI after PR creation.
-    tests_added:
-      - tests/collector-router.test.mjs
-    modules_added:
-      - src/collector/responses.mjs
-      - src/collector/router.mjs
-    conformance_updates:
-      - CONF-010
-    recent_learnings:
-      read: true
-      updated: true
-      entry: Collector routes should validate before storage exists.
-    security:
-      storage_promoted: false
-      cloudflare_config_promoted: false
-      raw_payload_logging: false
-    privacy:
-      route_uses_shared_validator: true
-      accepted_events_are_not_stored: true
-      validation_errors_are_structured: true
-    accessibility:
-      product_ui_promoted: false
-      accessibility_release_decision: not-applicable
-    risks:
-      - Scaffold is not deployed and does not include platform adapter code.
-      - CORS, rate limiting and storage policy are still future work.
-      - Future Cloudflare adapter must preserve the no-storage boundary until storage PR is reviewed.
+agent_evidence_registry:
+  version: 1
+  purpose: Registry for agent evidence records. Individual records live under docs/agent-evidence/YYYY/MM/DD/.
+  canonical_format:
+    root_key: evidence_records
+    item_key: task_id
+    required_fields:
+      - task_id
+      - mode
+      - repository
+      - risk_level
+      - base_branch
+      - working_branch
+      - files_read
+      - files_changed
+      - promotion_decisions
+      - commands_run
+      - recent_learnings
+      - security
+      - privacy
+      - accessibility
+      - risks
+  storage_rule:
+    new_records: Add one file per task under docs/agent-evidence/YYYY/MM/DD/.
+    root_file: Keep this file as the registry and canonical format reference only.
+    naming: Use the task_id as the filename, with .yaml extension.
+  entries:
+    - task_id: flux-behaviour-repository-foundation
+      date: 2026-05-28
+      path: docs/agent-evidence/2026/05/28/flux-behaviour-repository-foundation.yaml
+      status: externalised
+    - task_id: flux-behaviour-governance-event-schema-baseline
+      date: 2026-05-29
+      path: docs/agent-evidence/2026/05/29/flux-behaviour-governance-event-schema-baseline.yaml
+      status: externalised
+    - task_id: flux-behaviour-validation-fixture-baseline
+      date: 2026-05-29
+      path: docs/agent-evidence/2026/05/29/flux-behaviour-validation-fixture-baseline.yaml
+      status: externalised
+    - task_id: flux-behaviour-event-validation-module
+      date: 2026-05-29
+      path: docs/agent-evidence/2026/05/29/flux-behaviour-event-validation-module.yaml
+      status: externalised
+    - task_id: flux-behaviour-collector-route-scaffold
+      date: 2026-05-29
+      path: docs/agent-evidence/2026/05/29/flux-behaviour-collector-route-scaffold.yaml
+      status: externalised
+    - task_id: flux-behaviour-cloudflare-worker-adapter
+      date: 2026-05-29
+      path: docs/agent-evidence/2026/05/29/flux-behaviour-cloudflare-worker-adapter.yaml
+      status: externalised

@@ -1,0 +1,69 @@
+evidence_records:
+  - task_id: flux-behaviour-collector-route-scaffold
+    mode: collector-route-scaffold
+    repository: kevinrapley/flux-behaviour
+    risk_level: high
+    base_branch: main
+    working_branch: feature/collector-route-scaffold
+    files_read:
+      - README.md
+      - AGENTS.md
+      - RECENT_LEARNINGS.md
+      - src/events/index.mjs
+      - contracts/events/flux-event.schema.json
+      - fixtures/events/valid/focus-enter.json
+      - fixtures/events/invalid/typed-value.json
+    files_changed:
+      - src/collector/responses.mjs
+      - src/collector/router.mjs
+      - tests/collector-router.test.mjs
+      - docs/collector/collector-route-scaffold.md
+      - conformance-matrix.yaml
+      - RECENT_LEARNINGS.md
+      - agent-evidence.yaml
+    promotion_decisions:
+      - source: event validation module
+        decision: use shared validator in route scaffold
+        runtime_code: true
+      - source: collector worker from prototype
+        decision: not promoted in this PR
+        runtime_code: false
+      - source: Cloudflare configuration
+        decision: not promoted in this PR
+        runtime_code: false
+      - source: storage bindings
+        decision: not introduced in this PR
+        runtime_code: false
+    commands_run:
+      - command: GitHub connector file writes
+        status: passed
+        evidence: Branch feature/collector-route-scaffold updated with scaffold routes, tests and docs.
+      - command: npm test
+        status: pending
+        evidence: Will be run by CI after PR creation.
+    tests_added:
+      - tests/collector-router.test.mjs
+    modules_added:
+      - src/collector/responses.mjs
+      - src/collector/router.mjs
+    conformance_updates:
+      - CONF-010
+    recent_learnings:
+      read: true
+      updated: true
+      entry: Collector routes should validate before storage exists.
+    security:
+      storage_promoted: false
+      cloudflare_config_promoted: false
+      raw_payload_logging: false
+    privacy:
+      route_uses_shared_validator: true
+      accepted_events_are_not_stored: true
+      validation_errors_are_structured: true
+    accessibility:
+      product_ui_promoted: false
+      accessibility_release_decision: not-applicable
+    risks:
+      - Scaffold is not deployed and does not include platform adapter code.
+      - CORS, rate limiting and storage policy are still future work.
+      - Future Cloudflare adapter must preserve the no-storage boundary until storage PR is reviewed.

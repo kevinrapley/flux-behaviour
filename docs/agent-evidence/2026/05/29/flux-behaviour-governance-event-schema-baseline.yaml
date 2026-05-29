@@ -1,0 +1,82 @@
+evidence_records:
+  - task_id: flux-behaviour-governance-event-schema-baseline
+    mode: docs-and-contract-promotion
+    repository: kevinrapley/flux-behaviour
+    risk_level: high
+    base_branch: main
+    working_branch: chore/governance-event-schema-baseline
+    files_read:
+      - README.md
+      - AGENTS.md
+      - RECENT_LEARNINGS.md
+      - docs/migration/source-inventory.md
+      - docs/governance/assurance-case.md
+      - kevinrapley/flux-behavioural-analytics README.md
+      - kevinrapley/flux-behavioural-analytics public/governance_pack/README.md
+      - kevinrapley/flux-behavioural-analytics public/governance_pack/flux_plain_english_onepager.md
+      - kevinrapley/flux-behavioural-analytics public/governance_pack/flux_ethics_impact.md
+      - kevinrapley/flux-behavioural-analytics public/governance_pack/flux_service_standard_mapping.md
+      - kevinrapley/flux-behavioural-analytics public/governance_pack/flux_governance_playbook.md
+      - kevinrapley/flux-behavioural-analytics public/governance_pack/flux_inclusivity_testing_plan.md
+      - kevinrapley/flux-behavioural-analytics public/flux_instrumentation_guide_v6.md
+      - kevinrapley/flux-behavioural-analytics config/flux_scoring_config_v6.10.json
+    files_changed:
+      - docs/product/what-flux-is.md
+      - docs/governance/ethics-impact.md
+      - docs/governance/service-standard-mapping.md
+      - docs/governance/inclusivity-testing-plan.md
+      - docs/governance/governance-playbook.md
+      - docs/instrumentation/event-taxonomy.md
+      - contracts/events/flux-event.schema.json
+      - config/scoring/flux-scoring-config.v6.10.reference.json
+      - tests/event-schema.test.mjs
+      - tests/scoring-config.test.mjs
+      - conformance-matrix.yaml
+      - RECENT_LEARNINGS.md
+      - agent-evidence.yaml
+    promotion_decisions:
+      - source: governance pack
+        decision: rewrite as maintained product and governance docs
+        runtime_code: false
+      - source: instrumentation guide
+        decision: promote as metadata-only event contract and taxonomy
+        runtime_code: false
+      - source: scoring config v6.10
+        decision: promote as reference-only config extract with tests
+        runtime_code: false
+      - source: collector worker
+        decision: not promoted in this PR
+        runtime_code: false
+      - source: wrangler.toml
+        decision: blocked from direct copy
+        runtime_code: false
+    commands_run:
+      - command: GitHub connector file writes
+        status: passed
+        evidence: Branch chore/governance-event-schema-baseline updated with docs, contracts and tests.
+    tests_added:
+      - tests/event-schema.test.mjs
+      - tests/scoring-config.test.mjs
+    contracts_added:
+      - contracts/events/flux-event.schema.json
+      - config/scoring/flux-scoring-config.v6.10.reference.json
+    conformance_updates:
+      - CONF-005
+      - CONF-006
+    recent_learnings:
+      read: true
+      updated: true
+      entry: Promote product meaning and contracts before runtime code.
+    security:
+      runtime_code_promoted: false
+      secrets_promoted: false
+      direct_wrangle_configuration_copy: false
+    privacy:
+      event_schema_requires_consent_yes: true
+      content_bearing_fields_excluded: true
+    accessibility:
+      product_ui_promoted: false
+      accessibility_release_decision: not-applicable
+    risks:
+      - Event schema is baseline only and still needs runtime validator integration.
+      - Scoring config is reference-only and still needs full schema and engine validation before runtime use.

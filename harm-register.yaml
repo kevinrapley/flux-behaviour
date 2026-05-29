@@ -26,3 +26,17 @@ harms:
     owner: security-lead
     escalation_route: Product owner and data protection lead
     release_decision: blocked
+  - id: HARM-003
+    harm: Collector route could be exposed before CORS, rate limiting, retention and operational controls are defined.
+    affected_groups:
+      - All service users
+      - Vulnerable users
+      - Users completing high-stakes forms
+      - Service teams relying on telemetry evidence
+    likelihood: medium
+    severity: high
+    mitigation: Keep adapter storage disabled; do not add deployment configuration, routes or storage bindings until CORS, rate limits, retention, deletion and incident controls are reviewed.
+    residual_risk: medium
+    owner: product-lead
+    escalation_route: Product owner and security lead
+    release_decision: blocked
