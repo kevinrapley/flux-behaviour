@@ -270,8 +270,8 @@ evidence_records:
         status: passed
         evidence: Branch test/validation-fixture-baseline updated with fixtures, docs and tests.
       - command: npm test
-        status: pending
-        evidence: Will be run by CI after PR creation.
+        status: passed
+        evidence: CI passed after PR creation and review fixes.
     tests_added:
       - tests/event-fixtures.test.mjs
       - tests/scoring-reference-fixtures.test.mjs
@@ -301,3 +301,72 @@ evidence_records:
       - Event fixture validation uses a small local validator and should later be replaced or supplemented by a formal JSON Schema validator.
       - Scoring fixtures are reference cases only and do not implement scoring logic.
       - No runtime collector, SDK or storage code is promoted.
+  - task_id: flux-behaviour-event-validation-module
+    mode: runtime-neutral-validation-module
+    repository: kevinrapley/flux-behaviour
+    risk_level: high
+    base_branch: main
+    working_branch: feature/event-validation-module
+    files_read:
+      - README.md
+      - AGENTS.md
+      - RECENT_LEARNINGS.md
+      - contracts/events/flux-event.schema.json
+      - tests/event-fixtures.test.mjs
+      - fixtures/events/valid/*.json
+      - fixtures/events/invalid/*.json
+    files_changed:
+      - src/events/event-validation-errors.mjs
+      - src/events/validate-event.mjs
+      - src/events/index.mjs
+      - tests/event-validation.test.mjs
+      - docs/instrumentation/event-validation.md
+      - conformance-matrix.yaml
+      - RECENT_LEARNINGS.md
+      - agent-evidence.yaml
+    promotion_decisions:
+      - source: event schema and fixture tests
+        decision: extract reusable runtime-neutral validator
+        runtime_code: true
+      - source: collector worker
+        decision: not promoted in this PR
+        runtime_code: false
+      - source: SDK/browser instrumentation
+        decision: not promoted in this PR
+        runtime_code: false
+      - source: Cloudflare configuration
+        decision: not promoted in this PR
+        runtime_code: false
+    commands_run:
+      - command: GitHub connector file writes
+        status: passed
+        evidence: Branch feature/event-validation-module updated with validation module, tests and docs.
+      - command: npm test
+        status: pending
+        evidence: Will be run by CI after PR creation.
+    tests_added:
+      - tests/event-validation.test.mjs
+    modules_added:
+      - src/events/event-validation-errors.mjs
+      - src/events/validate-event.mjs
+      - src/events/index.mjs
+    conformance_updates:
+      - CONF-009
+    recent_learnings:
+      read: true
+      updated: true
+      entry: Runtime validation should come before collector or SDK implementation.
+    security:
+      collector_promoted: false
+      sdk_promoted: false
+      cloudflare_config_promoted: false
+      storage_promoted: false
+    privacy:
+      validator_reuses_event_contract: true
+      validation_errors_do_not_echo_submitted_values: true
+    accessibility:
+      product_ui_promoted: false
+      accessibility_release_decision: not-applicable
+    risks:
+      - Validator supports the current schema subset only and is not a full JSON Schema implementation.
+      - Future collector and SDK work must use this module or an explicitly superseding validator.
