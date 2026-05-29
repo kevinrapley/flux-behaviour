@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0.0",
+  "session_id": "session-valid-002",
+  "consent": "yes",
+  "origin": "formkit",
+  "event_class": "nav",
+  "action": "nav.tab.next",
+  "role": "control",
+  "element_key": "application.next-step",
+  "timestamp_ms": 1760000002400,
+  "navigation_direction": "forward",
+  "pointer_type": "keyboard"
+}
