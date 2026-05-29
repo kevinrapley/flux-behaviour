@@ -1,5 +1,5 @@
-import { validateEvent } from '../events/index.mjs';
 import { fluxEventSchema } from '../events/flux-event-schema.mjs';
+import { validateEventRuntime } from '../events/validate-event-runtime.mjs';
 import {
   invalidJsonResponse,
   jsonResponse,
@@ -59,7 +59,7 @@ async function handleCollect(request) {
     }]);
   }
 
-  const validation = validateEvent(event, fluxEventSchema);
+  const validation = validateEventRuntime(event, fluxEventSchema);
 
   if (!validation.valid) {
     const bounded = validation['errors'].slice(0, MAX_DETAILS);
