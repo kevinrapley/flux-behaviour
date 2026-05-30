@@ -49,3 +49,7 @@ agent_evidence_registry:
       date: 2026-05-29
       path: docs/agent-evidence/2026/05/29/flux-behaviour-cloudflare-worker-adapter.yaml
       status: externalised
+    - task_id: flux-behaviour-collector-boundary-controls
+      date: 2026-05-29
+      path: docs/agent-evidence/2026/05/29/flux-behaviour-collector-boundary-controls.yaml
+      status: externalised

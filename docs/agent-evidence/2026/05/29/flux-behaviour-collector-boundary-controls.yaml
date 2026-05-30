@@ -1,0 +1,34 @@
+evidence_records:
+  - task_id: flux-behaviour-collector-boundary-controls
+    mode: collector-boundary-controls
+    repository: kevinrapley/flux-behaviour
+    risk_level: high
+    base_branch: main
+    working_branch: feature/collector-boundary-controls
+    files_changed:
+      - src/collector/boundary-controls.mjs
+      - src/cloudflare/worker.mjs
+      - tests/collector-boundary-controls.test.mjs
+      - docs/collector/boundary-controls.md
+      - conformance-matrix.yaml
+      - RECENT_LEARNINGS.md
+      - gap-register.yaml
+      - harm-register.yaml
+    decisions:
+      - Wrap collector route with boundary checks before storage work.
+      - Add configuration shape only; do not commit real origin values.
+      - Add rate-limit interface only; do not add a backing service.
+      - Preserve storage-disabled behaviour.
+    tests_added:
+      - tests/collector-boundary-controls.test.mjs
+    conformance_updates:
+      - CONF-012
+    gaps_recorded:
+      - GAP-004
+    harms_recorded:
+      - HARM-003
+    risks:
+      - Boundary controls are not deployment approval.
+      - Real origin allow-list still needs review.
+      - Rate limiting still needs an implementation.
+      - Storage, retention and deletion controls remain future work.
