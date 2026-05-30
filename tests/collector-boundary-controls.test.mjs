@@ -96,6 +96,25 @@ test('collector boundary rejects oversized requests before validation', async ()
   assert.equal(body.error.code, 'request_too_large');
 });
 
+test('collector boundary rejects oversized requests without content length', async () => {
+  const policy = createBoundaryPolicy({
+    allowedOrigins: ['https://service.example'],
+    maxBodyBytes: 10
+  });
+  const response = await applyCollectorBoundary(request('/collect', {
+    method: 'POST',
+    headers: {
+      origin: 'https://service.example',
+      'content-type': 'application/json'
+    },
+    body: JSON.stringify({ payload: 'this-body-is-too-large' })
+  }), policy, handleCollectorRequest);
+  const body = await json(response);
+
+  assert.equal(response.status, 413);
+  assert.equal(body.error.code, 'request_too_large');
+});
+
 test('collector boundary rejects rate-limited requests through stub interface', async () => {
   const policy = createBoundaryPolicy({
     allowedOrigins: ['https://service.example'],
