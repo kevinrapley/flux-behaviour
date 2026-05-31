@@ -4,6 +4,10 @@ Recent learnings created by the LLM agent in reverse-chronological order (most r
 
 ---
 
+## 2026-05-30 — Storage readiness should define contracts before bindings
+
+Before introducing R2, D1, Queues or any write path, the collector needs a storage contract, disabled-store behaviour, retention and deletion design, and tests proving accepted events still return `stored: false`.
+
 ## 2026-05-29 — Boundary controls should precede storage bindings
 
 Before introducing storage, the collector boundary needs explicit controls for CORS, preflight, allowed methods and headers, request body limits and rate-limit interfaces. These controls reduce exposure risk but do not replace production deployment review.
