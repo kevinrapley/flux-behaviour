@@ -71,3 +71,9 @@ records:
     actual_evidence: Boundary control scaffold added on feature/collector-boundary-controls with storage still disabled
     status: present
     owner: product-lead
+  - id: CONF-013
+    rule: Storage writes must not be introduced until storage readiness controls are documented and tested
+    expected_evidence: src/collector/storage-contract.mjs, tests/collector-storage-contract.test.mjs and docs/collector/storage-readiness.md exist
+    actual_evidence: Storage contract and readiness documentation added on feature/collector-storage-readiness with storage still disabled
+    status: present
+    owner: product-lead
