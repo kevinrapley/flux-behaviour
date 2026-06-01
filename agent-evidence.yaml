@@ -53,3 +53,7 @@ agent_evidence_registry:
       date: 2026-05-29
       path: docs/agent-evidence/2026/05/29/flux-behaviour-collector-boundary-controls.yaml
       status: externalised
+    - task_id: flux-behaviour-collector-storage-readiness
+      date: 2026-05-30
+      path: docs/agent-evidence/2026/05/30/flux-behaviour-collector-storage-readiness.yaml
+      status: externalised
