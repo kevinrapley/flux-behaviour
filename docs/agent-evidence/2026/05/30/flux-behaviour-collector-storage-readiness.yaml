@@ -1,0 +1,34 @@
+evidence_records:
+  - task_id: flux-behaviour-collector-storage-readiness
+    mode: collector-storage-readiness
+    repository: kevinrapley/flux-behaviour
+    risk_level: high
+    base_branch: main
+    working_branch: feature/collector-storage-readiness
+    files_changed:
+      - src/collector/storage-contract.mjs
+      - tests/collector-storage-contract.test.mjs
+      - docs/collector/storage-readiness.md
+      - conformance-matrix.yaml
+      - RECENT_LEARNINGS.md
+      - gap-register.yaml
+      - harm-register.yaml
+    decisions:
+      - Add storage contract and disabled store only.
+      - Do not add R2, D1, Queue or Durable Object bindings.
+      - Do not add wrangler configuration or deployment routes.
+      - Preserve collector responses with stored false.
+      - Document retention, deletion, index and storage decision criteria before implementation.
+    tests_added:
+      - tests/collector-storage-contract.test.mjs
+    conformance_updates:
+      - CONF-013
+    gaps_recorded:
+      - GAP-004
+    harms_recorded:
+      - HARM-003
+    risks:
+      - Storage readiness does not permit live storage.
+      - Retention and deletion policy still require review.
+      - Production storage choice is not made in this PR.
+      - No storage writes are introduced.
