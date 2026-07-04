@@ -1,0 +1,36 @@
+// Demo prototype styles built from the official GOV.UK Frontend package.
+
+@use 'govuk-frontend/dist/govuk' with (
+	$govuk-page-width: 1020px,
+	$govuk-assets-path: '/assets/govuk/assets/'
+);
+
+.flux-code-block {
+	background: #f3f2f1;
+	border: 1px solid #b1b4b6;
+	overflow-x: auto;
+	padding: govuk.govuk-spacing(4);
+
+	code {
+		font-family: monospace;
+		font-size: 1rem;
+		line-height: 1.4;
+	}
+}
+
+.flux-chart__graphic {
+	min-height: 120px;
+	width: 100%;
+}
+
+.flux-chart__axis text,
+.flux-chart__data-label,
+.flux-chart__axis-label {
+	fill: #414042;
+	font-family: 'GDS Transport', arial, sans-serif;
+	font-size: 0.875rem;
+}
+
+.flux-chart__source {
+	color: #505a5d;
+}

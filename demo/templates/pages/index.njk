@@ -1,0 +1,48 @@
+{% extends "layout.njk" %}
+
+{% block content %}
+<div class="govuk-grid-row">
+	<div class="govuk-grid-column-two-thirds">
+		<h1 class="govuk-heading-xl">Add behavioural analytics to your service</h1>
+		<p class="govuk-body-l">Flux Behaviour measures where people struggle in digital services using consented, metadata-only events. It never records what people type, who they are, or anything they did not agree to share.</p>
+
+		<h2 class="govuk-heading-l">Install the tag</h2>
+		<p class="govuk-body">Add this snippet to every page of your service, like you would with other analytics tags:</p>
+		<pre class="flux-code-block"><code>&lt;script&gt;
+  window.flux = window.flux || function () {
+    (window.flux.q = window.flux.q || []).push(arguments);
+  };
+&lt;/script&gt;
+&lt;script type="module"
+  src="https://your-flux-host/assets/flux/sdk/flux-browser.install.mjs"
+  data-flux-endpoint="https://your-collector.example/collect"&gt;&lt;/script&gt;</code></pre>
+
+		<h2 class="govuk-heading-l">Ask for consent, then send events</h2>
+		<p class="govuk-body">The tag drops every event until the person grants consent. Nothing is queued or stored before that point.</p>
+		<pre class="flux-code-block"><code>flux('consent', 'granted');
+flux('event', 'nav', 'page.loaded', { role: 'page', element_key: 'start' });
+flux('event', 'focus', 'field.blur', {
+  role: 'field',
+  element_key: 'full-name',
+  duration_ms: 1200,
+  edit_count: 3,
+  value_length: 12
+});</code></pre>
+
+		<h2 class="govuk-heading-l">What the tag will never send</h2>
+		<ul class="govuk-list govuk-list--bullet">
+			<li>typed values or free-text content</li>
+			<li>names, emails or other direct identifiers</li>
+			<li>any event before consent, or after consent is revoked</li>
+			<li>any field outside the published event contract — unknown fields are stripped before validation and invalid events are dropped, not sent</li>
+		</ul>
+
+		<a href="/journey/" role="button" draggable="false" class="govuk-button govuk-button--start" data-module="govuk-button">
+			Try the demo journey
+			<svg class="govuk-button__start-icon" xmlns="http://www.w3.org/2000/svg" width="17.5" height="19" viewBox="0 0 33 40" aria-hidden="true" focusable="false">
+				<path fill="currentColor" d="M0 0h13l20 20-20 20H0l20-20z"></path>
+			</svg>
+		</a>
+	</div>
+</div>
+{% endblock %}
