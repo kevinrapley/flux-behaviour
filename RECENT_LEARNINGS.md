@@ -4,6 +4,18 @@ Recent learnings created by the LLM agent in reverse-chronological order (most r
 
 ---
 
+## 2026-07-04 — The SDK must validate against the shared contract before transport
+
+The browser tag reuses the same schema module and runtime validator as the collector, strips unknown fields before validation and drops invalid events instead of sending them. Client and server enforcing one contract means a compromised or buggy page cannot widen what leaves the browser. Consent is a hard gate, not a flag on the payload: without it events are dropped, never queued.
+
+## 2026-07-04 — Demo honesty requires labelling fixtures and delivery uncertainty
+
+The demo dashboard renders fixture data while collector storage is disabled, and says so on the page. The journey event log says "emitted" rather than "sent", because sendBeacon acceptance does not confirm delivery. Demo surfaces must not imply capability the system does not have.
+
+## 2026-07-04 — GOV.UK demo build mirrors the ResearchOps pattern
+
+The demo uses govuk-frontend v6 from npm, a Sass entry point, Nunjucks page rendering and static output to a gitignored public/ directory, following the working ResearchOps build. Charts follow ONS Charts conventions (per-breakpoint config, accessible summaries, source lines) pending direct vendoring of ONSdigital/Charts.
+
 ## 2026-05-29 — Boundary controls should precede storage bindings
 
 Before introducing storage, the collector boundary needs explicit controls for CORS, preflight, allowed methods and headers, request body limits and rate-limit interfaces. These controls reduce exposure risk but do not replace production deployment review.

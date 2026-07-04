@@ -53,3 +53,7 @@ agent_evidence_registry:
       date: 2026-05-29
       path: docs/agent-evidence/2026/05/29/flux-behaviour-collector-boundary-controls.yaml
       status: externalised
+    - task_id: flux-behaviour-sdk-tag-and-demo-prototype
+      date: 2026-07-04
+      path: docs/agent-evidence/2026/07/04/flux-behaviour-sdk-tag-and-demo-prototype.yaml
+      status: externalised

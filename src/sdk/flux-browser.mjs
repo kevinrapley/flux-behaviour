@@ -62,7 +62,10 @@ function runCommand(tag, args) {
 }
 
 function readEndpointFromScript(windowLike) {
-  const script = windowLike.document?.currentScript;
+  // document.currentScript is null for module scripts, so fall back to the
+  // first script tag carrying the data attribute.
+  const script = windowLike.document?.currentScript
+    ?? windowLike.document?.querySelector?.('script[data-flux-endpoint]');
   const endpoint = script?.dataset?.fluxEndpoint;
   return typeof endpoint === 'string' && endpoint !== '' ? endpoint : null;
 }
