@@ -32,7 +32,7 @@ test('event schema declares metadata-only consented event contract', () => {
 
 test('representative event satisfies required baseline fields', () => {
   const event = {
-    schema_version: '1.0.0',
+    schema_version: '1.1.0',
     session_id: 'session-1234',
     consent: 'yes',
     origin: 'formkit',

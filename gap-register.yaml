@@ -62,3 +62,12 @@ gaps:
     action: Add collector-side acceptance metrics when storage is promoted.
     owner: product-lead
     status: open
+  - id: GAP-008
+    title: Playground signal mappings are demonstration heuristics
+    severity: low
+    observed_state: The playground scores use the v6.10 engine reference parameters, but the event-to-stimulus mappings are hand-tuned demo heuristics labelled as such on the page.
+    expected_state: Signal mappings derived from the validated scoring model with reference-case coverage before any score leaves a demo context.
+    risk: Viewers could over-trust demo score movements as validated behavioural measurement.
+    action: Replace heuristic mappings with validated model logic when scoring is promoted, keeping the interpretation policy guardrails.
+    owner: product-lead
+    status: open

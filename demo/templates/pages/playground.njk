@@ -1,0 +1,76 @@
+{% extends "layout.njk" %}
+
+{% block content %}
+<div class="govuk-grid-row">
+	<div class="govuk-grid-column-two-thirds">
+		<span class="govuk-caption-xl">Playground</span>
+		<h1 class="govuk-heading-xl">Watch behavioural dimensions respond</h1>
+		<p class="govuk-body">Interact with the controls below and watch the scores rise and fall in real time. Scores start at the neutral value of 50, are smoothed and rate-limited, and decay back toward neutral when you stop. The engine parameters come from the Flux v6.10 scoring reference; the signal mappings are demonstration heuristics.</p>
+		<div class="govuk-inset-text">
+			Scores describe interaction patterns for service improvement. They must never be read as judgements about a person's competence, honesty or ability.
+		</div>
+		<div class="govuk-button-group">
+			<button type="button" class="govuk-button" data-module="govuk-button" id="playground-consent">Grant consent and start</button>
+			<button type="button" class="govuk-button govuk-button--secondary" data-module="govuk-button" id="playground-reset">Reset scores</button>
+		</div>
+	</div>
+</div>
+
+<div class="govuk-grid-row" id="playground-zone" hidden>
+	<div class="govuk-grid-column-one-third">
+		<h2 class="govuk-heading-m">Try these</h2>
+
+		<div class="govuk-form-group">
+			<label class="govuk-label" for="playground-text">Type steadily, then make corrections</label>
+			<div class="govuk-hint">Steady typing raises Proficiency. Backspacing lowers it and nudges Frustration.</div>
+			<input class="govuk-input" id="playground-text" type="text" data-flux-field="playground-text">
+		</div>
+
+		<div class="govuk-form-group">
+			<label class="govuk-label" for="playground-textarea">Dwell on a longer answer</label>
+			<div class="govuk-hint">Long focus without progress raises Cognitive Load. Pasting raises Efficiency.</div>
+			<textarea class="govuk-textarea" id="playground-textarea" rows="3" data-flux-field="playground-textarea"></textarea>
+		</div>
+
+		<div class="govuk-form-group">
+			<label class="govuk-label" for="playground-rage">Click this repeatedly, fast</label>
+			<button type="button" class="govuk-button govuk-button--warning" data-module="govuk-button" id="playground-rage">Nothing happens</button>
+			<div class="govuk-hint">Rage-clicks spike Frustration and dent Efficiency.</div>
+		</div>
+
+		<details class="govuk-details" id="playground-help">
+			<summary class="govuk-details__summary">
+				<span class="govuk-details__summary-text">Open help (raises Cognitive Load)</span>
+			</summary>
+			<div class="govuk-details__text">Help use is a support signal, not a deficit. In the scoring policy it prompts content review, never user judgement.</div>
+		</details>
+
+		<button type="button" class="govuk-button" data-module="govuk-button" id="playground-complete">Complete the task</button>
+		<div class="govuk-hint">Completion lifts Efficiency, Engagement and Wayfinding.</div>
+
+		<p class="govuk-body-s" id="playground-session-note"></p>
+	</div>
+
+	<div class="govuk-grid-column-two-thirds">
+		<figure class="flux-chart" aria-describedby="playground-bars-summary">
+			<h2 class="govuk-heading-m">Current scores</h2>
+			<p class="govuk-body-s" id="playground-bars-summary">Live 0 to 100 scores per dimension. Bands follow the scoring reference: 70 and over green, 40 to 69 amber, under 40 red. The dashed line marks neutral (50).</p>
+			<div id="playground-score-bars" class="flux-chart__graphic" aria-hidden="true"></div>
+		</figure>
+
+		<figure class="flux-chart" aria-describedby="playground-lines-summary">
+			<h2 class="govuk-heading-m">Last 60 seconds</h2>
+			<p class="govuk-body-s" id="playground-lines-summary">Rolling score history per dimension, showing smoothing, rate limits and decay toward neutral.</p>
+			<div id="playground-score-lines" class="flux-chart__graphic" aria-hidden="true"></div>
+			<figcaption class="flux-chart__source govuk-body-s">Engine parameters: Flux scoring reference v6.10. Signal mappings: demo heuristics.</figcaption>
+		</figure>
+	</div>
+</div>
+
+<script type="application/json" id="flux-playground-config">{{ playgroundJson | safe }}</script>
+{% endblock %}
+
+{% block scripts %}
+<script src="/assets/vendor/d3.min.js"></script>
+<script type="module" src="/assets/demo/flux-playground.js" data-flux-endpoint="{{ collectorEndpoint }}"></script>
+{% endblock %}

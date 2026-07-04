@@ -18,6 +18,7 @@ test('demo build renders the GOV.UK prototype pages', () => {
     const index = readFileSync(join(outputRoot, 'index.html'), 'utf8');
     const journey = readFileSync(join(outputRoot, 'journey/index.html'), 'utf8');
     const dashboard = readFileSync(join(outputRoot, 'dashboard/index.html'), 'utf8');
+    const playground = readFileSync(join(outputRoot, 'playground/index.html'), 'utf8');
 
     assert.match(index, /govuk-template/);
     assert.match(index, /window\.flux/);
@@ -32,6 +33,13 @@ test('demo build renders the GOV.UK prototype pages', () => {
     assert.match(dashboard, /validation-errors-chart/);
     assert.match(dashboard, /flux-dashboard-data/);
     assert.match(dashboard, /fixture data/i);
+
+    assert.match(playground, /playground-score-bars/);
+    assert.match(playground, /playground-score-lines/);
+    assert.match(playground, /flux-playground-config/);
+    assert.match(playground, /"neutral":\s*50/);
+    assert.match(playground, /Efficiency/);
+    assert.match(playground, /never be read as judgements/i);
   } finally {
     rmSync(outputRoot, { recursive: true, force: true });
   }

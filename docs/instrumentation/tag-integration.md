@@ -40,6 +40,14 @@ flux('event', 'input', 'field.blur', {
 });
 ```
 
+Contract version 1.1.0 adds richer interaction metadata, all of it content-free:
+
+- `key_press_count`, `backspace_count` — typing volume and corrections; key identity is never recorded, only "printable", "backspace/delete" or "other"
+- `chars_per_minute` — typing speed derived from inter-key timing
+- `paste_count` — clipboard use as a count, never clipboard content
+- `revisit_count` — how many times a field was refocused
+- `pointer_type` — whether focus arrived by mouse, touch, pen or keyboard
+
 Every event is built against the published event contract (`contracts/events/flux-event.schema.json`) and validated locally before transport:
 
 - fields outside the optional metadata allowlist are stripped before validation, so typed values, free text and identifiers cannot leave the page

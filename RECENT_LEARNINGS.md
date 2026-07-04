@@ -4,6 +4,14 @@ Recent learnings created by the LLM agent in reverse-chronological order (most r
 
 ---
 
+## 2026-07-04 — Rich behavioural capture can stay content-free
+
+Typing speed, corrections, clipboard use, revisits and input method are all measurable as bounded counts and timings without recording key identity or content. Contract v1.1.0 adds these as optional metadata; the capture layer reduces keys to printable/backspace/other at the point of listening, so content never exists in the pipeline. Contract version bumps ripple through fixtures, tests and the SDK constant — the drift test between the schema module and the JSON contract catches misses.
+
+## 2026-07-04 — Playground scores need engine fidelity and interpretation guardrails together
+
+The playground runs the v6.10 engine reference parameters (neutral, EMA, median filter, rate limit, decay, deadband) so score movement feels like the real model, but the event-to-stimulus mappings are demo heuristics and the page says so. Score displays must carry the interpretation policy (service improvement only, never user judgement) wherever they appear, including demos.
+
 ## 2026-07-04 — The SDK must validate against the shared contract before transport
 
 The browser tag reuses the same schema module and runtime validator as the collector, strips unknown fields before validation and drops invalid events instead of sending them. Client and server enforcing one contract means a compromised or buggy page cannot widen what leaves the browser. Consent is a hard gate, not a flag on the payload: without it events are dropped, never queued.

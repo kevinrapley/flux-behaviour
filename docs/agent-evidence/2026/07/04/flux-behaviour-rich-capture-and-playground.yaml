@@ -1,0 +1,84 @@
+evidence_records:
+  - task_id: flux-behaviour-rich-capture-and-playground
+    mode: contract-extension-and-demo-playground
+    repository: kevinrapley/flux-behaviour
+    risk_level: high
+    base_branch: main
+    working_branch: feature/sdk-tag-and-demo-prototype
+    files_read:
+      - config/scoring/flux-scoring-config.v6.10.reference.json
+      - fixtures/scoring/reference-cases/scoring-reference-cases.json
+      - tests/flux-event-schema-module.test.mjs
+      - tests/event-schema.test.mjs
+      - src/events/flux-event-schema.mjs
+    files_changed:
+      - src/events/flux-event-schema.mjs
+      - contracts/events/flux-event.schema.json
+      - src/sdk/flux-tag.mjs
+      - fixtures/events/valid (schema_version bump)
+      - fixtures/events/invalid (schema_version bump)
+      - tests/event-schema.test.mjs
+      - tests/event-validation.test.mjs
+      - tests/score-engine.test.mjs
+      - tests/demo-build.test.mjs
+      - demo/assets/flux-field-capture.js
+      - demo/assets/flux-score-engine.mjs
+      - demo/assets/flux-score-charts.js
+      - demo/assets/flux-playground.js
+      - demo/assets/demo-journey.js
+      - demo/templates/pages/playground.njk
+      - demo/templates/layout.njk
+      - scripts/demo/render-demo-pages.mjs
+      - docs/instrumentation/tag-integration.md
+      - docs/product/demo-prototype.md
+      - gap-register.yaml
+      - RECENT_LEARNINGS.md
+      - agent-evidence.yaml
+    promotion_decisions:
+      - source: event contract v1.0.0
+        decision: extended to v1.1.0 with content-free interaction metadata (key_press_count, backspace_count, paste_count, chars_per_minute, revisit_count); key identity reduced to printable/backspace/other at capture
+        runtime_code: true
+      - source: flux-behavioural-analytics playground lineage
+        decision: rebuilt as a GOV.UK page with ONS-pattern live charts; score engine implements the v6.10 engine reference parameters as demo logic in demo/assets, not promoted production scoring
+        runtime_code: true
+      - source: v6.10 signal-to-dimension model logic
+        decision: not promoted; playground uses labelled demo heuristics (GAP-008)
+        runtime_code: false
+    commands_run:
+      - command: npm test
+        status: passed
+        evidence: 61 tests passing including 6 score-engine tests validating neutral start, rate limiting, decay, bounds and deadband against the reference config file.
+      - command: npm run demo:build
+        status: passed
+        evidence: Playground verified in a browser; six dimensions moved under simulated typing, corrections and rage-clicks, and journey log showed key_press_count, backspace_count, chars_per_minute, paste_count, revisit_count and pointer_type.
+      - command: npm run validate
+        status: passed
+        evidence: Governance file check passed.
+      - command: npm run security:secrets
+        status: passed
+        evidence: Secret pattern scan passed.
+    tests_added:
+      - tests/score-engine.test.mjs
+    modules_added:
+      - demo/assets/flux-field-capture.js
+      - demo/assets/flux-score-engine.mjs
+      - demo/assets/flux-score-charts.js
+      - demo/assets/flux-playground.js
+    recent_learnings:
+      read: true
+      updated: true
+      entry: Rich behavioural capture can stay content-free; playground scores need engine fidelity and interpretation guardrails together.
+    security:
+      collector_promoted: false
+      sdk_promoted: true
+      cloudflare_config_promoted: false
+      notes: New metadata fields are bounded integers; the SDK allowlist and schema reject anything content-bearing. Which keys were pressed is never recorded.
+    privacy:
+      consent_gate: Unchanged; playground requires an explicit consent action before capture starts.
+      data_boundary: Typing speed, corrections and clipboard use are counts and timings only; clipboard content, key identity and typed values never enter the pipeline.
+    accessibility:
+      status: partial
+      notes: Playground charts have accessible summaries and the interpretation warning; full audit remains GAP-006.
+    risks:
+      - Playground signal mappings are demo heuristics (GAP-008).
+      - Contract v1.1.0 is not yet consumed by any deployed collector.

@@ -1,8 +1,22 @@
+import { readFileSync } from 'node:fs';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import nunjucks from 'nunjucks';
 
 import { dashboardChartData, helpRequests } from '../../demo/data/dashboard-fixture.mjs';
+
+const scoringReference = JSON.parse(
+  readFileSync(resolve(process.cwd(), 'config/scoring/flux-scoring-config.v6.10.reference.json'), 'utf8')
+);
+
+const playgroundDimensionKeys = ['eff', 'nav', 'prof', 'eng', 'frustration', 'cogload'];
+const playgroundConfig = {
+  dimensions: scoringReference.dimensions
+    .filter((dimension) => playgroundDimensionKeys.includes(dimension.key))
+    .map(({ key, label }) => ({ key, label })),
+  params: scoringReference.engine_reference,
+  bands: scoringReference.ui_score_bands
+};
 
 const root = resolve(process.cwd());
 const outputRoot = resolve(root, process.argv[2] ?? 'public');
@@ -32,6 +46,16 @@ const pages = [
       pageTitle: 'Apply for a demo licence',
       activeNavigation: 'journey',
       collectorEndpoint
+    }
+  },
+  {
+    template: 'pages/playground.njk',
+    output: 'playground/index.html',
+    context: {
+      pageTitle: 'Behavioural dimensions playground',
+      activeNavigation: 'playground',
+      collectorEndpoint,
+      playgroundJson: JSON.stringify(playgroundConfig)
     }
   },
   {

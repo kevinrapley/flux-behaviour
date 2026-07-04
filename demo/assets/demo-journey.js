@@ -1,4 +1,5 @@
 import { installFluxBrowserTag, createBrowserTransport } from '/assets/flux/sdk/flux-browser.mjs';
+import { instrumentFields } from '/assets/demo/flux-field-capture.js';
 
 const endpoint = document.currentScript?.dataset?.fluxEndpoint
   ?? document.querySelector('script[data-flux-endpoint]')?.dataset?.fluxEndpoint
@@ -31,7 +32,7 @@ function appendLogRow(event, status) {
   if (!logBody) return;
 
   const metadata = Object.entries(event)
-    .filter(([key]) => !['schema_version', 'session_id', 'consent', 'origin', 'event_class', 'action', 'role', 'element_key'].includes(key))
+    .filter(([key]) => !['schema_version', 'session_id', 'consent', 'origin', 'event_class', 'action', 'role', 'element_key', 'timestamp_ms'].includes(key))
     .map(([key, value]) => `${key}: ${value}`)
     .join(', ');
 
@@ -48,7 +49,7 @@ function appendLogRow(event, status) {
   logBody.prepend(row);
 }
 
-const tag = installFluxBrowserTag(window, {
+installFluxBrowserTag(window, {
   endpoint,
   transport: demoTransport,
   onDrop(drop) {
@@ -73,44 +74,8 @@ document.getElementById('flux-consent-reject')?.addEventListener('click', () => 
   if (logStatus) logStatus.textContent = 'Consent rejected. No events will be emitted.';
 });
 
-const focusStartTimes = new Map();
-const editCounts = new Map();
-
-document.addEventListener('focusin', (event) => {
-  const fieldKey = event.target?.dataset?.fluxField;
-  if (!fieldKey) return;
-
-  focusStartTimes.set(fieldKey, performance.now());
-  window.flux('event', 'focus', 'field.focus', { role: 'field', element_key: fieldKey });
-});
-
-document.addEventListener('focusout', (event) => {
-  const target = event.target;
-  const fieldKey = target?.dataset?.fluxField;
-  if (!fieldKey) return;
-
-  const startedAt = focusStartTimes.get(fieldKey);
-  const durationMs = startedAt === undefined ? 0 : Math.round(performance.now() - startedAt);
-  focusStartTimes.delete(fieldKey);
-
-  const details = {
-    role: 'field',
-    element_key: fieldKey,
-    duration_ms: Math.min(durationMs, 3600000),
-    edit_count: Math.min(editCounts.get(fieldKey) ?? 0, 10000)
-  };
-
-  if (typeof target.value === 'string') {
-    details.value_length = Math.min(target.value.length, 10000);
-  }
-
-  window.flux('event', 'input', 'field.blur', details);
-});
-
-document.addEventListener('input', (event) => {
-  const fieldKey = event.target?.dataset?.fluxField;
-  if (!fieldKey) return;
-  editCounts.set(fieldKey, (editCounts.get(fieldKey) ?? 0) + 1);
+instrumentFields(document, (eventClass, action, details) => {
+  window.flux('event', eventClass, action, details);
 });
 
 document.getElementById('journey-help')?.addEventListener('toggle', (event) => {
@@ -130,5 +95,3 @@ document.getElementById('demo-journey-form')?.addEventListener('submit', (event)
     navigation_direction: 'forward'
   });
 });
-
-export { tag };

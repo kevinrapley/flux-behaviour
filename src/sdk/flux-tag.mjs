@@ -1,7 +1,7 @@
 import { fluxEventSchema } from '../events/flux-event-schema.mjs';
 import { validateEventRuntime } from '../events/validate-event-runtime.mjs';
 
-const SCHEMA_VERSION = '1.0.0';
+const SCHEMA_VERSION = '1.1.0';
 const SDK_ORIGIN = 'sdk';
 
 const OPTIONAL_METADATA_KEYS = Object.freeze([
@@ -12,7 +12,12 @@ const OPTIONAL_METADATA_KEYS = Object.freeze([
   'navigation_direction',
   'pointer_type',
   'file_count',
-  'file_size_bucket'
+  'file_size_bucket',
+  'key_press_count',
+  'backspace_count',
+  'paste_count',
+  'chars_per_minute',
+  'revisit_count'
 ]);
 
 /**

@@ -57,3 +57,7 @@ agent_evidence_registry:
       date: 2026-07-04
       path: docs/agent-evidence/2026/07/04/flux-behaviour-sdk-tag-and-demo-prototype.yaml
       status: externalised
+    - task_id: flux-behaviour-rich-capture-and-playground
+      date: 2026-07-04
+      path: docs/agent-evidence/2026/07/04/flux-behaviour-rich-capture-and-playground.yaml
+      status: externalised

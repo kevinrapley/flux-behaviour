@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.0.0",
+  "schema_version": "1.1.0",
   "session_id": "session-valid-001",
   "consent": "yes",
   "origin": "formkit",
