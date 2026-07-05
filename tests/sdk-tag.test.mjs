@@ -126,6 +126,43 @@ test('generated session ids satisfy the event contract', () => {
   assert.equal(sessionId.length >= 8 && sessionId.length <= 128, true);
 });
 
+test('generated session ids use custom randomSource when provided', () => {
+  const customRandom = () => 0.5; // maps to index 18 in alphabet -> 's'
+  const sessionId = generateSessionId(customRandom);
+  assert.equal(sessionId, 'flux-ssssssssssssssssssssssss');
+});
+
+test('generated session ids use secure crypto when crypto is available', () => {
+  const originalCrypto = Object.getOwnPropertyDescriptor(globalThis, 'crypto');
+  let getRandomValuesCalled = false;
+
+  const mockCrypto = {
+    getRandomValues: (array) => {
+      getRandomValuesCalled = true;
+      array.fill(0); // 0 / 4294967296 = 0 -> alphabet[0] = 'a'
+      return array;
+    }
+  };
+
+  Object.defineProperty(globalThis, 'crypto', {
+    value: mockCrypto,
+    configurable: true,
+    writable: true
+  });
+
+  try {
+    const sessionId = generateSessionId();
+    assert.equal(getRandomValuesCalled, true);
+    assert.equal(sessionId, 'flux-aaaaaaaaaaaaaaaaaaaaaaaa');
+  } finally {
+    if (originalCrypto) {
+      Object.defineProperty(globalThis, 'crypto', originalCrypto);
+    } else {
+      delete globalThis.crypto;
+    }
+  }
+});
+
 test('browser tag drains the pre-install command queue in order', async () => {
   const { sent, transport } = createCapturingTransport();
   const queue = [

@@ -88,7 +88,26 @@ export function createFluxTag(options = {}) {
 }
 
 export function generateSessionId(randomSource) {
-  const random = typeof randomSource === 'function' ? randomSource : Math.random;
+  let random = randomSource;
+  if (typeof random !== 'function') {
+    const cryptoObj = typeof globalThis !== 'undefined' && globalThis.crypto
+      ? globalThis.crypto
+      : (typeof window !== 'undefined' ? window.crypto : null);
+
+    if (cryptoObj && typeof cryptoObj.getRandomValues === 'function') {
+      const alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
+      const array = new Uint32Array(24);
+      cryptoObj.getRandomValues(array);
+      let suffix = '';
+      for (let i = 0; i < 24; i++) {
+        const floatVal = array[i] / 4294967296;
+        suffix += alphabet[Math.floor(floatVal * alphabet.length)];
+      }
+      return `flux-${suffix}`;
+    }
+    random = Math.random;
+  }
+
   const alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
   let suffix = '';
 

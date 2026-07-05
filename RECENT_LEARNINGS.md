@@ -4,9 +4,9 @@ Recent learnings created by the LLM agent in reverse-chronological order (most r
 
 ---
 
-## 2026-07-05 — Fetch with credentials omit and keepalive ensures compliant transit
+## 2026-07-05 — Fetch with credentials omit and keepalive ensures compliant transit; secure randomness for session IDs
 
-We prefer `fetch` over `sendBeacon` because browser implementations of `sendBeacon` always append credentials (cookies, client certs) on same-site or credentialed endpoints, violating our strict credentials-omitted transport contract. Utilizing `fetch` with `credentials: 'omit'` and `keepalive: true` ensures safe, credentials-free delivery of behavioural analytics even during page unloads, falling back to `sendBeacon` only when `fetch` is unavailable. Additionally, we now dynamically generate CycloneDX SBOM components from `package-lock.json` dependencies to keep inventory controls complete as dependencies are added.
+We prefer `fetch` over `sendBeacon` because browser implementations of `sendBeacon` always append credentials (cookies, client certs) on same-site or credentialed endpoints, violating our strict credentials-omitted transport contract. Utilizing `fetch` with `credentials: 'omit'` and `keepalive: true` ensures safe, credentials-free delivery of behavioural analytics even during page unloads, falling back to `sendBeacon` only when `fetch` is unavailable. To resolve CodeQL's insecure randomness alert, we now prioritize the cryptographically secure `crypto.getRandomValues` (CSPRNG) API for generating session IDs, falling back to `Math.random` only when platform crypto APIs are unavailable. Additionally, we now dynamically generate CycloneDX SBOM components from `package-lock.json` dependencies to keep inventory controls complete as dependencies are added.
 
 ## 2026-07-05 — Behavioural credit requires substance; speed without consideration is not trust
 
