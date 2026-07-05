@@ -28,9 +28,10 @@ export function applyAutoNudges(engine, ev, t = Date.now()) {
   switch (`${ev.type}.${ev.metric}`) {
     case 'act.rage':
       maybe('frustration', 4);
-      maybe('efficiency', -1);
+      maybe('efficiency', -1.5);
       maybe('engagement', -1);
       add('predictive', -1);
+      add('stability', -0.5);
       return;
 
     case 'act.tabs':
@@ -201,13 +202,22 @@ export function applyAutoNudges(engine, ev, t = Date.now()) {
       // Derived from the v6.10 formula directions:
       //   eff = lerp(30,95,path_efficiency); nav penalised by misses and
       //   submovements; prof penalised by acquire time and submovements.
-      const eff = Number(ev.path_efficiency ?? 0.5);
       const subs = Number(ev.submovements ?? 0);
       const misses = Number(ev.misses_per_target ?? 0);
-      add('efficiency', (lerp(30, 95, eff) - 62.5) / 20);
+
+      // Misses matter whether or not the click was aimed.
       add('wayfinding', -(misses * 0.5) - Math.max(0, subs - 20) * 0.02);
-      add('proficiency', -Math.max(0, subs - 20) * 0.02);
       if (misses > 0) maybe('frustration', 0.5 * misses);
+
+      // Efficiency is only assessable when there was a real aiming movement.
+      // A stationary or twitch click (rage clicking, re-clicking under the
+      // cursor) is not an aiming task, so it earns no efficiency credit and
+      // no penalty here — rage and miss mappings own those penalties.
+      if (!ev.aimed) return;
+
+      const eff = Number(ev.path_efficiency ?? 0.5);
+      add('efficiency', (lerp(30, 95, eff) - 62.5) / 20);
+      add('proficiency', -Math.max(0, subs - 20) * 0.02);
       if (ev.band === 'GREEN') add('predictive', 0.3);
       return;
     }

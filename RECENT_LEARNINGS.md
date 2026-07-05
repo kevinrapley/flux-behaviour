@@ -4,6 +4,10 @@ Recent learnings created by the LLM agent in reverse-chronological order (most r
 
 ---
 
+## 2026-07-05 — Signals need coherence guards, not just correct formulas
+
+Rage clicking scored as high Efficiency because short pointer trails measured as perfectly efficient paths, and rapid re-clicks re-counted the previous approach from the hover window. The fixes are model-level, not weight tweaks: a stationary click is not an aiming task (efficiency 0, no credit), and an acquisition consumes its approach (one approach, one score). When two signals can be produced by the same behaviour, check they cannot pull a dimension in contradictory directions.
+
 ## 2026-07-05 — The original engine is event-driven; sampling engines silence single events
 
 The v46.s engine applies each stimulus as its own tick (EMA → median → deadband → rate limit against time since that channel last moved), with decay on a separate clock. A fixed-interval sampling engine median-filters single events (like a help open) to zero. Porting the original semantics — including seeding channel clocks and backdating seeds before replay bursts — is what makes every behaviour visibly move its dimensions.

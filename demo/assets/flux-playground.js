@@ -3,6 +3,7 @@ import { createScoreEngine } from '/assets/demo/flux-score-engine.mjs';
 import { applyAutoNudges } from '/assets/demo/flux-nudges.js';
 import { instrumentBehaviour } from '/assets/demo/flux-behaviour-signals.js';
 import { createScoreBars, createScoreLines } from '/assets/demo/flux-score-charts.js';
+import { initPointerViz } from '/assets/demo/flux-pointer-viz.js';
 
 const config = JSON.parse(document.getElementById('flux-playground-config').textContent);
 const { dimensions, params, bands, ndBand, personas, composites: compositeDefs } = config;
@@ -84,11 +85,20 @@ function handleSignal(ev) {
   if (label) label.textContent = `${ev.type}.${ev.metric}`;
 
   if (ev.type === 'edit' && ev.metric === 'typing') lastWpm = Math.round(ev.value / 5);
-  if (ev.type === 'pointer' && ev.metric === 'ndAttempt') updateNdPanel(ev);
+  if (ev.type === 'pointer' && ev.metric === 'ndAttempt') {
+    updateNdPanel(ev);
+    pointerViz.addAttempt(ev);
+  }
 
   const emitter = contractEmit[`${ev.type}.${ev.metric}`];
   if (emitter && tag.hasConsent) emitter(ev);
 }
+
+const pointerViz = initPointerViz(document, window, {
+  pathCanvasId: 'pointer-path-canvas',
+  scatterCanvasId: 'acquisition-matrix-canvas',
+  ndBand
+});
 
 const behaviour = instrumentBehaviour(document, window, { onSignal: handleSignal, ndBand });
 const counts = behaviour.counts;
@@ -107,7 +117,7 @@ function updateNdPanel(nd) {
   el('nd-subs').textContent = String(nd.submovements);
   el('nd-time').textContent = `${nd.time_to_acquire_ms} ms`;
   el('nd-misses').textContent = String(nd.misses_per_target);
-  el('nd-band').textContent = nd.band;
+  el('nd-band').textContent = nd.aimed ? nd.band : `${nd.band} (unaimed click)`;
 }
 
 function renderCounts() {

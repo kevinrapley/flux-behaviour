@@ -73,45 +73,75 @@ export function bandForNd(metrics, ndBand) {
   if (eff >= efficiency.green_min && subs <= submovements.green_max) band = 'GREEN';
   else if (eff >= efficiency.amber_min || subs <= submovements.amber_max) band = 'AMBER';
 
-  // adjustBandForMisses, as in the original pointer visualisation.
-  if (misses >= 3) return 'RED';
-  if (misses >= 1 && band === 'GREEN') return 'AMBER';
+  // adjustBandForMisses, exactly as in the original pointer visualisation:
+  // many misses force RED; a few misses deny GREEN.
+  if (misses >= 10) return 'RED';
+  if (misses >= 3 && band === 'GREEN') return 'AMBER';
   return band;
 }
 
+// Kinematics from the original pointerviz.js: 3-point box smoothing, a 1.2px
+// jitter gate, ~22 degree submovement threshold, and — critically — a click
+// with no real approach movement scores efficiency 0, not 1. There was no
+// aiming task to be efficient at.
 export function computeKinematics(points) {
   if (!points || points.length < 2) {
-    return { path_efficiency: 1, submovements: 0, duration_ms: 0 };
+    return { path_efficiency: 0, submovements: 1, duration_ms: 0, aimed: false };
   }
 
+  const smoothed = new Array(points.length);
+  smoothed[0] = points[0];
+  for (let i = 1; i < points.length - 1; i += 1) {
+    smoothed[i] = {
+      x: (points[i - 1].x + points[i].x + points[i + 1].x) / 3,
+      y: (points[i - 1].y + points[i].y + points[i + 1].y) / 3,
+      t: points[i].t
+    };
+  }
+  smoothed[points.length - 1] = points[points.length - 1];
+
+  const MIN_STEP = 1.2;
+  const MIN_ANGLE = (22 * Math.PI) / 180;
   let pathLength = 0;
-  let submovements = 0;
+  let submovements = 1;
   let lastAngle = null;
 
-  for (let i = 1; i < points.length; i += 1) {
-    const dx = points[i].x - points[i - 1].x;
-    const dy = points[i].y - points[i - 1].y;
+  for (let i = 1; i < smoothed.length; i += 1) {
+    const dx = smoothed[i].x - smoothed[i - 1].x;
+    const dy = smoothed[i].y - smoothed[i - 1].y;
     const segment = Math.hypot(dx, dy);
-    if (segment < 2) continue;
     pathLength += segment;
+    if (segment < MIN_STEP) continue;
 
     const angle = Math.atan2(dy, dx);
     if (lastAngle !== null) {
       let diff = Math.abs(angle - lastAngle);
       if (diff > Math.PI) diff = 2 * Math.PI - diff;
-      if (diff > SUBMOVEMENT_ANGLE_RAD) submovements += 1;
+      if (diff > MIN_ANGLE) {
+        submovements += 1;
+        lastAngle = angle;
+      }
+    } else {
+      lastAngle = angle;
     }
-    lastAngle = angle;
   }
 
   const direct = Math.hypot(
-    points[points.length - 1].x - points[0].x,
-    points[points.length - 1].y - points[0].y
+    smoothed[smoothed.length - 1].x - smoothed[0].x,
+    smoothed[smoothed.length - 1].y - smoothed[0].y
   );
-  const path_efficiency = pathLength > 0 ? Math.max(0, Math.min(1, direct / pathLength)) : 1;
-  const duration_ms = Math.round(points[points.length - 1].t - points[0].t);
+  const duration_ms = Math.round(smoothed[smoothed.length - 1].t - smoothed[0].t);
 
-  return { path_efficiency, submovements: Math.min(submovements, 200), duration_ms };
+  // An "aimed" acquisition needs a real approach: meaningful travel over
+  // meaningful time. Stationary or twitch clicks are not aiming tasks and
+  // must never earn efficiency credit (this is what made rage clicks look
+  // efficient before).
+  const aimed = direct >= 30 && duration_ms >= 100;
+  const path_efficiency = aimed
+    ? Math.max(0, Math.min(1, direct / Math.max(pathLength, 1e-6)))
+    : 0;
+
+  return { path_efficiency, submovements: Math.min(submovements, 60), duration_ms, aimed };
 }
 
 // Typing-speed maths shared with the journey capture.
@@ -320,27 +350,37 @@ export function instrumentBehaviour(doc, win, { onSignal, ndBand }) {
   }, 1000);
 
   // ---- Pointer kinematics and miss policy (pointerviz.js, sdk v1.5.0) ----
-  let pointerTrail = [];
+  // Bursts, as in the original: an acquisition attempt starts at pointerdown,
+  // seeded with the last 800ms of approach hover, and closes at pointerup on
+  // an interactive target. Kinematics are computed on the burst, never on a
+  // rolling window, so repeated stationary clicks measure as unaimed.
+  const HOVER_WINDOW_MS = 800;
+  const hoverTrail = [];
+  let burst = null;
   const missQueue = [];
   let latestNd = null;
 
   doc.addEventListener('pointermove', (e) => {
     const t = performance.now();
-    pointerTrail.push({ x: e.clientX, y: e.clientY, t });
-    // Keep the trail to the current approach: drop points older than 3s.
-    while (pointerTrail.length > 0 && t - pointerTrail[0].t > 3000) pointerTrail.shift();
-    if (pointerTrail.length > 400) pointerTrail.shift();
+    hoverTrail.push({ x: e.clientX, y: e.clientY, t });
+    while (hoverTrail.length > 0 && t - hoverTrail[0].t > HOVER_WINDOW_MS) hoverTrail.shift();
+    if (burst) burst.push({ x: e.clientX, y: e.clientY, t });
   }, { passive: true, capture: true });
 
   doc.addEventListener('pointerdown', (e) => {
     if (!(e.target instanceof win.Element)) return;
-    missQueue.push({ el: e.target, x: e.clientX, y: e.clientY, t: performance.now() });
-    while (missQueue.length > 0 && performance.now() - missQueue[0].t > ACQUISITION_WINDOW_MS) missQueue.shift();
+    const t = performance.now();
+    burst = hoverTrail.filter((p) => t - p.t <= HOVER_WINDOW_MS).map((p) => ({ ...p }));
+    burst.push({ x: e.clientX, y: e.clientY, t });
+    missQueue.push({ el: e.target, x: e.clientX, y: e.clientY, t });
+    while (missQueue.length > 0 && t - missQueue[0].t > ACQUISITION_WINDOW_MS) missQueue.shift();
   }, true);
 
   doc.addEventListener('pointerup', (e) => {
     const clicked = e.target;
-    if (!(clicked instanceof win.Element)) return;
+    const points = burst;
+    burst = null;
+    if (!(clicked instanceof win.Element) || !points) return;
 
     let target = null;
     for (const sel of INTERACTIVE_INCLUDE) {
@@ -360,14 +400,19 @@ export function instrumentBehaviour(doc, win, { onSignal, ndBand }) {
     }
     counts.misses += misses;
 
-    const kinematics = computeKinematics(pointerTrail);
-    pointerTrail = [];
+    points.push({ x: e.clientX, y: e.clientY, t: performance.now() });
+    // An acquisition consumes its approach. Without this, rapid re-clicks
+    // inherit the previous approach from the hover window and each rage
+    // click re-scores as a fresh aimed, efficient acquisition.
+    hoverTrail.length = 0;
+    const kinematics = computeKinematics(points);
     const metrics = {
       pointerType: e.pointerType || 'mouse',
       path_efficiency: Math.round(kinematics.path_efficiency * 100) / 100,
       submovements: kinematics.submovements,
       time_to_acquire_ms: kinematics.duration_ms,
-      misses_per_target: misses
+      misses_per_target: misses,
+      aimed: kinematics.aimed
     };
     metrics.band = bandForNd(metrics, ndBand);
     latestNd = metrics;

@@ -217,6 +217,14 @@
 			<figcaption class="flux-chart__source govuk-body-s">Engine and mappings: Flux v6.10 / engine v46.s lineage. Demo heuristics where the original defined only formula direction.</figcaption>
 		</figure>
 
+		<h3 class="govuk-heading-m">Pointer path</h3>
+		<p class="govuk-body-s" id="pointer-path-summary">Your pointer movement over the last 5 seconds, mapped into this panel. The oldest part of the path fades out.</p>
+		<canvas id="pointer-path-canvas" class="playground-canvas" height="140" aria-describedby="pointer-path-summary" role="img" aria-label="Pointer path preview"></canvas>
+
+		<h3 class="govuk-heading-m">Acquisition matrix</h3>
+		<p class="govuk-body-s" id="acquisition-matrix-summary">Every click plotted by path efficiency (vertical) and submovements (horizontal). Green marks efficient, direct acquisitions; red marks poor ones, including unaimed rapid clicking. Dashed lines are the banding thresholds; older clicks fade.</p>
+		<canvas id="acquisition-matrix-canvas" class="playground-canvas playground-canvas--matrix" height="220" aria-describedby="acquisition-matrix-summary" role="img" aria-label="Acquisition matrix of clicks by efficiency"></canvas>
+
 		<h3 class="govuk-heading-m">Pointer telemetry</h3>
 		<p class="govuk-body-s">Kinematics of your last control acquisition (the original ND attempt).</p>
 		<dl class="govuk-summary-list govuk-summary-list--no-border playground-nd" id="playground-nd">

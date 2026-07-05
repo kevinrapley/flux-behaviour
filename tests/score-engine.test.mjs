@@ -195,22 +195,88 @@ test('persona replays move their target dimensions', () => {
 
 test('nd banding follows the v6.10 thresholds with miss adjustment', () => {
   assert.equal(bandForNd({ path_efficiency: 0.9, submovements: 5, misses_per_target: 0 }, ndBand), 'GREEN');
-  assert.equal(bandForNd({ path_efficiency: 0.9, submovements: 5, misses_per_target: 1 }, ndBand), 'AMBER');
+  assert.equal(bandForNd({ path_efficiency: 0.9, submovements: 5, misses_per_target: 1 }, ndBand), 'GREEN');
+  assert.equal(bandForNd({ path_efficiency: 0.9, submovements: 5, misses_per_target: 10 }, ndBand), 'RED');
   assert.equal(bandForNd({ path_efficiency: 0.5, submovements: 30, misses_per_target: 0 }, ndBand), 'AMBER');
   assert.equal(bandForNd({ path_efficiency: 0.2, submovements: 80, misses_per_target: 0 }, ndBand), 'RED');
-  assert.equal(bandForNd({ path_efficiency: 0.9, submovements: 5, misses_per_target: 3 }, ndBand), 'RED');
+  assert.equal(bandForNd({ path_efficiency: 0.9, submovements: 5, misses_per_target: 3 }, ndBand), 'AMBER');
 });
 
 test('pointer kinematics: straight paths are efficient, zigzags count submovements', () => {
-  const straight = Array.from({ length: 20 }, (_, i) => ({ x: i * 10, y: 0, t: i * 10 }));
+  const straight = Array.from({ length: 20 }, (_, i) => ({ x: i * 20, y: 0, t: i * 10 }));
   const straightMetrics = computeKinematics(straight);
+  assert.ok(straightMetrics.aimed, 'a long steady approach is an aimed acquisition');
   assert.ok(straightMetrics.path_efficiency > 0.95);
-  assert.equal(straightMetrics.submovements, 0);
+  assert.ok(straightMetrics.submovements <= 2);
 
   const zigzag = Array.from({ length: 20 }, (_, i) => ({ x: i * 10, y: i % 2 === 0 ? 0 : 40, t: i * 10 }));
   const zigzagMetrics = computeKinematics(zigzag);
-  assert.ok(zigzagMetrics.path_efficiency < 0.5, `zigzag efficiency ${zigzagMetrics.path_efficiency}`);
-  assert.ok(zigzagMetrics.submovements > 5);
+  assert.ok(
+    zigzagMetrics.path_efficiency < ndBand.efficiency.green_min,
+    `zigzag efficiency ${zigzagMetrics.path_efficiency} stays below the green threshold`
+  );
+  assert.ok(zigzagMetrics.submovements > 5, `zigzag submovements counted: ${zigzagMetrics.submovements}`);
+});
+
+test('stationary and twitch clicks are unaimed and score zero efficiency', () => {
+  assert.deepEqual(computeKinematics([]), { path_efficiency: 0, submovements: 1, duration_ms: 0, aimed: false });
+  assert.equal(computeKinematics([{ x: 100, y: 100, t: 0 }]).aimed, false);
+
+  // A rapid re-click with a few pixels of drift: no aiming task happened.
+  const twitch = [
+    { x: 100, y: 100, t: 0 },
+    { x: 102, y: 101, t: 20 },
+    { x: 101, y: 103, t: 40 }
+  ];
+  const metrics = computeKinematics(twitch);
+  assert.equal(metrics.aimed, false);
+  assert.equal(metrics.path_efficiency, 0);
+});
+
+test('rage clicking cannot raise efficiency (coherence regression)', () => {
+  const scoring = engine();
+  let t = T0 + 1000;
+
+  // A rage burst as the page would emit it: three unaimed acquisitions on
+  // the same control, then the rage signal itself.
+  for (let i = 0; i < 3; i += 1) {
+    t += 150;
+    applyAutoNudges(scoring, {
+      type: 'pointer',
+      metric: 'ndAttempt',
+      path_efficiency: 0,
+      submovements: 1,
+      misses_per_target: 0,
+      aimed: false,
+      band: 'RED'
+    }, t);
+  }
+  t += 50;
+  applyAutoNudges(scoring, { type: 'act', metric: 'rage' }, t);
+
+  const scores = scoring.snapshot();
+  assert.ok(scores.efficiency < engineParams.neutral, `efficiency fell under rage: ${scores.efficiency}`);
+  assert.ok(scores.frustration > engineParams.neutral, `frustration rose under rage: ${scores.frustration}`);
+});
+
+test('unaimed clicks earn no efficiency credit; aimed direct clicks do', () => {
+  const unaimed = engine();
+  for (let i = 1; i <= 5; i += 1) {
+    applyAutoNudges(unaimed, {
+      type: 'pointer', metric: 'ndAttempt',
+      path_efficiency: 0, submovements: 1, misses_per_target: 0, aimed: false, band: 'RED'
+    }, T0 + i * 500);
+  }
+  assert.equal(unaimed.snapshot().efficiency, engineParams.neutral);
+
+  const aimed = engine();
+  for (let i = 1; i <= 5; i += 1) {
+    applyAutoNudges(aimed, {
+      type: 'pointer', metric: 'ndAttempt',
+      path_efficiency: 0.95, submovements: 3, misses_per_target: 0, aimed: true, band: 'GREEN'
+    }, T0 + i * 500);
+  }
+  assert.ok(aimed.snapshot().efficiency > engineParams.neutral);
 });
 
 test('score bands match the reference values', () => {
