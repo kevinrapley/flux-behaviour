@@ -4,6 +4,10 @@ Recent learnings created by the LLM agent in reverse-chronological order (most r
 
 ---
 
+## 2026-07-05 — Fetch with credentials omit and keepalive ensures compliant transit
+
+We prefer `fetch` over `sendBeacon` because browser implementations of `sendBeacon` always append credentials (cookies, client certs) on same-site or credentialed endpoints, violating our strict credentials-omitted transport contract. Utilizing `fetch` with `credentials: 'omit'` and `keepalive: true` ensures safe, credentials-free delivery of behavioural analytics even during page unloads, falling back to `sendBeacon` only when `fetch` is unavailable. Additionally, we now dynamically generate CycloneDX SBOM components from `package-lock.json` dependencies to keep inventory controls complete as dependencies are added.
+
 ## 2026-07-05 — Behavioural credit requires substance; speed without consideration is not trust
 
 The full mapping sweep found a family of contradictions with one shape: activity being rewarded as competence. Aimless tab-hunting built ICT Level and soothed frustration; three empty forward tabs scored as a wayfinding streak; Cmd+Z counted as tool fluency; box-ticking in under a second earned full trust; anxious password toggling raised epistemic confidence; failed lookup retries read as engagement; button-mashing pumped ethics. The unifying fixes: credit requires substance (creditable input, a real selection, a considered pause), corrections and retries are struggle signals, and repeats do not compound meaning. Enforced by a standing invariant test that no signal pushes one dimension in both directions, plus per-contradiction regressions, and documented in docs/product/behaviour-signal-map.md.

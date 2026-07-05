@@ -163,11 +163,36 @@ test('browser tag reads the endpoint from the script dataset', async () => {
   assert.equal(sent[0].endpoint, 'https://collector.example.test/collect');
 });
 
-test('browser transport prefers sendBeacon and falls back to fetch', async () => {
+test('browser transport prefers fetch and falls back to sendBeacon', async () => {
   const beaconCalls = [];
   const fetchCalls = [];
 
-  const beaconWindow = {
+  // 1. fetch is available and succeeds: sendBeacon must not be called
+  const fetchWindow = {
+    Blob,
+    navigator: {
+      sendBeacon: (endpoint, payload) => {
+        throw new Error('sendBeacon should not run when fetch succeeds');
+      }
+    },
+    fetch: async (endpoint, init) => {
+      fetchCalls.push({ endpoint, init });
+      return { ok: true };
+    }
+  };
+
+  await createBrowserTransport(fetchWindow)({
+    endpoint: 'https://collector.example.test/collect',
+    body: '{"ok":true}'
+  });
+  assert.equal(fetchCalls.length, 1);
+  assert.equal(fetchCalls[0].init.method, 'POST');
+  assert.equal(fetchCalls[0].init.headers['content-type'], 'application/json');
+  assert.equal(fetchCalls[0].init.credentials, 'omit');
+  assert.equal(fetchCalls[0].init.keepalive, true);
+
+  // 2. fetch throws: falls back to sendBeacon
+  const fallbackWindow = {
     Blob,
     navigator: {
       sendBeacon: (endpoint, payload) => {
@@ -176,22 +201,7 @@ test('browser transport prefers sendBeacon and falls back to fetch', async () =>
       }
     },
     fetch: async () => {
-      throw new Error('fetch should not run when sendBeacon succeeds');
-    }
-  };
-
-  await createBrowserTransport(beaconWindow)({
-    endpoint: 'https://collector.example.test/collect',
-    body: '{"ok":true}'
-  });
-  assert.equal(beaconCalls.length, 1);
-
-  const fallbackWindow = {
-    Blob,
-    navigator: { sendBeacon: () => false },
-    fetch: async (endpoint, init) => {
-      fetchCalls.push({ endpoint, init });
-      return { ok: true };
+      throw new Error('fetch failed');
     }
   };
 
@@ -199,8 +209,23 @@ test('browser transport prefers sendBeacon and falls back to fetch', async () =>
     endpoint: 'https://collector.example.test/collect',
     body: '{"ok":true}'
   });
-  assert.equal(fetchCalls.length, 1);
-  assert.equal(fetchCalls[0].init.method, 'POST');
-  assert.equal(fetchCalls[0].init.headers['content-type'], 'application/json');
-  assert.equal(fetchCalls[0].init.credentials, 'omit');
+  assert.equal(beaconCalls.length, 1);
+  assert.equal(beaconCalls[0].endpoint, 'https://collector.example.test/collect');
+
+  // 3. fetch is not defined: falls back to sendBeacon
+  const noFetchWindow = {
+    Blob,
+    navigator: {
+      sendBeacon: (endpoint, payload) => {
+        beaconCalls.push({ endpoint, payload });
+        return true;
+      }
+    }
+  };
+
+  await createBrowserTransport(noFetchWindow)({
+    endpoint: 'https://collector.example.test/collect',
+    body: '{"ok":true}'
+  });
+  assert.equal(beaconCalls.length, 2);
 });

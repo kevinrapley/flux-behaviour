@@ -72,21 +72,28 @@ function readEndpointFromScript(windowLike) {
 
 export function createBrowserTransport(windowLike) {
   return async ({ endpoint, body }) => {
-    const navigatorLike = windowLike.navigator;
+    // Prefer fetch with keepalive: true and credentials: 'omit' to ensure credentials are not sent.
+    if (typeof windowLike.fetch === 'function') {
+      try {
+        await windowLike.fetch(endpoint, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body,
+          keepalive: true,
+          credentials: 'omit'
+        });
+        return;
+      } catch (err) {
+        // Fall back to sendBeacon if fetch fails (e.g. keepalive size limits or network issue).
+      }
+    }
 
+    const navigatorLike = windowLike.navigator;
     if (navigatorLike && typeof navigatorLike.sendBeacon === 'function') {
       const payload = new windowLike.Blob([body], { type: 'application/json' });
       if (navigatorLike.sendBeacon(endpoint, payload)) {
         return;
       }
     }
-
-    await windowLike.fetch(endpoint, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body,
-      keepalive: true,
-      credentials: 'omit'
-    });
   };
 }
