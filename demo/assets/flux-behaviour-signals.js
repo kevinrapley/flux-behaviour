@@ -1,0 +1,388 @@
+// Behavioural signal capture ported from the original playground modules
+// (flux-behavioural-analytics public/js/activity.js, formkit.js,
+// pointerviz.js, flux_sdk_v1.5.0.js miss policy). Everything measured is
+// interaction metadata: counts, timings, geometry and input methods.
+// Content is never read — key identity reduces to printable/backspace/other
+// and pointer capture stores coordinates, not targets' values.
+
+const RAGE_WINDOW_MS = 700;
+const CLICKS_BETWEEN_WINDOW_MS = 2000;
+const IDLE_EPISODE_MS = 6000;
+const CREDITABLE_WINDOW_MS = 3500;
+const ACQUISITION_WINDOW_MS = 1200;
+const SUBMOVEMENT_ANGLE_RAD = 0.9;
+
+const INTERACTIVE_INCLUDE = [
+  "input:not([type='hidden']):not([disabled])",
+  'select:not([disabled])',
+  'textarea:not([disabled])',
+  'button:not([disabled])',
+  "[role='button']:not([aria-disabled='true'])"
+];
+
+const MISS_EXCLUDE = [
+  'label',
+  "a:not([role='button'])",
+  'summary', 'details', 'fieldset', 'legend', 'svg', 'img',
+  "[aria-hidden='true']", "[tabindex='-1']"
+];
+
+export function createBehaviourCounts() {
+  return {
+    keypresses: 0,
+    corrections: 0,
+    pastes: 0,
+    autocompletes: 0,
+    shortcuts: 0,
+    fieldFocuses: 0,
+    revisits: 0,
+    tabMoves: 0,
+    clickMoves: 0,
+    forwardStreaks: 0,
+    backSkips: 0,
+    rageClicks: 0,
+    dwellLong: 0,
+    idleEpisodes: 0,
+    ndGreen: 0,
+    ndAmber: 0,
+    ndRed: 0,
+    misses: 0,
+    helpViews: 0,
+    lookups: 0,
+    validationErrors: 0,
+    errorRecoveries: 0,
+    submits: 0,
+    assuranceTicks: 0,
+    passwordToggles: 0,
+    handoffs: 0,
+    contextNotes: 0,
+    oversightAcks: 0,
+    policyBreaches: 0,
+    fatigueMarks: 0,
+    personaPlays: 0
+  };
+}
+
+export function bandForNd(metrics, ndBand) {
+  const { efficiency, submovements } = ndBand;
+  const eff = metrics.path_efficiency;
+  const subs = metrics.submovements;
+  const misses = metrics.misses_per_target ?? 0;
+
+  let band = 'RED';
+  if (eff >= efficiency.green_min && subs <= submovements.green_max) band = 'GREEN';
+  else if (eff >= efficiency.amber_min || subs <= submovements.amber_max) band = 'AMBER';
+
+  // adjustBandForMisses, as in the original pointer visualisation.
+  if (misses >= 3) return 'RED';
+  if (misses >= 1 && band === 'GREEN') return 'AMBER';
+  return band;
+}
+
+export function computeKinematics(points) {
+  if (!points || points.length < 2) {
+    return { path_efficiency: 1, submovements: 0, duration_ms: 0 };
+  }
+
+  let pathLength = 0;
+  let submovements = 0;
+  let lastAngle = null;
+
+  for (let i = 1; i < points.length; i += 1) {
+    const dx = points[i].x - points[i - 1].x;
+    const dy = points[i].y - points[i - 1].y;
+    const segment = Math.hypot(dx, dy);
+    if (segment < 2) continue;
+    pathLength += segment;
+
+    const angle = Math.atan2(dy, dx);
+    if (lastAngle !== null) {
+      let diff = Math.abs(angle - lastAngle);
+      if (diff > Math.PI) diff = 2 * Math.PI - diff;
+      if (diff > SUBMOVEMENT_ANGLE_RAD) submovements += 1;
+    }
+    lastAngle = angle;
+  }
+
+  const direct = Math.hypot(
+    points[points.length - 1].x - points[0].x,
+    points[points.length - 1].y - points[0].y
+  );
+  const path_efficiency = pathLength > 0 ? Math.max(0, Math.min(1, direct / pathLength)) : 1;
+  const duration_ms = Math.round(points[points.length - 1].t - points[0].t);
+
+  return { path_efficiency, submovements: Math.min(submovements, 200), duration_ms };
+}
+
+// Typing-speed maths shared with the journey capture.
+export function computeCharsPerMinute(printableCount, typingMs) {
+  if (printableCount < 2 || typingMs <= 0) return 0;
+  return Math.min(Math.round(printableCount / (typingMs / 60000)), 2000);
+}
+
+export function instrumentBehaviour(doc, win, { onSignal, ndBand }) {
+  const counts = createBehaviourCounts();
+  const signal = (s) => {
+    try { onSignal(s); } catch { /* observers must not break capture */ }
+  };
+
+  const isField = (el) => !!(el && el.matches && el.matches('input, textarea, select'));
+  const isText = (el) => !!(el && el.matches && el.matches("textarea, input:not([type='radio']):not([type='checkbox']):not([type='hidden'])"));
+  const matchesAny = (el, selectors) => selectors.some((sel) => {
+    try { return el.matches(sel) || !!el.closest(sel); } catch { return false; }
+  });
+
+  // ---- Creditable input tracking (formkit.js) ----
+  const fieldMeta = new WeakMap();
+  const meta = (el) => {
+    let m = fieldMeta.get(el);
+    if (!m) {
+      m = { creditableSince: 0, focusCount: 0, focusedAt: 0, keyPresses: 0, backspaces: 0, printable: 0, typingMs: 0, lastKeyAt: null };
+      fieldMeta.set(el, m);
+    }
+    return m;
+  };
+  const isCreditable = (el) => {
+    if (!el) return false;
+    const m = fieldMeta.get(el);
+    return !!m && m.creditableSince > 0 && performance.now() - m.creditableSince <= CREDITABLE_WINDOW_MS;
+  };
+
+  doc.addEventListener('input', (e) => {
+    const el = e.target;
+    if (!isText(el)) return;
+    const value = typeof el.value === 'string' ? el.value.trim() : '';
+    if (value.length >= 2 && /[A-Za-z0-9]/.test(value) && (!el.checkValidity || el.checkValidity())) {
+      meta(el).creditableSince = performance.now();
+    }
+    if (e.inputType === 'insertReplacementText') {
+      counts.autocompletes += 1;
+      signal({ type: 'act', metric: 'autocomplete' });
+    }
+  }, true);
+
+  // ---- Focus navigation: tabs, clicksBetween, streaks, revisits, dwell ----
+  let navMethod = 'click';
+  let lastFocused = null;
+  let lastBlurAt = 0;
+  let lastIndex = null;
+  let tabForward = 0;
+  let clickForward = 0;
+
+  win.addEventListener('keydown', (e) => {
+    if (e.key === 'Tab') navMethod = e.shiftKey ? 'tab-prev' : 'tab-next';
+    if ((e.metaKey || e.ctrlKey) && e.key.length === 1) {
+      counts.shortcuts += 1;
+      signal({ type: 'act', metric: 'shortcut' });
+    }
+  }, true);
+  ['pointerdown', 'touchstart'].forEach((t) => win.addEventListener(t, () => { navMethod = 'click'; }, true));
+
+  const fieldIndex = (el) => {
+    const fields = Array.from(doc.querySelectorAll('input, textarea, select'));
+    return fields.indexOf(el);
+  };
+
+  doc.addEventListener('focusin', (e) => {
+    const el = e.target;
+    if (!isField(el)) return;
+
+    const m = meta(el);
+    m.focusCount += 1;
+    m.focusedAt = performance.now();
+    counts.fieldFocuses += 1;
+    if (m.focusCount > 1) {
+      counts.revisits += 1;
+      signal({ type: 'field', metric: 'revisit', value: m.focusCount - 1 });
+    }
+
+    const idx = fieldIndex(el);
+    let dir = 'start';
+    if (lastIndex !== null && lastIndex !== -1 && idx !== -1 && idx !== lastIndex) {
+      const diff = idx - lastIndex;
+      dir = diff === 1 ? 'forward' : diff === -1 ? 'back' : 'skip';
+    }
+    const nav = { dir, method: navMethod };
+
+    if (navMethod === 'tab-next' || navMethod === 'tab-prev') {
+      counts.tabMoves += 1;
+      signal({ type: 'act', metric: 'tabs', nav, creditable: isCreditable(lastFocused) });
+    } else if (lastFocused && lastFocused !== el && Date.now() - lastBlurAt < CLICKS_BETWEEN_WINDOW_MS) {
+      counts.clickMoves += 1;
+      signal({ type: 'act', metric: 'clicksBetween', nav, creditable: isCreditable(lastFocused) });
+    }
+    if (dir === 'back' || dir === 'skip') counts.backSkips += 1;
+
+    if (dir === 'forward' && navMethod === 'tab-next') { tabForward += 1; clickForward = 0; }
+    else if (dir === 'forward') { clickForward += 1; tabForward = 0; }
+    else { tabForward = 0; clickForward = 0; }
+
+    if (tabForward > 0 && tabForward % 3 === 0) {
+      counts.forwardStreaks += 1;
+      signal({ type: 'act', metric: 'streak3', method: 'tab' });
+    }
+    if (clickForward > 0 && clickForward % 3 === 0) {
+      counts.forwardStreaks += 1;
+      signal({ type: 'act', metric: 'streak3', method: 'click' });
+    }
+
+    lastFocused = el;
+    lastIndex = idx;
+  }, true);
+
+  doc.addEventListener('focusout', (e) => {
+    const el = e.target;
+    if (!isField(el)) return;
+    lastBlurAt = Date.now();
+
+    const m = meta(el);
+    if (m.focusedAt) {
+      const dwell = (performance.now() - m.focusedAt) / 1000;
+      if (dwell > 0.05) {
+        if (dwell >= 4) counts.dwellLong += 1;
+        signal({ type: 'time', metric: 'fieldDwell', value: Math.round(dwell * 100) / 100 });
+      }
+      m.focusedAt = 0;
+    }
+
+    if (m.keyPresses >= 5 && m.backspaces / m.keyPresses > 0.25) {
+      signal({ type: 'edit', metric: 'corrections', value: m.backspaces });
+    }
+    const cpm = computeCharsPerMinute(m.printable, m.typingMs);
+    if (cpm > 0) signal({ type: 'edit', metric: 'typing', value: cpm });
+    m.keyPresses = 0; m.backspaces = 0; m.printable = 0; m.typingMs = 0; m.lastKeyAt = null;
+  }, true);
+
+  // ---- Typing volume and corrections ----
+  doc.addEventListener('keydown', (e) => {
+    const el = e.target;
+    if (!isText(el)) return;
+    const m = meta(el);
+    const now = performance.now();
+    m.keyPresses += 1;
+    counts.keypresses += 1;
+    if (e.key === 'Backspace' || e.key === 'Delete') {
+      m.backspaces += 1;
+      counts.corrections += 1;
+    } else if (e.key.length === 1) {
+      m.printable += 1;
+      if (m.lastKeyAt !== null) {
+        const gap = now - m.lastKeyAt;
+        if (gap > 0 && gap < 2000) m.typingMs += gap;
+      }
+    }
+    m.lastKeyAt = now;
+  }, true);
+
+  doc.addEventListener('paste', (e) => {
+    if (!isText(e.target)) return;
+    counts.pastes += 1;
+    signal({ type: 'edit', metric: 'paste' });
+  }, true);
+
+  // ---- Rage clicks (activity.js) ----
+  const rageClicks = [];
+  doc.addEventListener('click', (e) => {
+    const el = e.target;
+    if (!el || (e.button !== undefined && e.button !== 0)) return;
+    const t = performance.now();
+    const key = el.id || el.name || el.tagName || 'el';
+    rageClicks.push({ t, key });
+    for (let i = rageClicks.length - 1; i >= 0; i -= 1) {
+      if (t - rageClicks[i].t > RAGE_WINDOW_MS) rageClicks.splice(i, 1);
+    }
+    if (rageClicks.filter((c) => c.key === key).length >= 3) {
+      counts.rageClicks += 1;
+      const reason = isText(el)
+        ? ((el.value || '').length === 0 ? 'empty_field' : 'control_nonresponsive')
+        : 'control_nonresponsive';
+      signal({ type: 'act', metric: 'rage', reason });
+      for (let i = rageClicks.length - 1; i >= 0; i -= 1) {
+        if (rageClicks[i].key === key) rageClicks.splice(i, 1);
+      }
+    }
+  }, true);
+
+  // ---- Idle episodes (activity.js, 6s of no interaction) ----
+  let lastActivity = Date.now();
+  let idleActive = false;
+  ['click', 'keydown', 'input', 'pointermove', 'scroll', 'focusin', 'pointerdown', 'touchstart']
+    .forEach((t) => win.addEventListener(t, () => {
+      if (idleActive) {
+        idleActive = false;
+        counts.idleEpisodes += 1;
+        signal({ type: 'time', metric: 'idleEpisode', value: Math.round((Date.now() - lastActivity) / 1000) });
+      }
+      lastActivity = Date.now();
+    }, { passive: true, capture: true }));
+  const idleTimer = setInterval(() => {
+    if (!idleActive && Date.now() - lastActivity >= IDLE_EPISODE_MS) idleActive = true;
+  }, 1000);
+
+  // ---- Pointer kinematics and miss policy (pointerviz.js, sdk v1.5.0) ----
+  let pointerTrail = [];
+  const missQueue = [];
+  let latestNd = null;
+
+  doc.addEventListener('pointermove', (e) => {
+    const t = performance.now();
+    pointerTrail.push({ x: e.clientX, y: e.clientY, t });
+    // Keep the trail to the current approach: drop points older than 3s.
+    while (pointerTrail.length > 0 && t - pointerTrail[0].t > 3000) pointerTrail.shift();
+    if (pointerTrail.length > 400) pointerTrail.shift();
+  }, { passive: true, capture: true });
+
+  doc.addEventListener('pointerdown', (e) => {
+    if (!(e.target instanceof win.Element)) return;
+    missQueue.push({ el: e.target, x: e.clientX, y: e.clientY, t: performance.now() });
+    while (missQueue.length > 0 && performance.now() - missQueue[0].t > ACQUISITION_WINDOW_MS) missQueue.shift();
+  }, true);
+
+  doc.addEventListener('pointerup', (e) => {
+    const clicked = e.target;
+    if (!(clicked instanceof win.Element)) return;
+
+    let target = null;
+    for (const sel of INTERACTIVE_INCLUDE) {
+      try { target = clicked.closest(sel); } catch { target = null; }
+      if (target) break;
+    }
+    if (!target) return;
+
+    const rect = target.getBoundingClientRect();
+    let misses = 0;
+    const cutoff = performance.now() - ACQUISITION_WINDOW_MS;
+    for (const m of missQueue) {
+      if (m.t < cutoff) continue;
+      if (matchesAny(m.el, MISS_EXCLUDE)) continue;
+      if (m.x >= rect.left && m.x <= rect.right && m.y >= rect.top && m.y <= rect.bottom) continue;
+      misses += 1;
+    }
+    counts.misses += misses;
+
+    const kinematics = computeKinematics(pointerTrail);
+    pointerTrail = [];
+    const metrics = {
+      pointerType: e.pointerType || 'mouse',
+      path_efficiency: Math.round(kinematics.path_efficiency * 100) / 100,
+      submovements: kinematics.submovements,
+      time_to_acquire_ms: kinematics.duration_ms,
+      misses_per_target: misses
+    };
+    metrics.band = bandForNd(metrics, ndBand);
+    latestNd = metrics;
+
+    if (metrics.band === 'GREEN') counts.ndGreen += 1;
+    else if (metrics.band === 'AMBER') counts.ndAmber += 1;
+    else counts.ndRed += 1;
+
+    signal({ type: 'pointer', metric: 'ndAttempt', ...metrics });
+  }, true);
+
+  return {
+    counts,
+    isCreditable,
+    latestNd: () => latestNd,
+    destroy() { clearInterval(idleTimer); }
+  };
+}

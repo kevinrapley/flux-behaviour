@@ -1,0 +1,96 @@
+evidence_records:
+  - task_id: flux-behaviour-full-playground-port
+    mode: prototype-audit-and-playground-port
+    repository: kevinrapley/flux-behaviour
+    risk_level: high
+    base_branch: main
+    working_branch: feature/sdk-tag-and-demo-prototype
+    source_audit:
+      repository: kevinrapley/flux-behavioural-analytics
+      method: full clone reviewed in scratchpad; no prototype code copied into this repository unreviewed
+      files_reviewed:
+        - config/flux_scoring_config_v6.10.json
+        - config/flux_sdk_v1.5.0.js
+        - public/index.html
+        - public/app/main.js
+        - public/js/constants.js
+        - public/js/engine.js
+        - public/js/events.js
+        - public/js/activity.js
+        - public/js/formkit.js
+        - public/js/frustration.js
+        - public/js/cohorts.js
+        - public/js/ui.js
+        - public/js/tuning.js
+        - public/js/pointerviz.js
+        - public/js/state.js
+      findings:
+        - The full config defines 20 dimensions; the governed reference extract records 16 with renamed exploratory keys.
+        - The engine is event-driven (per-stimulus ticks), with backskip_min_gap_ms absent from the reference extract.
+        - Frustration is a dual-channel virtual score (event pressure vs tone soothing).
+        - Pointer kinematics (nd_attempt) with a strict miss policy and GREEN/AMBER/RED banding are central to the model.
+        - The engine's backOrSkip helper was defined but never called in the original.
+        - The original "spelling/grammar" debug readout was never implemented; corrections counting is the content-free proxy.
+    files_changed:
+      - demo/data/playground-model.mjs
+      - demo/assets/flux-score-engine.mjs
+      - demo/assets/flux-nudges.js
+      - demo/assets/flux-behaviour-signals.js
+      - demo/assets/flux-playground.js
+      - demo/templates/pages/playground.njk
+      - demo/styles/demo.scss
+      - scripts/demo/render-demo-pages.mjs
+      - tests/score-engine.test.mjs
+      - docs/product/demo-prototype.md
+      - gap-register.yaml
+      - RECENT_LEARNINGS.md
+      - agent-evidence.yaml
+    promotion_decisions:
+      - source: public/js/engine.js (v46.s) and frustration.js
+        decision: ported as demo engine with dual-channel frustration; seeding fix so single events and replays move scores
+        runtime_code: true
+      - source: events.js applyAutoNudges, ui.js handlers, frustration soothing rules, persona deltas, cohort rules, composites
+        decision: ported into demo/data/playground-model.mjs and demo/assets/flux-nudges.js with provenance comments
+        runtime_code: true
+      - source: activity.js, formkit.js, pointerviz.js, sdk miss policy
+        decision: reimplemented as demo/assets/flux-behaviour-signals.js (idle, tabs/clicks navigation, creditable guards, streaks, rage, dwell, revisits, typing, pointer kinematics, miss counting, banding)
+        runtime_code: true
+      - source: R scoring pipeline and golden corpus
+        decision: not promoted; recorded in GAP-008 as the validation route for promoted scoring
+        runtime_code: false
+      - source: RUM SDK, sankey dashboards, governance pack
+        decision: not promoted in this task
+        runtime_code: false
+    commands_run:
+      - command: npm test
+        status: passed
+        evidence: 71 tests passing, including engine semantics (event-driven ticks, rate limit, decay, bounds, dual-channel frustration, back/skip burst limit), a regression test that opening help moves cognitive load, a test that every mapped behaviour moves at least one dimension, persona replays, nd banding and kinematics.
+      - command: npm run validate
+        status: passed
+        evidence: Governance file check passed.
+      - command: npm run security:secrets
+        status: passed
+        evidence: Secret pattern scan passed.
+      - command: npm run demo:build
+        status: passed
+        evidence: Playground verified in a browser; help moved cognitive load, policy breach moved ethics and trust alignment immediately, persona replay moved its target dimensions, all 20 dimension bars rendered, behaviour counts table updated live, cohort classification responded.
+    tests_added:
+      - tests/score-engine.test.mjs (rewritten for the ported engine and mappings)
+    recent_learnings:
+      read: true
+      updated: true
+      entry: The original engine is event-driven; rebuild claims need a source-repository audit, not memory.
+    security:
+      collector_promoted: false
+      sdk_promoted: false
+      cloudflare_config_promoted: false
+      notes: All new capture remains metadata-only; key identity reduces to printable/backspace/other and pointer capture stores coordinates and geometry only.
+    privacy:
+      consent_gate: Playground capture and scoring start only after an explicit consent action; contract events remain consent-gated in the SDK.
+      data_boundary: Scores are computed locally in the browser; only contract-valid metadata events are posted to the collector.
+    accessibility:
+      status: partial
+      notes: GOV.UK error summary with focus management, accessible chart summaries, summary-list telemetry panel; full audit remains GAP-006.
+    risks:
+      - Ported scoring is prototype lineage, not corpus-validated (GAP-008).
+      - Exploratory dimension mappings are derived from formula directions, labelled on page.

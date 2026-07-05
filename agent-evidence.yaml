@@ -61,3 +61,7 @@ agent_evidence_registry:
       date: 2026-07-04
       path: docs/agent-evidence/2026/07/04/flux-behaviour-rich-capture-and-playground.yaml
       status: externalised
+    - task_id: flux-behaviour-full-playground-port
+      date: 2026-07-05
+      path: docs/agent-evidence/2026/07/05/flux-behaviour-full-playground-port.yaml
+      status: externalised

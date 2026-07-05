@@ -4,6 +4,14 @@ Recent learnings created by the LLM agent in reverse-chronological order (most r
 
 ---
 
+## 2026-07-05 — The original engine is event-driven; sampling engines silence single events
+
+The v46.s engine applies each stimulus as its own tick (EMA → median → deadband → rate limit against time since that channel last moved), with decay on a separate clock. A fixed-interval sampling engine median-filters single events (like a help open) to zero. Porting the original semantics — including seeding channel clocks and backdating seeds before replay bursts — is what makes every behaviour visibly move its dimensions.
+
+## 2026-07-05 — Rebuild claims need a source-repository audit, not memory
+
+Scouring the original repository surfaced substantially more than the governed reference extract recorded: 20 dimensions (not 16), the never-called backOrSkip helper, the dual-channel frustration model, creditable-input guards, pointer miss policy with acquisition windows, personas, cohort rules, composites and engine tuning. It also surfaced honest negatives — the original's "spelling/grammar" readout was never implemented. Port from source, and record what was found unbuilt.
+
 ## 2026-07-04 — Rich behavioural capture can stay content-free
 
 Typing speed, corrections, clipboard use, revisits and input method are all measurable as bounded counts and timings without recording key identity or content. Contract v1.1.0 adds these as optional metadata; the capture layer reduces keys to printable/backspace/other at the point of listening, so content never exists in the pipeline. Contract version bumps ripple through fixtures, tests and the SDK constant — the drift test between the schema module and the JSON contract catches misses.

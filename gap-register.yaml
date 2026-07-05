@@ -63,11 +63,11 @@ gaps:
     owner: product-lead
     status: open
   - id: GAP-008
-    title: Playground signal mappings are demonstration heuristics
+    title: Playground scoring is ported prototype logic, not corpus-validated scoring
     severity: low
-    observed_state: The playground scores use the v6.10 engine reference parameters, but the event-to-stimulus mappings are hand-tuned demo heuristics labelled as such on the page.
-    expected_state: Signal mappings derived from the validated scoring model with reference-case coverage before any score leaves a demo context.
+    observed_state: The playground ports the original v46.s engine and the original playground's signal mappings (applyAutoNudges, frustration soothing, persona deltas), with exploratory-dimension mappings derived from the v6.10 formula directions.
+    expected_state: Promoted scoring validated against the original repository's golden corpus (R pipeline) before any score leaves a demo context.
     risk: Viewers could over-trust demo score movements as validated behavioural measurement.
-    action: Replace heuristic mappings with validated model logic when scoring is promoted, keeping the interpretation policy guardrails.
+    action: Validate the ported engine and mappings against the golden corpus cases when scoring is promoted.
     owner: product-lead
     status: open
