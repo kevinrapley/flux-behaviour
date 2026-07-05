@@ -61,15 +61,18 @@ const contractEmit = {
 // ---- Behaviour capture and signal routing ----
 
 const COUNT_LABELS = {
-  keypresses: 'Key presses', corrections: 'Corrections (backspace/delete)', pastes: 'Pastes',
+  keypresses: 'Key presses', corrections: 'Corrections (backspace/delete)', undos: 'Undo commands', pastes: 'Pastes',
   autocompletes: 'Autocomplete fills', shortcuts: 'Keyboard shortcuts', fieldFocuses: 'Field focuses',
   revisits: 'Field revisits', tabMoves: 'Tab moves between fields', clickMoves: 'Click moves between fields',
-  forwardStreaks: 'Forward streaks (3+)', backSkips: 'Back or skip moves', rageClicks: 'Rage clicks',
+  forwardStreaks: 'Forward streaks (3+)', passiveTabStreaks: 'Passive tab streaks (hunting)',
+  backSkips: 'Back or skip moves', rageClicks: 'Rage clicks',
   dwellLong: 'Long dwells (4s+)', idleEpisodes: 'Idle episodes (6s+)', ndGreen: 'Pointer acquisitions — green',
   ndAmber: 'Pointer acquisitions — amber', ndRed: 'Pointer acquisitions — red', misses: 'Missed clicks near targets',
-  helpViews: 'Help views', lookups: 'Address lookups', validationErrors: 'Validation errors',
-  errorRecoveries: 'Error recoveries', submits: 'Successful submits', assuranceTicks: 'Assurance confirmations',
-  passwordToggles: 'Password show/hide', handoffs: 'Handoffs', contextNotes: 'Context notes',
+  helpViews: 'Help views', lookups: 'Address lookups', lookupRetries: 'Lookup retries (no selection)',
+  validationErrors: 'Validation errors', errorRecoveries: 'Error recoveries', submits: 'Successful submits',
+  assuranceTicks: 'Assurance confirmations', rushedAssuranceTicks: 'Rushed assurance ticks',
+  passwordToggles: 'Password show/hide', passwordToggleBursts: 'Password toggle bursts',
+  handoffs: 'Handoffs', contextNotes: 'Context notes',
   oversightAcks: 'Oversight acknowledgements', policyBreaches: 'Policy breaches (simulated)',
   fatigueMarks: 'Long-session marks', personaPlays: 'Persona replays'
 };
@@ -158,15 +161,28 @@ el('playground-help')?.addEventListener('toggle', (e) => {
   handleSignal({ type: 'assist', metric: 'help' });
 });
 
+// Assurance confirmations: ticks faster than they can be read score as
+// performative compliance, not considered assurance.
+let lastAssuranceTickAt = 0;
 document.querySelectorAll('.playground-assurance').forEach((box) => {
   box.addEventListener('change', () => {
     if (!box.checked) return;
-    counts.assuranceTicks += 1;
-    handleSignal({ type: 'trust', metric: 'assuranceTick' });
+    const now = performance.now();
+    const rushed = now - lastAssuranceTickAt < 800;
+    lastAssuranceTickAt = now;
+    if (rushed) {
+      counts.rushedAssuranceTicks += 1;
+      handleSignal({ type: 'trust', metric: 'assuranceTickRushed' });
+    } else {
+      counts.assuranceTicks += 1;
+      handleSignal({ type: 'trust', metric: 'assuranceTick' });
+    }
   });
 });
 
-// Password show/hide (trust events, as in the original fixtures).
+// Password show/hide (trust events, as in the original fixtures). Rapid
+// toggle bursts read as checking anxiety rather than verification.
+const passwordToggleTimes = [];
 el('password-toggle')?.addEventListener('click', (e) => {
   const field = el('case-password');
   const showing = field.type === 'text';
@@ -174,10 +190,21 @@ el('password-toggle')?.addEventListener('click', (e) => {
   e.target.textContent = showing ? 'Show' : 'Hide';
   e.target.setAttribute('aria-pressed', String(!showing));
   counts.passwordToggles += 1;
-  handleSignal({ type: 'trust', metric: showing ? 'passwordHide' : 'passwordReveal' });
+
+  const now = performance.now();
+  passwordToggleTimes.push(now);
+  while (passwordToggleTimes.length > 0 && now - passwordToggleTimes[0] > 5000) passwordToggleTimes.shift();
+  if (passwordToggleTimes.length >= 3) {
+    counts.passwordToggleBursts += 1;
+    passwordToggleTimes.length = 0;
+    handleSignal({ type: 'trust', metric: 'passwordToggleBurst' });
+  } else {
+    handleSignal({ type: 'trust', metric: showing ? 'passwordHide' : 'passwordReveal' });
+  }
 });
 
 // Deterministic address lookup from the original playground.
+let lookupPendingSelect = false;
 el('find-address')?.addEventListener('click', () => {
   const list = el('address-results');
   const pc = (el('postcode').value || 'SW1A 1AA').trim().toUpperCase();
@@ -188,7 +215,15 @@ el('find-address')?.addEventListener('click', () => {
   const towns = ['London', 'Bristol', 'Leeds', 'Manchester', 'Cardiff'];
 
   counts.lookups += 1;
-  handleSignal({ type: 'lookup', metric: 'start' });
+  if (lookupPendingSelect) {
+    // Searching again without picking a result: the lookup did not find
+    // what the person needed.
+    counts.lookupRetries += 1;
+    handleSignal({ type: 'lookup', metric: 'retry' });
+  } else {
+    handleSignal({ type: 'lookup', metric: 'start' });
+  }
+  lookupPendingSelect = true;
 
   list.replaceChildren();
   for (let i = 0; i < 4; i += 1) {
@@ -204,6 +239,7 @@ el('find-address')?.addEventListener('click', () => {
       el('address-town').value = town;
       el('postcode').value = pc;
       list.setAttribute('hidden', '');
+      lookupPendingSelect = false;
       handleSignal({ type: 'lookup', metric: 'select' });
     });
     item.appendChild(button);
@@ -257,7 +293,9 @@ el('playground-form')?.addEventListener('submit', (e) => {
   }
 });
 
-// Team and governance actions.
+// Team and governance actions. Mashing the same button does not compound
+// its meaning: repeats inside 4 seconds are counted but not scored, so
+// Ethics and Collaboration cannot be pumped by clicking.
 const teamActions = [
   ['btn-handoff', 'handoffs', { type: 'handoff', metric: 'note' }],
   ['btn-context-note', 'contextNotes', { type: 'context', metric: 'note' }],
@@ -265,9 +303,16 @@ const teamActions = [
   ['btn-breach', 'policyBreaches', { type: 'policy', metric: 'breach' }],
   ['btn-fatigue', 'fatigueMarks', { type: 'fatigue', metric: 'mark' }]
 ];
+const lastActionAt = new Map();
 for (const [id, countKey, signalDef] of teamActions) {
   el(id)?.addEventListener('click', () => {
     counts[countKey] += 1;
+    const now = performance.now();
+    if (now - (lastActionAt.get(id) ?? -Infinity) < 4000) {
+      countsDirty = true;
+      return;
+    }
+    lastActionAt.set(id, now);
     handleSignal(signalDef);
   });
 }

@@ -1,0 +1,57 @@
+evidence_records:
+  - task_id: flux-behaviour-signal-coherence-sweep
+    mode: full-mapping-sweep-and-tuning
+    repository: kevinrapley/flux-behaviour
+    risk_level: medium
+    base_branch: main
+    working_branch: feature/sdk-tag-and-demo-prototype
+    problem_statement: Sweep every behaviour-to-dimension mapping for contradictions and tune the model so scores truthfully represent human behaviour in online service UIs.
+    contradictions_found_and_fixed:
+      - Aimless forward tab-hunting built ICT Level and soothed frustration while wayfinding fell; ICT and soothing now require creditable input.
+      - Three empty forward tabs scored as a positive wayfinding streak; streaks are now creditable-only, and passive tab streaks emit the original's negative wayfind.passiveTab signal.
+      - Cmd/Ctrl+Z counted as a proficiency-raising shortcut; undo is now a correction signal (proficiency down, frustration up, small adaptability credit), and Cmd+V no longer double-counts with paste.
+      - Long dwell while actively composing text scored as cognitive load and an efficiency penalty; active dwell is now engagement.
+      - Radios, checkboxes, selects and one-digit numeric date parts could never be creditable, so completing them was punished as empty-field navigation; change events and numeric-aware appropriateness fix this.
+      - Rapid password toggle bursts raised epistemic confidence; they now read as checking anxiety (frustration up, epistemic down).
+      - Assurance ticks faster than 800ms apart earned full trust; rushed ticks now earn reduced trust and mark confirmation bias.
+      - Repeated address lookups without a selection only added engagement; retries now lower wayfinding and raise cognitive load.
+      - Mashing governance buttons pumped ethics and collaboration; repeats within 4 seconds are counted but not scored.
+      - Typing did not feed engagement, and clean GREEN pointer acquisitions did not, despite the v6.10 engagement formula crediting path efficiency; both now do.
+    files_changed:
+      - demo/assets/flux-behaviour-signals.js
+      - demo/assets/flux-nudges.js
+      - demo/assets/flux-playground.js
+      - tests/signal-coherence.test.mjs
+      - docs/product/behaviour-signal-map.md
+      - RECENT_LEARNINGS.md
+      - agent-evidence.yaml
+    commands_run:
+      - command: npm test
+        status: passed
+        evidence: 85 tests passing, including a standing invariant that no signal pushes one dimension in both directions across all 37 signal variants, plus per-contradiction regressions.
+      - command: npm run demo:build
+        status: passed
+        evidence: Verified live — rushed ticks reduced trust credit and dented bias sensitivity (49.4), a password toggle burst raised frustration without raising epistemic confidence, lookup retries lowered wayfinding (49.8), and five mashed oversight clicks scored once (ethics 51.2) while all five were counted.
+      - command: npm run validate
+        status: passed
+        evidence: Governance file check passed.
+      - command: npm run security:secrets
+        status: passed
+        evidence: Secret pattern scan passed.
+    recent_learnings:
+      read: true
+      updated: true
+      entry: Behavioural credit requires substance; speed without consideration is not trust.
+    security:
+      collector_promoted: false
+      sdk_promoted: false
+      cloudflare_config_promoted: false
+      notes: All new detections remain metadata-only counts and timings.
+    privacy:
+      consent_gate: Unchanged.
+      data_boundary: Unchanged; creditable-input checks read value length and validity locally and store booleans only.
+    accessibility:
+      status: partial
+      notes: No new UI beyond count rows; full audit remains GAP-006.
+    risks:
+      - Tuning thresholds (800ms rushed tick, 4s governance damping, 0.5 chars/s active dwell) are demo heuristics pending golden-corpus validation (GAP-008).

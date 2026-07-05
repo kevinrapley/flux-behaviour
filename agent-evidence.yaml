@@ -69,3 +69,7 @@ agent_evidence_registry:
       date: 2026-07-05
       path: docs/agent-evidence/2026/07/05/flux-behaviour-pointer-viz-and-coherence.yaml
       status: externalised
+    - task_id: flux-behaviour-signal-coherence-sweep
+      date: 2026-07-05
+      path: docs/agent-evidence/2026/07/05/flux-behaviour-signal-coherence-sweep.yaml
+      status: externalised

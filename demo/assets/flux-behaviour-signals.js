@@ -31,9 +31,14 @@ export function createBehaviourCounts() {
   return {
     keypresses: 0,
     corrections: 0,
+    undos: 0,
     pastes: 0,
     autocompletes: 0,
     shortcuts: 0,
+    passiveTabStreaks: 0,
+    lookupRetries: 0,
+    passwordToggleBursts: 0,
+    rushedAssuranceTicks: 0,
     fieldFocuses: 0,
     revisits: 0,
     tabMoves: 0,
@@ -150,6 +155,24 @@ export function computeCharsPerMinute(printableCount, typingMs) {
   return Math.min(Math.round(printableCount / (typingMs / 60000)), 2000);
 }
 
+// Creditable-input appropriateness (formkit.js isAppropriate, widened so
+// realistic GOV.UK components can earn credit): short numeric parts like a
+// date input's day field are creditable from one digit; free text needs two
+// meaningful characters.
+export function isCreditableValue({ value, inputMode }) {
+  const trimmed = typeof value === 'string' ? value.trim() : '';
+  if (!/[A-Za-z0-9]/.test(trimmed)) return false;
+  const minLength = inputMode === 'numeric' ? 1 : 2;
+  return trimmed.length >= minLength;
+}
+
+// Dwell is engaged production, not struggle, when the person was actively
+// typing for the time they spent: at least ~0.5 printable characters per
+// second of dwell (minimum 2).
+export function isActiveDwell(printableCount, dwellSeconds) {
+  return printableCount >= Math.max(2, dwellSeconds * 0.5);
+}
+
 export function instrumentBehaviour(doc, win, { onSignal, ndBand }) {
   const counts = createBehaviourCounts();
   const signal = (s) => {
@@ -181,13 +204,24 @@ export function instrumentBehaviour(doc, win, { onSignal, ndBand }) {
   doc.addEventListener('input', (e) => {
     const el = e.target;
     if (!isText(el)) return;
-    const value = typeof el.value === 'string' ? el.value.trim() : '';
-    if (value.length >= 2 && /[A-Za-z0-9]/.test(value) && (!el.checkValidity || el.checkValidity())) {
+    const appropriate = isCreditableValue({ value: el.value, inputMode: el.getAttribute?.('inputmode') });
+    if (appropriate && (!el.checkValidity || el.checkValidity())) {
       meta(el).creditableSince = performance.now();
     }
     if (e.inputType === 'insertReplacementText') {
       counts.autocompletes += 1;
       signal({ type: 'act', metric: 'autocomplete' });
+    }
+  }, true);
+
+  // Choosing a radio, checkbox or select option is creditable input too —
+  // otherwise completing a choice question and moving on is punished as
+  // empty-field navigation.
+  doc.addEventListener('change', (e) => {
+    const el = e.target;
+    if (!el || !el.matches) return;
+    if (el.matches("input[type='radio'], input[type='checkbox']") || (el.matches('select') && el.value)) {
+      meta(el).creditableSince = performance.now();
     }
   }, true);
 
@@ -198,12 +232,23 @@ export function instrumentBehaviour(doc, win, { onSignal, ndBand }) {
   let lastIndex = null;
   let tabForward = 0;
   let clickForward = 0;
+  let passiveTabs = 0;
 
   win.addEventListener('keydown', (e) => {
     if (e.key === 'Tab') navMethod = e.shiftKey ? 'tab-prev' : 'tab-next';
     if ((e.metaKey || e.ctrlKey) && e.key.length === 1) {
-      counts.shortcuts += 1;
-      signal({ type: 'act', metric: 'shortcut' });
+      const key = e.key.toLowerCase();
+      if (key === 'z') {
+        // Undo is a correction signal, not tool fluency — the v6.10
+        // frustration formula counts undo bursts.
+        counts.undos += 1;
+        signal({ type: 'edit', metric: 'undo' });
+      } else if (key !== 'v') {
+        // Cmd/Ctrl+V is owned by the paste signal; counting it here too
+        // would double-score one behaviour.
+        counts.shortcuts += 1;
+        signal({ type: 'act', metric: 'shortcut' });
+      }
     }
   }, true);
   ['pointerdown', 'touchstart'].forEach((t) => win.addEventListener(t, () => { navMethod = 'click'; }, true));
@@ -234,18 +279,29 @@ export function instrumentBehaviour(doc, win, { onSignal, ndBand }) {
     }
     const nav = { dir, method: navMethod };
 
+    const creditable = isCreditable(lastFocused);
+
     if (navMethod === 'tab-next' || navMethod === 'tab-prev') {
       counts.tabMoves += 1;
-      signal({ type: 'act', metric: 'tabs', nav, creditable: isCreditable(lastFocused) });
+      signal({ type: 'act', metric: 'tabs', nav, creditable });
     } else if (lastFocused && lastFocused !== el && Date.now() - lastBlurAt < CLICKS_BETWEEN_WINDOW_MS) {
       counts.clickMoves += 1;
-      signal({ type: 'act', metric: 'clicksBetween', nav, creditable: isCreditable(lastFocused) });
+      signal({ type: 'act', metric: 'clicksBetween', nav, creditable });
     }
     if (dir === 'back' || dir === 'skip') counts.backSkips += 1;
 
-    if (dir === 'forward' && navMethod === 'tab-next') { tabForward += 1; clickForward = 0; }
-    else if (dir === 'forward') { clickForward += 1; tabForward = 0; }
-    else { tabForward = 0; clickForward = 0; }
+    // Streaks only count productive forward moves: leaving a field you
+    // actually completed. Empty forward tabbing is the original's
+    // wayfind.passiveTab — a hunting signal, the opposite of a streak.
+    if (dir === 'forward' && creditable && navMethod === 'tab-next') {
+      tabForward += 1; clickForward = 0; passiveTabs = 0;
+    } else if (dir === 'forward' && creditable) {
+      clickForward += 1; tabForward = 0; passiveTabs = 0;
+    } else if (dir !== 'start' && !creditable && (navMethod === 'tab-next' || navMethod === 'tab-prev')) {
+      passiveTabs += 1; tabForward = 0; clickForward = 0;
+    } else {
+      tabForward = 0; clickForward = 0; passiveTabs = 0;
+    }
 
     if (tabForward > 0 && tabForward % 3 === 0) {
       counts.forwardStreaks += 1;
@@ -254,6 +310,10 @@ export function instrumentBehaviour(doc, win, { onSignal, ndBand }) {
     if (clickForward > 0 && clickForward % 3 === 0) {
       counts.forwardStreaks += 1;
       signal({ type: 'act', metric: 'streak3', method: 'click' });
+    }
+    if (passiveTabs > 0 && passiveTabs % 3 === 0) {
+      counts.passiveTabStreaks += 1;
+      signal({ type: 'act', metric: 'passiveTabs', value: passiveTabs });
     }
 
     lastFocused = el;
@@ -270,7 +330,12 @@ export function instrumentBehaviour(doc, win, { onSignal, ndBand }) {
       const dwell = (performance.now() - m.focusedAt) / 1000;
       if (dwell > 0.05) {
         if (dwell >= 4) counts.dwellLong += 1;
-        signal({ type: 'time', metric: 'fieldDwell', value: Math.round(dwell * 100) / 100 });
+        signal({
+          type: 'time',
+          metric: 'fieldDwell',
+          value: Math.round(dwell * 100) / 100,
+          active: isActiveDwell(m.printable, dwell)
+        });
       }
       m.focusedAt = 0;
     }

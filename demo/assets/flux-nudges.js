@@ -50,24 +50,37 @@ export function applyAutoNudges(engine, ev, t = Date.now()) {
         if (ev.creditable) {
           if (isTabs) { add('efficiency', 1); add('proficiency', 1); add('wayfinding', 1); }
           else add('proficiency', 0.5);
+          // Fluent-tool and calming credit belong to productive movement
+          // only. Aimless tab-hunting must not build ICT Level or soothe
+          // frustration while wayfinding falls.
+          soothe(engine, isTabs ? 0.4 : 0.25, t);
+          if (isTabs) add('ict', 0.5);
         } else if (isTabs) {
           add('efficiency', -0.25); add('proficiency', -0.25); add('wayfinding', -0.25);
         } else {
           add('efficiency', -1);
         }
-        soothe(engine, isTabs ? 0.4 : 0.25, t);
-        if (isTabs) add('ict', 0.5);
       }
       return;
     }
 
     case 'act.streak3':
+      // Streaks are creditable-only at capture, so this is genuinely fluent
+      // forward completion of the form.
       add('wayfinding', 1);
       soothe(engine, 0.9, t);
       add('epistemic', 1);
       add('ritual', 0.5);
       add('predictive', 0.5);
       if (ev.method === 'tab') add('ict', 0.5);
+      return;
+
+    case 'act.passiveTabs':
+      // The original's wayfind.passiveTab: cycling fields without entering
+      // anything is hunting for where to go, not progress.
+      add('wayfinding', -1);
+      add('cogload', 0.5);
+      add('epistemic', -0.5);
       return;
 
     case 'act.autocomplete':
@@ -80,8 +93,24 @@ export function applyAutoNudges(engine, ev, t = Date.now()) {
       add('proficiency', 0.5);
       return;
 
+    case 'edit.undo':
+      // Undo is a correction, not tool fluency: the v6.10 frustration
+      // formula counts undo bursts. A little adaptability credit remains —
+      // recovering by undo beats abandoning.
+      add('proficiency', -0.5);
+      maybe('frustration', 0.75);
+      add('adaptability', 0.25);
+      return;
+
     case 'time.fieldDwell': {
       const seconds = Number(ev.value || 0);
+      if (ev.active) {
+        // Long dwell while actively typing is engaged composition, not
+        // struggle: penalising efficiency here punished careful writing.
+        add('engagement', 1);
+        if (seconds >= 8) add('cogload', 0.5);
+        return;
+      }
       if (seconds >= 8) { add('cogload', 2); add('efficiency', -1); }
       else if (seconds >= 4) add('cogload', 1);
       else if (seconds > 0) soothe(engine, 0.2, t);
@@ -107,10 +136,12 @@ export function applyAutoNudges(engine, ev, t = Date.now()) {
       return;
 
     case 'edit.typing': {
-      // Steady typing: chars_per_minute from the capture layer.
+      // Steady typing: chars_per_minute from the capture layer. Sustained
+      // production is also the strongest engagement evidence there is.
       const cpm = Number(ev.value || 0);
-      if (cpm > 150) { add('proficiency', 2); add('ict', 1); add('predictive', 0.5); }
-      else if (cpm > 60) { add('proficiency', 1); add('ict', 0.5); }
+      if (cpm > 150) { add('proficiency', 2); add('ict', 1); add('predictive', 0.5); add('engagement', 1); }
+      else if (cpm > 60) { add('proficiency', 1); add('ict', 0.5); add('engagement', 0.75); }
+      else if (cpm > 0) add('engagement', 0.5);
       return;
     }
 
@@ -124,6 +155,15 @@ export function applyAutoNudges(engine, ev, t = Date.now()) {
       add('social_trust', 1);
       return;
 
+    case 'trust.assuranceTickRushed':
+      // Ticking governance confirmations faster than they can be read is
+      // performative compliance: reduced trust credit and a
+      // confirmation-bias marker, not full assurance.
+      add('trust', 0.5);
+      add('cogbias', -1);
+      add('epistemic', -0.5);
+      return;
+
     case 'trust.passwordReveal':
       add('epistemic', 0.5);
       return;
@@ -132,8 +172,23 @@ export function applyAutoNudges(engine, ev, t = Date.now()) {
       soothe(engine, 0.3, t);
       return;
 
+    case 'trust.passwordToggleBurst':
+      // Rapid show/hide toggling is checking anxiety, not growing
+      // confidence — the opposite of a single verify-and-hide.
+      maybe('frustration', 1);
+      add('epistemic', -1);
+      return;
+
     case 'lookup.start':
       add('engagement', 1);
+      return;
+
+    case 'lookup.retry':
+      // Searching again without selecting a result: the lookup is not
+      // finding what the person needs.
+      add('wayfinding', -1);
+      add('cogload', 1);
+      maybe('frustration', 0.5);
       return;
 
     case 'lookup.select':
@@ -218,7 +273,12 @@ export function applyAutoNudges(engine, ev, t = Date.now()) {
       const eff = Number(ev.path_efficiency ?? 0.5);
       add('efficiency', (lerp(30, 95, eff) - 62.5) / 20);
       add('proficiency', -Math.max(0, subs - 20) * 0.02);
-      if (ev.band === 'GREEN') add('predictive', 0.3);
+      if (ev.band === 'GREEN') {
+        add('predictive', 0.3);
+        // The v6.10 engagement formula credits path efficiency and clean
+        // acquisitions: eng = 60 + path_efficiency*20 - misses*5.
+        add('engagement', 0.3);
+      }
       return;
     }
 

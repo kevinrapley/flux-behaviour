@@ -4,6 +4,10 @@ Recent learnings created by the LLM agent in reverse-chronological order (most r
 
 ---
 
+## 2026-07-05 — Behavioural credit requires substance; speed without consideration is not trust
+
+The full mapping sweep found a family of contradictions with one shape: activity being rewarded as competence. Aimless tab-hunting built ICT Level and soothed frustration; three empty forward tabs scored as a wayfinding streak; Cmd+Z counted as tool fluency; box-ticking in under a second earned full trust; anxious password toggling raised epistemic confidence; failed lookup retries read as engagement; button-mashing pumped ethics. The unifying fixes: credit requires substance (creditable input, a real selection, a considered pause), corrections and retries are struggle signals, and repeats do not compound meaning. Enforced by a standing invariant test that no signal pushes one dimension in both directions, plus per-contradiction regressions, and documented in docs/product/behaviour-signal-map.md.
+
 ## 2026-07-05 — Signals need coherence guards, not just correct formulas
 
 Rage clicking scored as high Efficiency because short pointer trails measured as perfectly efficient paths, and rapid re-clicks re-counted the previous approach from the hover window. The fixes are model-level, not weight tweaks: a stationary click is not an aiming task (efficiency 0, no credit), and an acquisition consumes its approach (one approach, one score). When two signals can be produced by the same behaviour, check they cannot pull a dimension in contradictory directions.
