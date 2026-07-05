@@ -1,0 +1,63 @@
+evidence_records:
+  - task_id: flux-behaviour-pointer-viz-and-coherence
+    mode: pointer-visualisation-and-signal-coherence
+    repository: kevinrapley/flux-behaviour
+    risk_level: medium
+    base_branch: main
+    working_branch: feature/sdk-tag-and-demo-prototype
+    problem_statement: Rage clicking could raise Efficiency at the same time as Frustration, which is incoherent. The playground also lacked the original's pointer path preview and motor-map scatter.
+    root_causes:
+      - computeKinematics scored trails with fewer than 2 points as efficiency 1; the original scores them 0 — a stationary click is not an aiming task.
+      - Kinematics ran on a rolling 3-second trail instead of per-acquisition bursts, so rapid re-clicks re-measured the previous approach.
+      - The 800ms approach hover window was not consumed on acquisition, so every rage click inherited the last genuine approach and banded GREEN with efficiency credit.
+    files_changed:
+      - demo/assets/flux-behaviour-signals.js
+      - demo/assets/flux-nudges.js
+      - demo/assets/flux-pointer-viz.js
+      - demo/assets/flux-playground.js
+      - demo/templates/pages/playground.njk
+      - demo/styles/demo.scss
+      - tests/score-engine.test.mjs
+      - docs/product/demo-prototype.md
+      - RECENT_LEARNINGS.md
+      - agent-evidence.yaml
+    promotion_decisions:
+      - source: original pointerviz.js path preview and nd-scatter
+        decision: ported as demo/assets/flux-pointer-viz.js — 5s fading path preview and acquisition matrix (efficiency vs submovements, band-coloured, threshold guides, older points fade)
+        runtime_code: true
+      - source: original burst model (hover window seeds acquisition at pointerdown)
+        decision: ported into the signals module with two coherence guards beyond the original — unaimed clicks score zero efficiency and earn no credit, and an acquisition consumes its approach
+        runtime_code: true
+      - source: original kinematics (3-pt smoothing, 1.2px jitter gate, 22-degree submovements, miss band adjustment >=10 RED / >=3 denies GREEN)
+        decision: ported, replacing the earlier approximation
+        runtime_code: true
+    commands_run:
+      - command: npm test
+        status: passed
+        evidence: 74 tests passing, including new coherence regressions — stationary/twitch clicks are unaimed with zero efficiency, unaimed clicks earn no efficiency credit while aimed direct clicks do, and a simulated rage burst leaves Efficiency below neutral while Frustration rises.
+      - command: npm run demo:build
+        status: passed
+        evidence: Verified in a browser — rage burst produced Efficiency 49.3 and Frustration 50.9 with one genuine GREEN acquisition and unaimed re-clicks; acquisition matrix rendered band-coloured points with threshold guides; path canvas painted a fading trail.
+      - command: npm run validate
+        status: passed
+        evidence: Governance file check passed.
+      - command: npm run security:secrets
+        status: passed
+        evidence: Secret pattern scan passed.
+    recent_learnings:
+      read: true
+      updated: true
+      entry: Signals need coherence guards, not just correct formulas.
+    security:
+      collector_promoted: false
+      sdk_promoted: false
+      cloudflare_config_promoted: false
+      notes: Pointer visualisations store coordinates and timing only; nothing about the content under the pointer is captured.
+    privacy:
+      consent_gate: Unchanged; visuals render inside the consent-gated playground zone.
+      data_boundary: Path and matrix data stay in the browser and are never transported.
+    accessibility:
+      status: partial
+      notes: Both canvases carry role="img", aria-labels and described-by summaries explaining what they show; full audit remains GAP-006.
+    risks:
+      - Coherence guards are demo-model logic pending golden-corpus validation (GAP-008).

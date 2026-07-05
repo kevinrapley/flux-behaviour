@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
-const ignoredDirs = new Set(['.git','node_modules','dist','coverage']);
+const ignoredDirs = new Set(['.git','node_modules','dist','coverage','public']);
 const ignoredFiles = new Set(['scripts/secret-pattern-scan.mjs','RECENT_LEARNINGS.md','docs/security/secret-handling.md','docs/migration/source-inventory.md','SECURITY.md']);
 const secretAssignmentName = '(?:SECRET|TOKEN|API_KEY|PASSWORD|PRIVATE_KEY|CLIENT_SECRET|ACCESS_KEY|BEARER_TOKEN)';
 const secretAssignmentValue = '(?:"[^"\\n]{16,}"|\'[^\'\\n]{16,}\'|[A-Za-z0-9_./+=:@%\\-]{16,})';

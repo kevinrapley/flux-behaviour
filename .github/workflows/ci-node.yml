@@ -18,4 +18,5 @@ jobs:
       - name: Run check
         run: |
           node --version
+          npm ci
           npm test

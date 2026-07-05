@@ -35,3 +35,39 @@ gaps:
     action: Add and review Cloudflare deployment posture, production rate limiting, retention, deletion and storage policy before enabling live collection.
     owner: product-lead
     status: open
+  - id: GAP-005
+    title: Demo dashboard charts follow ONS Charts patterns but do not vendor the library
+    severity: low
+    observed_state: demo/assets/flux-charts.js implements bar and line charts following ONS Charts conventions with d3.
+    expected_state: Visualisations vendor or consume ONSdigital/Charts templates directly so upstream improvements flow through.
+    risk: Chart behaviour may drift from ONS accessibility and styling standards.
+    action: Replace bespoke chart modules with vendored ONSdigital/Charts templates once the dashboard has real data.
+    owner: product-lead
+    status: open
+  - id: GAP-006
+    title: Demo prototype has not been through a full accessibility audit
+    severity: medium
+    observed_state: Demo pages use GOV.UK Frontend components and patterns with accessible summaries on charts, but no audit has run.
+    expected_state: Keyboard, screen reader and axe-style audits recorded in accessibility-evidence.md before any public deployment.
+    risk: Demo may ship inaccessible interactions, undermining the product's public-service positioning.
+    action: Run and record an accessibility audit of the demo before it is deployed anywhere public.
+    owner: governance-lead
+    status: open
+  - id: GAP-007
+    title: SDK tag events are fire-and-forget with no delivery observability
+    severity: low
+    observed_state: The tag drops events on transport failure and sendBeacon acceptance does not confirm delivery.
+    expected_state: Collector-side received-event metrics make loss rates visible before production adoption.
+    risk: Services could over-trust dashboards built on partially delivered data.
+    action: Add collector-side acceptance metrics when storage is promoted.
+    owner: product-lead
+    status: open
+  - id: GAP-008
+    title: Playground scoring is ported prototype logic, not corpus-validated scoring
+    severity: low
+    observed_state: The playground ports the original v46.s engine and the original playground's signal mappings (applyAutoNudges, frustration soothing, persona deltas), with exploratory-dimension mappings derived from the v6.10 formula directions.
+    expected_state: Promoted scoring validated against the original repository's golden corpus (R pipeline) before any score leaves a demo context.
+    risk: Viewers could over-trust demo score movements as validated behavioural measurement.
+    action: Validate the ported engine and mappings against the golden corpus cases when scoring is promoted.
+    owner: product-lead
+    status: open

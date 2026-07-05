@@ -1,0 +1,51 @@
+evidence_records:
+  - task_id: flux-behaviour-pr-21-fixes
+    mode: fix-review-comments
+    repository: kevinrapley/flux-behaviour
+    risk_level: low
+    base_branch: main
+    working_branch: feature/sdk-tag-and-demo-prototype
+    problem_statement: Address the Codex and github-advanced-security review comments on PR #21, fixing the credentials-omission transport issue, CodeQL insecure randomness session ID alert, and populating the CycloneDX SBOM.
+    files_read:
+      - src/sdk/flux-browser.mjs
+      - src/sdk/flux-tag.mjs
+      - tests/sdk-tag.test.mjs
+      - scripts/generate-minimal-sbom.mjs
+      - package.json
+      - package-lock.json
+    files_changed:
+      - src/sdk/flux-browser.mjs
+      - src/sdk/flux-tag.mjs
+      - tests/sdk-tag.test.mjs
+      - scripts/generate-minimal-sbom.mjs
+      - agent-evidence.yaml
+      - RECENT_LEARNINGS.md
+    promotion_decisions: []
+    commands_run:
+      - command: npm test
+        status: passed
+        evidence: 87 tests passing, including transport prefers fetch, falls back to sendBeacon, and secure session ID generation.
+      - command: npm run sbom
+        status: passed
+        evidence: Generated CycloneDX SBOM (sbom.cdx.json) populated with direct dependencies, versions, purls, and hashes.
+      - command: npm run validate
+        status: passed
+        evidence: Governance file check passed.
+      - command: npm run security:secrets
+        status: passed
+        evidence: Secret pattern scan passed.
+    recent_learnings:
+      read: true
+      updated: true
+      entry: Fetch with credentials omit and keepalive ensures compliant metadata-only transit; CSPRNG-driven session ID generation resolves insecure randomness; Dynamic CycloneDX SBOM generation prevents incomplete dependency inventory lists.
+    security:
+      no_secrets_committed: true
+      notes: Prioritized fetch with credentials omit prevents credentials from leaking to collectors. Cryptographically secure session ID generation (CSPRNG) prevents predictable session tracking.
+    privacy:
+      consent_gate: Unchanged.
+      data_boundary: Enforced credentials omission by prioritizing fetch credentials omit over sendBeacon.
+    accessibility:
+      required: false
+      notes: No changes to UI components.
+    risks:
+      - Transport fallback to sendBeacon may transmit credentials on same-site or credentialed endpoints in case fetch fails, though this is now a last-resort fallback.

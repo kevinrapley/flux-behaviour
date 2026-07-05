@@ -19,7 +19,7 @@ export const fluxEventSchema = Object.freeze({
   properties: {
     schema_version: {
       type: 'string',
-      const: '1.0.0'
+      const: '1.1.0'
     },
     session_id: {
       type: 'string',
@@ -94,6 +94,31 @@ export const fluxEventSchema = Object.freeze({
     file_size_bucket: {
       type: 'string',
       enum: ['none', 'small', 'medium', 'large', 'unknown']
+    },
+    key_press_count: {
+      type: 'integer',
+      minimum: 0,
+      maximum: 10000
+    },
+    backspace_count: {
+      type: 'integer',
+      minimum: 0,
+      maximum: 10000
+    },
+    paste_count: {
+      type: 'integer',
+      minimum: 0,
+      maximum: 100
+    },
+    chars_per_minute: {
+      type: 'integer',
+      minimum: 0,
+      maximum: 2000
+    },
+    revisit_count: {
+      type: 'integer',
+      minimum: 0,
+      maximum: 1000
     }
   }
 });

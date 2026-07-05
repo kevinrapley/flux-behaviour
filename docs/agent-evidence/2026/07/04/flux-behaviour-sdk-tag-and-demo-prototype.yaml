@@ -1,0 +1,103 @@
+evidence_records:
+  - task_id: flux-behaviour-sdk-tag-and-demo-prototype
+    mode: runtime-promotion-with-demo-prototype
+    repository: kevinrapley/flux-behaviour
+    risk_level: high
+    base_branch: main
+    working_branch: feature/sdk-tag-and-demo-prototype
+    files_read:
+      - README.md
+      - AGENTS.md
+      - RECENT_LEARNINGS.md
+      - src/events/flux-event-schema.mjs
+      - src/events/validate-event-runtime.mjs
+      - src/collector/router.mjs
+      - src/collector/boundary-controls.mjs
+      - src/cloudflare/worker.mjs
+      - scripts/check-required-files.mjs
+      - scripts/secret-pattern-scan.mjs
+      - .github/workflows/ci-node.yml
+      - .github/workflows/ci-conformance.yml
+      - gap-register.yaml
+      - agent-evidence.yaml
+    files_changed:
+      - src/sdk/flux-tag.mjs
+      - src/sdk/flux-browser.mjs
+      - src/sdk/flux-browser.install.mjs
+      - tests/sdk-tag.test.mjs
+      - tests/demo-build.test.mjs
+      - demo/templates/layout.njk
+      - demo/templates/pages/index.njk
+      - demo/templates/pages/journey.njk
+      - demo/templates/pages/dashboard.njk
+      - demo/data/dashboard-fixture.mjs
+      - demo/assets/demo-journey.js
+      - demo/assets/flux-charts.js
+      - demo/styles/demo.scss
+      - scripts/demo/render-demo-pages.mjs
+      - scripts/demo/copy-demo-assets.mjs
+      - scripts/demo/serve-demo.mjs
+      - scripts/secret-pattern-scan.mjs
+      - .github/workflows/ci-node.yml
+      - .github/workflows/ci-conformance.yml
+      - package.json
+      - package-lock.json
+      - .gitignore
+      - docs/instrumentation/tag-integration.md
+      - docs/product/demo-prototype.md
+      - gap-register.yaml
+      - RECENT_LEARNINGS.md
+      - agent-evidence.yaml
+      - README.md
+    promotion_decisions:
+      - source: prototype SDK / browser instrumentation lineage
+        decision: reimplemented as a consent-gated tag that reuses the shared schema and runtime validator; no prototype code copied
+        runtime_code: true
+      - source: prototype demo and dashboards lineage
+        decision: rebuilt as a GOV.UK Frontend v6 static prototype following the ResearchOps build pattern, with ONS Charts pattern visualisations on fixture data
+        runtime_code: true
+      - source: collector storage and aggregation
+        decision: not promoted in this PR; dashboard is fixture-only and labelled as such
+        runtime_code: false
+      - source: Cloudflare deployment configuration
+        decision: not promoted in this PR
+        runtime_code: false
+    commands_run:
+      - command: npm test
+        status: passed
+        evidence: 55 tests passing including 10 SDK tag tests and 2 demo build tests.
+      - command: npm run validate
+        status: passed
+        evidence: Repository governance file check passed for 19 files.
+      - command: npm run security:secrets
+        status: passed
+        evidence: Secret pattern sanity scan passed after excluding gitignored public/ build output.
+      - command: npm run demo:build
+        status: passed
+        evidence: Sass compile, page render and asset copy completed; pages verified in a browser (consent gate, event log, both charts).
+    tests_added:
+      - tests/sdk-tag.test.mjs
+      - tests/demo-build.test.mjs
+    modules_added:
+      - src/sdk/flux-tag.mjs
+      - src/sdk/flux-browser.mjs
+      - src/sdk/flux-browser.install.mjs
+    recent_learnings:
+      read: true
+      updated: true
+      entry: The SDK must validate against the shared contract before transport; demo honesty requires labelling fixtures and delivery uncertainty; GOV.UK demo build mirrors the ResearchOps pattern.
+    security:
+      collector_promoted: false
+      sdk_promoted: true
+      cloudflare_config_promoted: false
+      notes: Tag strips unknown fields before validation, drops invalid events, sends credentials-omitted requests and never persists consent state. CI workflows now run npm ci against the committed lockfile.
+    privacy:
+      consent_gate: Events are dropped, never queued, before consent; revocation stops emission immediately.
+      data_boundary: Only contract fields leave the page; typed values, free text and identifiers are stripped client-side and rejected server-side.
+    accessibility:
+      status: partial
+      notes: GOV.UK Frontend components, skip link, aria-live event log and accessible chart summaries are in place; a full audit is recorded as GAP-006.
+    risks:
+      - Fire-and-forget transport gives no delivery observability (GAP-007).
+      - Charts follow ONS Charts conventions but do not vendor the library (GAP-005).
+      - Demo has not had a full accessibility audit (GAP-006).

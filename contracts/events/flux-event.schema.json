@@ -19,7 +19,7 @@
   "properties": {
     "schema_version": {
       "type": "string",
-      "const": "1.0.0"
+      "const": "1.1.0"
     },
     "session_id": {
       "type": "string",
@@ -33,11 +33,28 @@
     },
     "origin": {
       "type": "string",
-      "enum": ["formkit", "sdk", "collector-test"]
+      "enum": [
+        "formkit",
+        "sdk",
+        "collector-test"
+      ]
     },
     "event_class": {
       "type": "string",
-      "enum": ["focus", "input", "nav", "kbd", "clipboard", "drop", "file", "picker", "trust", "assist", "a11y", "env"]
+      "enum": [
+        "focus",
+        "input",
+        "nav",
+        "kbd",
+        "clipboard",
+        "drop",
+        "file",
+        "picker",
+        "trust",
+        "assist",
+        "a11y",
+        "env"
+      ]
     },
     "action": {
       "type": "string",
@@ -47,7 +64,14 @@
     },
     "role": {
       "type": "string",
-      "enum": ["field", "form", "control", "page", "service", "environment"]
+      "enum": [
+        "field",
+        "form",
+        "control",
+        "page",
+        "service",
+        "environment"
+      ]
     },
     "element_key": {
       "type": "string",
@@ -76,15 +100,32 @@
     },
     "reason": {
       "type": "string",
-      "enum": ["empty_field", "control_nonresponsive", "validation_error", "help_requested", "unknown"]
+      "enum": [
+        "empty_field",
+        "control_nonresponsive",
+        "validation_error",
+        "help_requested",
+        "unknown"
+      ]
     },
     "navigation_direction": {
       "type": "string",
-      "enum": ["forward", "back", "skip", "unknown"]
+      "enum": [
+        "forward",
+        "back",
+        "skip",
+        "unknown"
+      ]
     },
     "pointer_type": {
       "type": "string",
-      "enum": ["mouse", "pen", "touch", "keyboard", "unknown"]
+      "enum": [
+        "mouse",
+        "pen",
+        "touch",
+        "keyboard",
+        "unknown"
+      ]
     },
     "file_count": {
       "type": "integer",
@@ -93,7 +134,38 @@
     },
     "file_size_bucket": {
       "type": "string",
-      "enum": ["none", "small", "medium", "large", "unknown"]
+      "enum": [
+        "none",
+        "small",
+        "medium",
+        "large",
+        "unknown"
+      ]
+    },
+    "key_press_count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 10000
+    },
+    "backspace_count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 10000
+    },
+    "paste_count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "chars_per_minute": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 2000
+    },
+    "revisit_count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1000
     }
   }
 }

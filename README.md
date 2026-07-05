@@ -12,18 +12,28 @@ Flux is service-improvement evidence. It is not surveillance tooling. It must no
 
 ## Current status
 
-Status: governed foundation. Runtime product code has not yet been promoted.
+Status: governed foundation with early runtime code. The event contract, runtime validator, collector scaffold (storage disabled), consent-gated SDK tag and a GOV.UK demo prototype have been promoted. Collector storage, aggregation and production deployment have not.
 
-The repository currently provides branch posture, CODEOWNERS, security policy, CI scaffolding, assurance records, a harm register, migration controls and local validation scripts.
+The repository also provides branch posture, CODEOWNERS, security policy, CI scaffolding, assurance records, a harm register, migration controls and local validation scripts.
+
+## Adding Flux to a service
+
+Services add Flux like other analytics tags: a snippet plus a hosted module, configured with a collector endpoint. Events are consent-gated, metadata-only and validated against the published contract in the browser before transport and again at the collector. See `docs/instrumentation/tag-integration.md`.
+
+## Demo prototype
+
+`npm run demo:serve` builds and serves a GOV.UK Frontend prototype at `http://localhost:4321/`: an instrumented demo journey with a consent banner and live event log, and a dashboard of behavioural signals following ONS Charts conventions (fixture data while storage is disabled). See `docs/product/demo-prototype.md`.
 
 ## Repository layout
 
 ```text
 .github/                  GitHub templates and CI workflows
 contracts/                Repository contract notes
+demo/                     GOV.UK demo prototype templates, styles, assets and fixtures
 docs/                     Product, architecture, migration, governance and security docs
-scripts/                  Local validation scripts
-tests/                    Repository posture tests
+scripts/                  Local validation and demo build scripts
+src/                      Event contract, collector, Cloudflare adapter and SDK tag
+tests/                    Repository posture and runtime tests
 agent-evidence.yaml       Evidence for the foundation change
 conformance-matrix.yaml   Control conformance record
 gap-register.yaml         Open assurance gaps

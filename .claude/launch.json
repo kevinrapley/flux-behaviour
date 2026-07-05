@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "flux-demo",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["scripts/demo/serve-demo.mjs"],
+      "port": 4321
+    }
+  ]
+}
