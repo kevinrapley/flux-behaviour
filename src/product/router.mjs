@@ -15,6 +15,7 @@ export async function handleProductRequest(request, env) {
   if (path === '/api/collect' && request.method === 'POST') return collect(request, env);
   if (path === '/api/auth/google/start' && request.method === 'GET') return startGoogleSignIn(request, env);
   if (path === '/api/auth/google/callback' && request.method === 'GET') return completeGoogleSignIn(request, env);
+  if (path.startsWith('/api/dashboard/researchops/session/') && request.method === 'GET') return sessionHistory(request, env, path);
   if (path === '/api/dashboard/researchops' && request.method === 'GET') return dashboard(request, env);
   return json({ ok: false, error: 'not_found' }, 404);
 }
@@ -114,6 +115,18 @@ async function dashboard(request, env) {
   const events = await env.FLUX_DB.prepare("SELECT session_id, action, element_key, metadata_json, narrative, occurred_at_ms FROM (SELECT session_id, action, element_key, metadata_json, narrative, occurred_at_ms FROM events WHERE tenant_id = 'researchops' AND session_id IN (SELECT id FROM sessions WHERE tenant_id = 'researchops' ORDER BY started_at_ms DESC LIMIT 50) ORDER BY occurred_at_ms DESC LIMIT 500) ORDER BY occurred_at_ms ASC").all();
   const journeys = groupJourneys(sessions.results, events.results).map((journey) => ({ ...journey, dimension_scores: scoreSessionDimensions(journey.events) }));
   return json({ ok: true, sessions: sessions.results, journeys, analytics: buildLiveAnalytics(sessions.results, events.results, journeys) });
+}
+
+async function sessionHistory(request, env, path) {
+  const sessionCookie = request.headers.get('cookie')?.match(/(?:^|; )flux_session=([^;]+)/)?.[1]; const [accountId, expires, signature] = sessionCookie?.split('.') ?? [];
+  if (!accountId || !signature || Number(expires) <= Date.now() || !(await equal(signature, await hash(`${accountId}.${expires}`, env.FLUX_AUTH_SECRET)))) return json({ ok: false, error: 'unauthorised' }, 401);
+  const access = await env.FLUX_DB.prepare("SELECT 1 FROM account_tenants WHERE account_id = ? AND tenant_id = 'researchops'").bind(accountId).first(); if (!access) return json({ ok: false, error: 'forbidden' }, 403);
+  const sessionId = decodeURIComponent(path.slice('/api/dashboard/researchops/session/'.length));
+  if (!/^[A-Za-z0-9._:-]{8,128}$/.test(sessionId)) return json({ ok: false, error: 'not_found' }, 404);
+  const session = await env.FLUX_DB.prepare("SELECT id, visitor_id, started_at_ms, last_seen_at_ms, is_returning_visitor FROM sessions WHERE id = ? AND tenant_id = 'researchops'").bind(sessionId).first();
+  if (!session) return json({ ok: false, error: 'not_found' }, 404);
+  const events = await env.FLUX_DB.prepare("SELECT session_id, action, element_key, metadata_json, narrative, occurred_at_ms FROM events WHERE tenant_id = 'researchops' AND session_id = ? ORDER BY occurred_at_ms ASC").bind(sessionId).all();
+  return json({ ok: true, journey: { ...session, events: events.results, dimension_scores: scoreSessionDimensions(events.results) } });
 }
 
 export function groupJourneys(sessions = [], events = []) {

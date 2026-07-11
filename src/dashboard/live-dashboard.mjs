@@ -132,9 +132,35 @@ function journeySection(session) {
     empty.textContent = 'No interaction events were received for this session.';
     section.append(heading, empty, sessionDimensionDetails(session.dimension_scores));
   } else {
-    section.append(heading, events, sessionDimensionDetails(session.dimension_scores));
+    section.append(heading, events, completeHistoryButton(session, events), sessionDimensionDetails(session.dimension_scores));
   }
   return section;
+}
+
+function completeHistoryButton(session, list) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'govuk-button govuk-button--secondary';
+  button.textContent = 'View complete session history';
+  button.addEventListener('click', async () => {
+    button.disabled = true;
+    button.textContent = 'Loading complete history';
+    const response = await fetch(`/api/dashboard/researchops/session/${encodeURIComponent(session.id)}`, { credentials: 'include' });
+    if (!response.ok) {
+      button.textContent = 'Complete history unavailable';
+      return;
+    }
+    const data = await response.json();
+    list.replaceChildren(...data.journey.events.map((event) => journeyEvent(event)));
+    button.remove();
+  });
+  return button;
+}
+
+function journeyEvent(event) {
+  const item = document.createElement('li');
+  item.textContent = `${new Date(event.occurred_at_ms).toLocaleTimeString()} — ${event.narrative}`;
+  return item;
 }
 
 function sessionDimensionDetails(scores) {

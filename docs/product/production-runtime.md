@@ -10,4 +10,6 @@ The tracker creates persistent visitor and session identifiers only after a visi
 
 For each session, Flux calculates the 20 indicators used by the demo model and five composites. The calculation is bounded to observed, consented metadata; an unsupported indicator remains neutral and no value is inferred from identity, text or a protected field. These are service-friction heuristics for human review, not classifications or judgements of an individual. The promoted mapping has not yet completed golden-corpus validation, so it remains governed by GAP-008 and must not support automated or high-stakes decisions.
 
+The dashboard overview uses a bounded recent-event window, but each displayed session offers an authenticated complete-history request. That request reads the session's full, tenant-scoped event sequence in chronological order and recomputes its indicators from that full sequence.
+
 Live collection is not release approval. DPIA, accessibility evidence, retention/deletion policy, production rate limiting and incident controls remain release blockers.
