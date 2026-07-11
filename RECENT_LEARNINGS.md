@@ -4,6 +4,10 @@ Recent learnings created by the LLM agent in reverse-chronological order (most r
 
 ---
 
+## 2026-07-11 — Sparse production data reveals dashboard copy and chart defects
+
+Fixture-rich previews can hide singular grammar and repeated axis ticks. Verify the authenticated dashboard with real sparse data: pluralise calculated rates and reduce grid steps when the chart maximum is below the normal tick count.
+
 ## 2026-07-11 — Analytics dashboards should lead with cumulative service evidence
 
 A chronological dump of sessions is an investigation tool, not a useful dashboard. Lead with period-based visitors, returning visitors, sessions, interactions, comparison deltas and trends; keep individual journeys as an intentional drill-down. This improves decision usefulness and also reduces the prominence of pseudonymous identifiers.

@@ -97,3 +97,7 @@ agent_evidence_registry:
       date: 2026-07-11
       path: docs/agent-evidence/2026/07/11/flux-behaviour-cumulative-analytics-dashboard.yaml
       status: externalised
+    - task_id: flux-behaviour-dashboard-sparse-data-polish
+      date: 2026-07-11
+      path: docs/agent-evidence/2026/07/11/flux-behaviour-dashboard-sparse-data-polish.yaml
+      status: externalised
