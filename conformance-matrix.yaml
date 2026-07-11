@@ -71,3 +71,9 @@ records:
     actual_evidence: Boundary control scaffold added on feature/collector-boundary-controls with storage still disabled
     status: present
     owner: product-lead
+  - id: CONF-013
+    rule: Stored behavioural analytics must be tenant-scoped, consented, pseudonymous and metadata-only
+    expected_evidence: D1 migration, product router, browser SDK and runtime tests exist
+    actual_evidence: D1 tenant/session/event model and consent-first browser SDK added on feature/researchops-analytics; live endpoint accepts the approved ResearchOps origin.
+    status: present-with-release-blockers
+    owner: product-lead

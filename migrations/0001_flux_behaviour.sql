@@ -1,0 +1,10 @@
+CREATE TABLE IF NOT EXISTS accounts (id TEXT PRIMARY KEY, email TEXT NOT NULL UNIQUE, created_at_ms INTEGER NOT NULL, last_login_at_ms INTEGER);
+CREATE TABLE IF NOT EXISTS tenants (id TEXT PRIMARY KEY, name TEXT NOT NULL, allowed_origins_json TEXT NOT NULL, created_at_ms INTEGER NOT NULL);
+CREATE TABLE IF NOT EXISTS account_tenants (account_id TEXT NOT NULL REFERENCES accounts(id), tenant_id TEXT NOT NULL REFERENCES tenants(id), role TEXT NOT NULL CHECK(role IN ('owner', 'viewer')), PRIMARY KEY (account_id, tenant_id));
+CREATE TABLE IF NOT EXISTS otp_challenges (id TEXT PRIMARY KEY, account_id TEXT NOT NULL REFERENCES accounts(id), code_hash TEXT NOT NULL, expires_at_ms INTEGER NOT NULL, consumed_at_ms INTEGER, attempts INTEGER NOT NULL DEFAULT 0, created_at_ms INTEGER NOT NULL);
+CREATE TABLE IF NOT EXISTS visitors (tenant_id TEXT NOT NULL REFERENCES tenants(id), visitor_id TEXT NOT NULL, first_seen_at_ms INTEGER NOT NULL, last_seen_at_ms INTEGER NOT NULL, session_count INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (tenant_id, visitor_id));
+CREATE TABLE IF NOT EXISTS sessions (id TEXT PRIMARY KEY, tenant_id TEXT NOT NULL REFERENCES tenants(id), visitor_id TEXT NOT NULL, started_at_ms INTEGER NOT NULL, last_seen_at_ms INTEGER NOT NULL, is_returning_visitor INTEGER NOT NULL);
+CREATE TABLE IF NOT EXISTS events (id TEXT PRIMARY KEY, tenant_id TEXT NOT NULL, visitor_id TEXT NOT NULL, session_id TEXT NOT NULL REFERENCES sessions(id), event_class TEXT NOT NULL, action TEXT NOT NULL, role TEXT NOT NULL, element_key TEXT NOT NULL, metadata_json TEXT NOT NULL, narrative TEXT NOT NULL, occurred_at_ms INTEGER NOT NULL);
+CREATE INDEX IF NOT EXISTS events_by_session ON events(session_id, occurred_at_ms);
+CREATE INDEX IF NOT EXISTS sessions_by_tenant ON sessions(tenant_id, started_at_ms DESC);
+INSERT OR IGNORE INTO tenants (id, name, allowed_origins_json, created_at_ms) VALUES ('researchops', 'ResearchOps', '["https://researchops.pages.dev","https://research-operations.com"]', unixepoch() * 1000);

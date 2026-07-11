@@ -34,6 +34,8 @@ test('representative event satisfies required baseline fields', () => {
   const event = {
     schema_version: '1.1.0',
     session_id: 'session-1234',
+    visitor_id: 'visitor-1234',
+    tenant_id: 'researchops',
     consent: 'yes',
     origin: 'formkit',
     event_class: 'focus',

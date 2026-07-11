@@ -1,0 +1,446 @@
+<!doctype html>
+<html class="govuk-template govuk-template--rebranded" lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Behavioural dimensions playground – Flux Behaviour demo</title>
+	<link rel="stylesheet" href="/assets/styles/demo.css" media="all">
+
+</head>
+
+<body class="govuk-template__body">
+	<script>document.body.className += ' js-enabled' + ('noModule' in HTMLScriptElement.prototype ? ' govuk-frontend-supported' : '');</script>
+	<a href="#main-content" class="govuk-skip-link" data-module="govuk-skip-link">Skip to main content</a>
+
+	<header class="govuk-header" data-module="govuk-header">
+		<div class="govuk-header__container govuk-width-container">
+			<div class="govuk-header__logo">
+				<a href="/" class="govuk-header__link govuk-header__link--homepage">
+					<span class="govuk-header__logotype-text">Flux Behaviour</span>
+				</a>
+			</div>
+		</div>
+	</header>
+	<div class="govuk-service-navigation" data-module="govuk-service-navigation">
+		<div class="govuk-width-container">
+			<div class="govuk-service-navigation__container">
+				<span class="govuk-service-navigation__service-name">
+					<a href="/" class="govuk-service-navigation__link">Behavioural analytics demo</a>
+				</span>
+				<nav aria-label="Menu" class="govuk-service-navigation__wrapper">
+					<ul class="govuk-service-navigation__list">
+						<li class="govuk-service-navigation__item">
+							<a class="govuk-service-navigation__link" href="/">Get started</a>
+						</li>
+						<li class="govuk-service-navigation__item">
+							<a class="govuk-service-navigation__link" href="/journey/">Demo journey</a>
+						</li>
+						<li class="govuk-service-navigation__item govuk-service-navigation__item--active">
+							<a class="govuk-service-navigation__link" href="/playground/"
+								aria-current="true">Playground</a>
+						</li>
+						<li class="govuk-service-navigation__item">
+							<a class="govuk-service-navigation__link" href="/dashboard/">Dashboard</a>
+						</li>
+					</ul>
+				</nav>
+			</div>
+		</div>
+	</div>
+	<div class="govuk-width-container">
+		<main class="govuk-main-wrapper" id="main-content" role="main">
+
+			<div class="govuk-grid-row">
+				<div class="govuk-grid-column-two-thirds">
+					<span class="govuk-caption-xl">Playground</span>
+					<h1 class="govuk-heading-xl">The full behavioural model, live</h1>
+					<p class="govuk-body">This playground carries over the whole of the original Flux Behavioural
+						Analytics prototype: all 20 dimensions, the v46.s scoring engine, pointer kinematics, navigation
+						analysis, typing behaviour, governance actions, personas and composites. Complete the realistic
+						form below however you naturally would — every interaction is measured and every measurement
+						moves scores.</p>
+					<div class="govuk-inset-text">
+						Scores describe interaction patterns for service improvement. They must never be read as
+						judgements about a person's competence, honesty or ability.
+					</div>
+					<div class="govuk-button-group">
+						<button type="button" class="govuk-button" data-module="govuk-button"
+							id="playground-consent">Grant consent and start</button>
+						<button type="button" class="govuk-button govuk-button--secondary" data-module="govuk-button"
+							id="playground-reset">Reset scores</button>
+					</div>
+					<p class="govuk-body-s" id="playground-session-note"></p>
+				</div>
+			</div>
+
+			<div id="playground-zone" hidden>
+				<div class="govuk-grid-row">
+					<div class="govuk-grid-column-one-half">
+						<h2 class="govuk-heading-l">Request for records</h2>
+						<p class="govuk-body-s">A realistic demo journey. Officer ID and rationale are required —
+							submitting without them raises validation errors; fixing them counts as recovery.</p>
+
+						<div class="govuk-error-summary" id="playground-error-summary" hidden role="alert" tabindex="-1"
+							aria-labelledby="error-summary-title">
+							<h2 class="govuk-error-summary__title" id="error-summary-title">There is a problem</h2>
+							<div class="govuk-error-summary__body">
+								<ul class="govuk-list govuk-error-summary__list" id="playground-error-list"></ul>
+							</div>
+						</div>
+
+						<div class="govuk-panel govuk-panel--confirmation" id="playground-confirmation" hidden>
+							<h2 class="govuk-panel__title govuk-heading-m">Request submitted</h2>
+						</div>
+
+						<form id="playground-form" novalidate>
+							<div class="govuk-form-group" id="group-officer-id">
+								<label class="govuk-label govuk-label--s" for="officer-id">Officer ID</label>
+								<div id="officer-id-hint" class="govuk-hint">Numeric ID issued by your force</div>
+								<p class="govuk-error-message" id="officer-id-error" hidden><span
+										class="govuk-visually-hidden">Error:</span> Enter your officer ID</p>
+								<input class="govuk-input govuk-input--width-10" id="officer-id" type="text"
+									inputmode="numeric" aria-describedby="officer-id-hint" autocomplete="off">
+							</div>
+
+							<div class="govuk-form-group">
+								<label class="govuk-label govuk-label--s" for="force-area">Force area</label>
+								<select class="govuk-select" id="force-area">
+									<option value="">Select a force</option>
+									<option>Avon and Somerset</option>
+									<option>Greater Manchester</option>
+									<option>Metropolitan Police</option>
+									<option>Police Scotland</option>
+									<option>West Midlands</option>
+								</select>
+							</div>
+
+							<div class="govuk-form-group">
+								<label class="govuk-label govuk-label--s" for="full-name">Full name</label>
+								<input class="govuk-input" id="full-name" type="text" autocomplete="name">
+							</div>
+
+							<div class="govuk-form-group">
+								<fieldset class="govuk-fieldset" role="group" aria-describedby="dob-hint">
+									<legend class="govuk-fieldset__legend govuk-fieldset__legend--s">Date of birth
+									</legend>
+									<div id="dob-hint" class="govuk-hint">For example, 27 3 1989</div>
+									<div class="govuk-date-input" id="dob">
+										<div class="govuk-date-input__item">
+											<div class="govuk-form-group">
+												<label class="govuk-label govuk-date-input__label"
+													for="dob-day">Day</label>
+												<input class="govuk-input govuk-date-input__input govuk-input--width-2"
+													id="dob-day" type="text" inputmode="numeric">
+											</div>
+										</div>
+										<div class="govuk-date-input__item">
+											<div class="govuk-form-group">
+												<label class="govuk-label govuk-date-input__label"
+													for="dob-month">Month</label>
+												<input class="govuk-input govuk-date-input__input govuk-input--width-2"
+													id="dob-month" type="text" inputmode="numeric">
+											</div>
+										</div>
+										<div class="govuk-date-input__item">
+											<div class="govuk-form-group">
+												<label class="govuk-label govuk-date-input__label"
+													for="dob-year">Year</label>
+												<input class="govuk-input govuk-date-input__input govuk-input--width-4"
+													id="dob-year" type="text" inputmode="numeric">
+											</div>
+										</div>
+									</div>
+								</fieldset>
+							</div>
+
+							<div class="govuk-form-group">
+								<label class="govuk-label govuk-label--s" for="postcode">Postcode</label>
+								<div class="govuk-hint" id="postcode-hint">Selecting a found address raises Wayfinding,
+									Trust and Domain Knowledge</div>
+								<input class="govuk-input govuk-input--width-10" id="postcode" type="text"
+									autocomplete="postal-code" aria-describedby="postcode-hint">
+								<button type="button" class="govuk-button govuk-button--secondary govuk-!-margin-top-2"
+									data-module="govuk-button" id="find-address">Find address</button>
+								<ul class="govuk-list playground-address-results" id="address-results" hidden></ul>
+							</div>
+
+							<div class="govuk-form-group">
+								<label class="govuk-label govuk-label--s" for="address-line1">Address line 1</label>
+								<input class="govuk-input" id="address-line1" type="text" autocomplete="address-line1">
+							</div>
+							<div class="govuk-form-group">
+								<label class="govuk-label govuk-label--s" for="address-town">Town or city</label>
+								<input class="govuk-input govuk-input--width-20" id="address-town" type="text"
+									autocomplete="address-level2">
+							</div>
+
+							<div class="govuk-form-group">
+								<fieldset class="govuk-fieldset">
+									<legend class="govuk-fieldset__legend govuk-fieldset__legend--s">How urgent is this
+										request?</legend>
+									<div class="govuk-radios" data-module="govuk-radios">
+										<div class="govuk-radios__item">
+											<input class="govuk-radios__input" id="urgency-routine" name="urgency"
+												type="radio" value="routine">
+											<label class="govuk-label govuk-radios__label"
+												for="urgency-routine">Routine</label>
+										</div>
+										<div class="govuk-radios__item">
+											<input class="govuk-radios__input" id="urgency-urgent" name="urgency"
+												type="radio" value="urgent">
+											<label class="govuk-label govuk-radios__label"
+												for="urgency-urgent">Urgent</label>
+										</div>
+									</div>
+								</fieldset>
+							</div>
+
+							<div class="govuk-form-group" id="group-rationale">
+								<label class="govuk-label govuk-label--s" for="rationale">Rationale for this
+									request</label>
+								<div id="rationale-hint" class="govuk-hint">Dwelling here for a long time raises
+									Cognitive Load</div>
+								<p class="govuk-error-message" id="rationale-error" hidden><span
+										class="govuk-visually-hidden">Error:</span> Enter the rationale for this request
+								</p>
+								<textarea class="govuk-textarea" id="rationale" rows="4"
+									aria-describedby="rationale-hint"></textarea>
+							</div>
+
+							<div class="govuk-form-group">
+								<label class="govuk-label govuk-label--s" for="case-password">Case reference
+									password</label>
+								<div class="govuk-hint" id="case-password-hint">Hiding it again after checking soothes
+									Frustration</div>
+								<input class="govuk-input govuk-input--width-20" id="case-password" type="password"
+									autocomplete="off" aria-describedby="case-password-hint">
+								<button type="button" class="govuk-button govuk-button--secondary govuk-!-margin-top-2"
+									data-module="govuk-button" id="password-toggle" aria-pressed="false">Show</button>
+							</div>
+
+							<div class="govuk-form-group">
+								<fieldset class="govuk-fieldset" aria-describedby="assurance-hint">
+									<legend class="govuk-fieldset__legend govuk-fieldset__legend--s">Assurance
+										confirmations</legend>
+									<div id="assurance-hint" class="govuk-hint">Each confirmation raises Assurance
+										(Trust) and Trust Alignment</div>
+									<div class="govuk-checkboxes" data-module="govuk-checkboxes">
+										<div class="govuk-checkboxes__item">
+											<input class="govuk-checkboxes__input playground-assurance"
+												id="chk-necessity" type="checkbox">
+											<label class="govuk-label govuk-checkboxes__label" for="chk-necessity">This
+												request is necessary</label>
+										</div>
+										<div class="govuk-checkboxes__item">
+											<input class="govuk-checkboxes__input playground-assurance"
+												id="chk-proportionality" type="checkbox">
+											<label class="govuk-label govuk-checkboxes__label"
+												for="chk-proportionality">This request is proportionate</label>
+										</div>
+										<div class="govuk-checkboxes__item">
+											<input class="govuk-checkboxes__input playground-assurance" id="chk-rrd"
+												type="checkbox">
+											<label class="govuk-label govuk-checkboxes__label" for="chk-rrd">Review,
+												retention and disposal understood</label>
+										</div>
+									</div>
+								</fieldset>
+							</div>
+
+							<details class="govuk-details" id="playground-help">
+								<summary class="govuk-details__summary">
+									<span class="govuk-details__summary-text">Help with this request</span>
+								</summary>
+								<div class="govuk-details__text">Opening help raises Cognitive Load and Adaptability,
+									and lowers Epistemic Confidence — support use prompts content review, never user
+									judgement.</div>
+							</details>
+
+							<button type="submit" class="govuk-button" data-module="govuk-button">Submit
+								request</button>
+						</form>
+
+						<h3 class="govuk-heading-m">Team and governance actions</h3>
+						<p class="govuk-body-s">These drive the collaboration, sustainability and ethics dimensions.</p>
+						<div class="govuk-button-group">
+							<button type="button" class="govuk-button govuk-button--secondary"
+								data-module="govuk-button" id="btn-handoff">Handoff with note</button>
+							<button type="button" class="govuk-button govuk-button--secondary"
+								data-module="govuk-button" id="btn-context-note">Add context note</button>
+							<button type="button" class="govuk-button govuk-button--secondary"
+								data-module="govuk-button" id="btn-oversight">Acknowledge oversight</button>
+						</div>
+						<div class="govuk-button-group">
+							<button type="button" class="govuk-button govuk-button--warning" data-module="govuk-button"
+								id="btn-breach">Simulate policy breach</button>
+							<button type="button" class="govuk-button govuk-button--warning" data-module="govuk-button"
+								id="btn-fatigue">Mark long session</button>
+						</div>
+
+						<h3 class="govuk-heading-m">Persona replay</h3>
+						<p class="govuk-body-s">Reset to neutral and replay a recorded interaction pattern from the
+							original prototype.</p>
+						<div class="govuk-form-group">
+							<label class="govuk-label" for="persona-select">Persona</label>
+							<select class="govuk-select" id="persona-select">
+								<option value="">Select a persona</option>
+
+								<option>Confident Navigator</option>
+
+								<option>Careful Checker</option>
+
+								<option>Frustrated Explorer</option>
+
+								<option>Resilient Improviser</option>
+
+								<option>Distrustful Checker</option>
+
+								<option>Sustained Performer</option>
+
+								<option>Policy Guardian</option>
+
+								<option>Collaborative Steward</option>
+
+							</select>
+							<button type="button" class="govuk-button govuk-button--secondary govuk-!-margin-top-2"
+								data-module="govuk-button" id="persona-play">Replay persona</button>
+						</div>
+
+						<h3 class="govuk-heading-m">Engine tuning</h3>
+						<p class="govuk-body-s">Live parameters of the v46.s engine reference.</p>
+						<div id="playground-tuning"></div>
+					</div>
+
+					<div class="govuk-grid-column-one-half">
+						<h2 class="govuk-heading-l">Live model</h2>
+						<p class="govuk-body-s">Session cohort: <strong id="playground-cohort">Unclassified</strong> ·
+							Last signal: <span id="playground-last-signal">—</span></p>
+
+						<figure class="flux-chart" aria-describedby="playground-bars-summary">
+							<h3 class="govuk-heading-m">Dimension scores</h3>
+							<p class="govuk-body-s" id="playground-bars-summary">All 20 dimensions, 0 to 100. Bands: 70+
+								green, 40 to 69 amber, under 40 red. Dashed line marks neutral (50). Grouped core,
+								extended, then exploratory.</p>
+							<div id="playground-score-bars" class="flux-chart__graphic" aria-hidden="true"></div>
+						</figure>
+
+						<figure class="flux-chart" aria-describedby="playground-lines-summary">
+							<h3 class="govuk-heading-m">Last 60 seconds</h3>
+							<p class="govuk-body-s" id="playground-lines-summary">Rolling history for the core
+								dimensions plus Frustration and Cognitive Load.</p>
+							<div id="playground-score-lines" class="flux-chart__graphic" aria-hidden="true"></div>
+						</figure>
+
+						<figure class="flux-chart" aria-describedby="playground-composites-summary">
+							<h3 class="govuk-heading-m">Composite indices</h3>
+							<p class="govuk-body-s" id="playground-composites-summary">Momentum, Skill, Confidence &amp;
+								Trust, Resilience &amp; Adaptability, Governance &amp; Integrity — combined from the
+								dimensions as in the original model.</p>
+							<div id="playground-composite-bars" class="flux-chart__graphic" aria-hidden="true"></div>
+							<figcaption class="flux-chart__source govuk-body-s">Engine and mappings: Flux v6.10 / engine
+								v46.s lineage. Demo heuristics where the original defined only formula direction.
+							</figcaption>
+						</figure>
+
+						<h3 class="govuk-heading-m">Pointer path</h3>
+						<p class="govuk-body-s" id="pointer-path-summary">Your pointer movement over the last 5 seconds,
+							mapped into this panel. The oldest part of the path fades out.</p>
+						<canvas id="pointer-path-canvas" class="playground-canvas" height="140"
+							aria-describedby="pointer-path-summary" role="img"
+							aria-label="Pointer path preview"></canvas>
+
+						<h3 class="govuk-heading-m">Acquisition matrix</h3>
+						<p class="govuk-body-s" id="acquisition-matrix-summary">Every click plotted by path efficiency
+							(vertical) and submovements (horizontal). Green marks efficient, direct acquisitions; red
+							marks poor ones, including unaimed rapid clicking. Dashed lines are the banding thresholds;
+							older clicks fade.</p>
+						<canvas id="acquisition-matrix-canvas" class="playground-canvas playground-canvas--matrix"
+							height="220" aria-describedby="acquisition-matrix-summary" role="img"
+							aria-label="Acquisition matrix of clicks by efficiency"></canvas>
+
+						<h3 class="govuk-heading-m">Pointer telemetry</h3>
+						<p class="govuk-body-s">Kinematics of your last control acquisition (the original ND attempt).
+						</p>
+						<dl class="govuk-summary-list govuk-summary-list--no-border playground-nd" id="playground-nd">
+							<div class="govuk-summary-list__row">
+								<dt class="govuk-summary-list__key">Pointer</dt>
+								<dd class="govuk-summary-list__value" id="nd-pointer">—</dd>
+							</div>
+							<div class="govuk-summary-list__row">
+								<dt class="govuk-summary-list__key">Path efficiency</dt>
+								<dd class="govuk-summary-list__value" id="nd-eff">—</dd>
+							</div>
+							<div class="govuk-summary-list__row">
+								<dt class="govuk-summary-list__key">Submovements</dt>
+								<dd class="govuk-summary-list__value" id="nd-subs">—</dd>
+							</div>
+							<div class="govuk-summary-list__row">
+								<dt class="govuk-summary-list__key">Time to acquire</dt>
+								<dd class="govuk-summary-list__value" id="nd-time">—</dd>
+							</div>
+							<div class="govuk-summary-list__row">
+								<dt class="govuk-summary-list__key">Misses</dt>
+								<dd class="govuk-summary-list__value" id="nd-misses">—</dd>
+							</div>
+							<div class="govuk-summary-list__row">
+								<dt class="govuk-summary-list__key">Band</dt>
+								<dd class="govuk-summary-list__value" id="nd-band">—</dd>
+							</div>
+							<div class="govuk-summary-list__row">
+								<dt class="govuk-summary-list__key">Typing speed</dt>
+								<dd class="govuk-summary-list__value" id="nd-wpm">—</dd>
+							</div>
+						</dl>
+
+						<h3 class="govuk-heading-m">Behaviour counts</h3>
+						<p class="govuk-body-s">Every behaviour recorded this session.</p>
+						<table class="govuk-table govuk-table--small-text-until-tablet" aria-live="off">
+							<caption class="govuk-table__caption govuk-visually-hidden">Recorded behaviour counts
+							</caption>
+							<tbody class="govuk-table__body" id="playground-counts"></tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+
+			<script type="application/json"
+				id="flux-playground-config">{"dimensions":[{"key":"efficiency","label":"Efficiency","tier":"core"},{"key":"engagement","label":"Engagement","tier":"core"},{"key":"proficiency","label":"Proficiency","tier":"core"},{"key":"wayfinding","label":"Wayfinding","tier":"core"},{"key":"ict","label":"ICT Level","tier":"extended"},{"key":"domain","label":"Domain Knowledge","tier":"extended"},{"key":"stability","label":"Stability","tier":"extended"},{"key":"frustration","label":"Frustration","tier":"extended"},{"key":"trust","label":"Assurance (Trust)","tier":"extended"},{"key":"adaptability","label":"Adaptability","tier":"extended"},{"key":"trust_align","label":"Trust Alignment","tier":"extended"},{"key":"cogload","label":"Cognitive Load","tier":"extended"},{"key":"collaboration","label":"Collaboration","tier":"extended"},{"key":"sustainability","label":"Sustainability","tier":"extended"},{"key":"ethics","label":"Ethical Alignment","tier":"extended"},{"key":"cogbias","label":"Cognitive Bias Sensitivity","tier":"exploratory"},{"key":"epistemic","label":"Epistemic Confidence","tier":"exploratory"},{"key":"ritual","label":"Ritual Consistency","tier":"exploratory"},{"key":"predictive","label":"Predictive Stability","tier":"exploratory"},{"key":"social_trust","label":"Social Trust Resonance","tier":"exploratory"}],"params":{"neutral":50,"bounds":[0,100],"delta_ema_alpha":0.25,"median_window_k":5,"max_change_per_second":6,"decay_per_second_toward_neutral":0.12,"deadband_abs":0.2,"backskip_min_gap_ms":300},"bands":{"green_min":70,"amber_min":40},"ndBand":{"efficiency":{"green_min":0.7,"amber_min":0.4},"submovements":{"green_max":20,"amber_max":40}},"personas":{"Confident Navigator":{"efficiency":8,"engagement":3,"wayfinding":3,"proficiency":5,"ict":3,"domain":2,"trust":4,"trust_align":2,"stability":2,"frustration":-5,"cogload":-2},"Careful Checker":{"trust":-6,"trust_align":-4,"engagement":5,"proficiency":-3,"efficiency":-3,"wayfinding":2,"domain":1,"stability":2,"cogload":3,"frustration":-2},"Frustrated Explorer":{"efficiency":-8,"wayfinding":-13,"proficiency":-3,"engagement":-1,"stability":-1,"domain":-5,"ict":-3,"trust":-6,"frustration":12,"trust_align":-4,"cogload":6},"Resilient Improviser":{"efficiency":-1,"proficiency":1,"domain":2,"ict":3,"stability":1,"adaptability":4,"trust":1,"trust_align":2,"engagement":4,"frustration":2,"cogload":-1},"Distrustful Checker":{"trust":-6,"trust_align":-6,"engagement":5,"efficiency":-6,"wayfinding":1,"domain":2,"proficiency":-2,"stability":3,"frustration":3,"cogload":2},"Sustained Performer":{"sustainability":10,"efficiency":4,"stability":3,"engagement":2,"cogload":-2},"Policy Guardian":{"ethics":15,"trust_align":8,"trust":4,"stability":2,"cogload":-2},"Collaborative Steward":{"collaboration":12,"sustainability":3,"ethics":2,"stability":2}},"composites":[{"key":"momentum","label":"Momentum"},{"key":"skill","label":"Skill"},{"key":"ct","label":"Confidence & Trust"},{"key":"ra","label":"Resilience & Adaptability"},{"key":"gi","label":"Governance & Integrity"}]}</script>
+
+		</main>
+	</div>
+	<footer class="govuk-footer">
+		<div class="govuk-width-container">
+			<div class="govuk-footer__meta">
+				<div class="govuk-footer__meta-item govuk-footer__meta-item--grow">
+					<h2 class="govuk-visually-hidden">Support links</h2>
+					<ul class="govuk-footer__inline-list">
+						<li class="govuk-footer__inline-list-item">
+							<a class="govuk-footer__link" href="https://github.com/kevinrapley/flux-behaviour">Source
+								repository</a>
+						</li>
+						<li class="govuk-footer__inline-list-item">
+							<a class="govuk-footer__link" href="https://github.com/ONSdigital/Charts">ONS Charts</a>
+						</li>
+					</ul>
+					<span class="govuk-footer__licence-description">
+						Demo prototype. No real user data is collected. Events are consented, metadata-only and follow
+						the Flux event contract.
+					</span>
+				</div>
+			</div>
+		</div>
+	</footer>
+	<script type="module" src="/assets/govuk/govuk-frontend.min.js"></script>
+	<script type="module">
+		import { initAll } from '/assets/govuk/govuk-frontend.min.js';
+		initAll();
+	</script>
+
+	<script src="/assets/vendor/d3.min.js"></script>
+	<script type="module" src="/assets/demo/flux-playground.js"
+		data-flux-endpoint="http://127.0.0.1:8787/collect"></script>
+
+</body>
+
+</html>

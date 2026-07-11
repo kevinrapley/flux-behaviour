@@ -9,12 +9,12 @@ gaps:
     owner: maintainer
     status: open
   - id: GAP-002
-    title: Runtime product code is not yet promoted
+    title: Runtime product code requires governed production assurance
     severity: medium
-    observed_state: Foundation exists without production collector, SDK, scoring engine or dashboard.
-    expected_state: Runtime code promoted through reviewed PRs.
-    risk: Repository is not a working product yet.
-    action: Promote source artefacts one by one using migration controls.
+    observed_state: Pages API, D1 model, browser SDK, account UI and dashboard have been promoted, but the work is awaiting reviewed PRs and release assurance.
+    expected_state: Runtime code is reviewed with DPIA, accessibility, retention, incident and rate-limit evidence before general availability.
+    risk: Live collection could be enabled without the assurance controls required for a public-service analytics product.
+    action: Complete release assurance and retain the production blocks in GAP-003, GAP-004 and GAP-005.
     owner: product-lead
     status: open
   - id: GAP-003
@@ -70,4 +70,13 @@ gaps:
     risk: Viewers could over-trust demo score movements as validated behavioural measurement.
     action: Validate the ported engine and mappings against the golden corpus cases when scoring is promoted.
     owner: product-lead
+    status: open
+  - id: GAP-009
+    title: OTP email delivery provider is not configured
+    severity: high
+    observed_state: The account and OTP routes are deployed, but protected Resend sender credentials are not configured.
+    expected_state: A verified sending provider delivers one-time codes and is tested without exposing email contents or credentials.
+    risk: Account creation and sign-in cannot complete.
+    action: Configure `RESEND_API_KEY` and `FLUX_EMAIL_FROM` as Pages secrets, then verify an end-to-end sign-in.
+    owner: security-lead
     status: open

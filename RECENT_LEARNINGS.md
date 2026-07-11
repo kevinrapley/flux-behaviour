@@ -43,6 +43,11 @@ The demo dashboard renders fixture data while collector storage is disabled, and
 ## 2026-07-04 — GOV.UK demo build mirrors the ResearchOps pattern
 
 The demo uses govuk-frontend v6 from npm, a Sass entry point, Nunjucks page rendering and static output to a gitignored public/ directory, following the working ResearchOps build. Charts follow ONS Charts conventions (per-breakpoint config, accessible summaries, source lines) pending direct vendoring of ONSdigital/Charts.
+## 2026-07-11 — Cross-service behavioural analytics needs an origin-bound tenant contract
+
+Use a tenant ID, an allow-listed browser origin, a pseudonymous persistent visitor ID and a browser-session ID together. Do not derive analytics identity from an authenticated account email or typed page content.
+
+---
 
 ## 2026-05-29 — Boundary controls should precede storage bindings
 

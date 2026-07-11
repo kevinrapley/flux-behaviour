@@ -1,0 +1,165 @@
+<!doctype html>
+<html class="govuk-template govuk-template--rebranded" lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Apply for a demo licence – Flux Behaviour demo</title>
+	<link rel="stylesheet" href="/assets/styles/demo.css" media="all">
+
+</head>
+<body class="govuk-template__body">
+	<script>document.body.className += ' js-enabled' + ('noModule' in HTMLScriptElement.prototype ? ' govuk-frontend-supported' : '');</script>
+	<a href="#main-content" class="govuk-skip-link" data-module="govuk-skip-link">Skip to main content</a>
+
+<div class="govuk-cookie-banner" data-nosnippet role="region" aria-label="Consent to behavioural analytics" id="flux-consent-banner">
+	<div class="govuk-cookie-banner__message govuk-width-container">
+		<div class="govuk-grid-row">
+			<div class="govuk-grid-column-two-thirds">
+				<h2 class="govuk-cookie-banner__heading govuk-heading-m">Behavioural analytics on this demo</h2>
+				<div class="govuk-cookie-banner__content">
+					<p class="govuk-body">With your consent, this demo measures interaction metadata such as how long fields take and where errors happen. It never records what you type.</p>
+				</div>
+			</div>
+		</div>
+		<div class="govuk-button-group">
+			<button value="accept" type="button" name="flux-consent" class="govuk-button" data-module="govuk-button" id="flux-consent-accept">Accept behavioural analytics</button>
+			<button value="reject" type="button" name="flux-consent" class="govuk-button" data-module="govuk-button" id="flux-consent-reject">Reject behavioural analytics</button>
+		</div>
+	</div>
+</div>
+
+	<header class="govuk-header" data-module="govuk-header">
+		<div class="govuk-header__container govuk-width-container">
+			<div class="govuk-header__logo">
+				<a href="/" class="govuk-header__link govuk-header__link--homepage">
+					<span class="govuk-header__logotype-text">Flux Behaviour</span>
+				</a>
+			</div>
+		</div>
+	</header>
+	<div class="govuk-service-navigation" data-module="govuk-service-navigation">
+		<div class="govuk-width-container">
+			<div class="govuk-service-navigation__container">
+				<span class="govuk-service-navigation__service-name">
+					<a href="/" class="govuk-service-navigation__link">Behavioural analytics demo</a>
+				</span>
+				<nav aria-label="Menu" class="govuk-service-navigation__wrapper">
+					<ul class="govuk-service-navigation__list">
+						<li class="govuk-service-navigation__item">
+							<a class="govuk-service-navigation__link" href="/">Get started</a>
+						</li>
+						<li class="govuk-service-navigation__item govuk-service-navigation__item--active">
+							<a class="govuk-service-navigation__link" href="/journey/" aria-current="true">Demo journey</a>
+						</li>
+						<li class="govuk-service-navigation__item">
+							<a class="govuk-service-navigation__link" href="/playground/">Playground</a>
+						</li>
+						<li class="govuk-service-navigation__item">
+							<a class="govuk-service-navigation__link" href="/dashboard/">Dashboard</a>
+						</li>
+					</ul>
+				</nav>
+			</div>
+		</div>
+	</div>
+	<div class="govuk-width-container">
+		<main class="govuk-main-wrapper" id="main-content" role="main">
+
+<div class="govuk-grid-row">
+	<div class="govuk-grid-column-two-thirds">
+		<span class="govuk-caption-xl">Demo journey</span>
+		<h1 class="govuk-heading-xl">Apply for a demo licence</h1>
+		<p class="govuk-body">This form is instrumented with the Flux tag. If you accept behavioural analytics, interacting with the fields below emits consented, metadata-only events. The panel underneath shows exactly what leaves the page.</p>
+
+		<form id="demo-journey-form" novalidate>
+			<div class="govuk-form-group">
+				<label class="govuk-label govuk-label--m" for="full-name">Full name</label>
+				<div id="full-name-hint" class="govuk-hint">Only the length of what you type is measured, never the content.</div>
+				<input class="govuk-input" id="full-name" name="full-name" type="text" aria-describedby="full-name-hint" data-flux-field="full-name">
+			</div>
+
+			<div class="govuk-form-group">
+				<label class="govuk-label govuk-label--m" for="licence-reason">Why do you need a licence?</label>
+				<textarea class="govuk-textarea" id="licence-reason" name="licence-reason" rows="4" data-flux-field="licence-reason"></textarea>
+			</div>
+
+			<div class="govuk-form-group">
+				<fieldset class="govuk-fieldset">
+					<legend class="govuk-fieldset__legend govuk-fieldset__legend--m">How would you like to be contacted?</legend>
+					<div class="govuk-radios" data-module="govuk-radios">
+						<div class="govuk-radios__item">
+							<input class="govuk-radios__input" id="contact-email" name="contact" type="radio" value="email" data-flux-field="contact">
+							<label class="govuk-label govuk-radios__label" for="contact-email">Email</label>
+						</div>
+						<div class="govuk-radios__item">
+							<input class="govuk-radios__input" id="contact-phone" name="contact" type="radio" value="phone" data-flux-field="contact">
+							<label class="govuk-label govuk-radios__label" for="contact-phone">Phone</label>
+						</div>
+					</div>
+				</fieldset>
+			</div>
+
+			<details class="govuk-details" id="journey-help" data-flux-help="licence-help">
+				<summary class="govuk-details__summary">
+					<span class="govuk-details__summary-text">Help with this application</span>
+				</summary>
+				<div class="govuk-details__text">Opening this help section emits an assist event so services can see which questions need better guidance.</div>
+			</details>
+
+			<button type="submit" class="govuk-button" data-module="govuk-button">Continue</button>
+		</form>
+	</div>
+</div>
+
+<div class="govuk-grid-row">
+	<div class="govuk-grid-column-full">
+		<h2 class="govuk-heading-l">Events emitted by this page</h2>
+		<p class="govuk-body" id="flux-event-log-status">No consent decision yet. Events are dropped until you accept behavioural analytics.</p>
+		<table class="govuk-table" id="flux-event-log" aria-live="polite">
+			<caption class="govuk-table__caption govuk-visually-hidden">Log of behavioural events emitted by this page</caption>
+			<thead class="govuk-table__head">
+				<tr class="govuk-table__row">
+					<th scope="col" class="govuk-table__header">Class</th>
+					<th scope="col" class="govuk-table__header">Action</th>
+					<th scope="col" class="govuk-table__header">Element</th>
+					<th scope="col" class="govuk-table__header">Metadata</th>
+					<th scope="col" class="govuk-table__header">Status</th>
+				</tr>
+			</thead>
+			<tbody class="govuk-table__body" id="flux-event-log-body"></tbody>
+		</table>
+	</div>
+</div>
+
+		</main>
+	</div>
+	<footer class="govuk-footer">
+		<div class="govuk-width-container">
+			<div class="govuk-footer__meta">
+				<div class="govuk-footer__meta-item govuk-footer__meta-item--grow">
+					<h2 class="govuk-visually-hidden">Support links</h2>
+					<ul class="govuk-footer__inline-list">
+						<li class="govuk-footer__inline-list-item">
+							<a class="govuk-footer__link" href="https://github.com/kevinrapley/flux-behaviour">Source repository</a>
+						</li>
+						<li class="govuk-footer__inline-list-item">
+							<a class="govuk-footer__link" href="https://github.com/ONSdigital/Charts">ONS Charts</a>
+						</li>
+					</ul>
+					<span class="govuk-footer__licence-description">
+						Demo prototype. No real user data is collected. Events are consented, metadata-only and follow the Flux event contract.
+					</span>
+				</div>
+			</div>
+		</div>
+	</footer>
+	<script type="module" src="/assets/govuk/govuk-frontend.min.js"></script>
+	<script type="module">
+		import { initAll } from '/assets/govuk/govuk-frontend.min.js';
+		initAll();
+	</script>
+
+<script type="module" src="/assets/demo/demo-journey.js" data-flux-endpoint="http://127.0.0.1:8787/collect"></script>
+
+</body>
+</html>
