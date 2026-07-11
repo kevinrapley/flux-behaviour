@@ -4,6 +4,10 @@ Recent learnings created by the LLM agent in reverse-chronological order (most r
 
 ---
 
+## 2026-07-11 — Analytics dashboards should lead with cumulative service evidence
+
+A chronological dump of sessions is an investigation tool, not a useful dashboard. Lead with period-based visitors, returning visitors, sessions, interactions, comparison deltas and trends; keep individual journeys as an intentional drill-down. This improves decision usefulness and also reduces the prominence of pseudonymous identifiers.
+
 ## 2026-07-11 — Runtime assets need a source-of-truth build path
 
 Static `public/` assets can make a feature appear to work until a normal build regenerates older source files over them. Keep deployed browser modules and dashboard modules under `src/`, copy them through the build pipeline, and regression-test the copied output. This is especially important for consent and identity behaviour: a successful one-off Pages upload is not evidence that the next governed deployment preserves it.

@@ -38,10 +38,10 @@ gaps:
   - id: GAP-005
     title: Live dashboard has no standard visualisation-template dependency
     severity: low
-    observed_state: The authenticated dashboard now renders live privacy-safe summary lists and per-session journeys rather than fixture charts. No live chart dependency is currently used.
+    observed_state: The authenticated dashboard now renders a responsive SVG audience trend with a text alternative and an expandable source-data table. It remains a locally reviewed implementation rather than a standard visualisation-template dependency.
     expected_state: Any future live visualisation uses a reviewed accessible template or component rather than bespoke fixture graphics.
     risk: A future dashboard chart could drift from accessibility and styling standards.
-    action: Retain accessible summary lists as the baseline and review a standard visualisation template before adding live charts.
+    action: Complete browser, keyboard and screen-reader review, then assess a standard visualisation template before expanding the chart catalogue.
     owner: product-lead
     status: open
   - id: GAP-006
