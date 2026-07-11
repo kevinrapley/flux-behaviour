@@ -36,12 +36,12 @@ gaps:
     owner: product-lead
     status: open
   - id: GAP-005
-    title: Demo dashboard charts follow ONS Charts patterns but do not vendor the library
+    title: Live dashboard has no standard visualisation-template dependency
     severity: low
-    observed_state: demo/assets/flux-charts.js implements bar and line charts following ONS Charts conventions with d3.
-    expected_state: Visualisations vendor or consume ONSdigital/Charts templates directly so upstream improvements flow through.
-    risk: Chart behaviour may drift from ONS accessibility and styling standards.
-    action: Replace bespoke chart modules with vendored ONSdigital/Charts templates once the dashboard has real data.
+    observed_state: The authenticated dashboard now renders live privacy-safe summary lists and per-session journeys rather than fixture charts. No live chart dependency is currently used.
+    expected_state: Any future live visualisation uses a reviewed accessible template or component rather than bespoke fixture graphics.
+    risk: A future dashboard chart could drift from accessibility and styling standards.
+    action: Retain accessible summary lists as the baseline and review a standard visualisation template before adding live charts.
     owner: product-lead
     status: open
   - id: GAP-006
