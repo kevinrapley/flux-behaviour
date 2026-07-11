@@ -1,5 +1,6 @@
 import { describeInteraction } from './narrative.mjs';
 import { buildGoogleAuthorisationUrl } from './google-oauth.mjs';
+import { buildLiveAnalytics } from './live-analytics.mjs';
 import { validateEventRuntime } from '../events/validate-event-runtime.mjs';
 import { fluxEventSchema } from '../events/flux-event-schema.mjs';
 
@@ -109,8 +110,8 @@ async function dashboard(request, env) {
   if (!accountId || !signature || Number(expires) <= Date.now() || !(await equal(signature, await hash(`${accountId}.${expires}`, env.FLUX_AUTH_SECRET)))) return json({ ok: false, error: 'unauthorised' }, 401);
   const access = await env.FLUX_DB.prepare("SELECT 1 FROM account_tenants WHERE account_id = ? AND tenant_id = 'researchops'").bind(accountId).first(); if (!access) return json({ ok: false, error: 'forbidden' }, 403);
   const sessions = await env.FLUX_DB.prepare("SELECT id, visitor_id, started_at_ms, last_seen_at_ms, is_returning_visitor FROM sessions WHERE tenant_id = 'researchops' ORDER BY started_at_ms DESC LIMIT 50").all();
-  const events = await env.FLUX_DB.prepare("SELECT session_id, narrative, occurred_at_ms FROM events WHERE tenant_id = 'researchops' AND session_id IN (SELECT id FROM sessions WHERE tenant_id = 'researchops' ORDER BY started_at_ms DESC LIMIT 50) ORDER BY occurred_at_ms ASC LIMIT 500").all();
-  return json({ ok: true, sessions: sessions.results, journeys: groupJourneys(sessions.results, events.results) });
+  const events = await env.FLUX_DB.prepare("SELECT session_id, action, element_key, metadata_json, narrative, occurred_at_ms FROM (SELECT session_id, action, element_key, metadata_json, narrative, occurred_at_ms FROM events WHERE tenant_id = 'researchops' AND session_id IN (SELECT id FROM sessions WHERE tenant_id = 'researchops' ORDER BY started_at_ms DESC LIMIT 50) ORDER BY occurred_at_ms DESC LIMIT 500) ORDER BY occurred_at_ms ASC").all();
+  return json({ ok: true, sessions: sessions.results, journeys: groupJourneys(sessions.results, events.results), analytics: buildLiveAnalytics(sessions.results, events.results) });
 }
 
 export function groupJourneys(sessions = [], events = []) {

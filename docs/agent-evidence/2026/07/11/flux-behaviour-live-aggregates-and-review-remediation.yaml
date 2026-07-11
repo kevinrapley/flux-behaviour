@@ -1,0 +1,51 @@
+evidence_records:
+  - task_id: flux-behaviour-live-aggregates-and-review-remediation
+    mode: repo-fix
+    repository: kevinrapley/flux-behaviour
+    risk_level: high
+    base_branch: main
+    working_branch: feature/live-researchops-aggregates
+    files_read:
+      - AGENTS.md
+      - src/sdk/flux-auto-capture.mjs
+      - src/product/router.mjs
+      - src/dashboard/live-dashboard.mjs
+      - docs/product/production-runtime.md
+    files_changed:
+      - src/sdk/flux-auto-capture.mjs
+      - src/product/router.mjs
+      - src/product/live-analytics.mjs
+      - src/dashboard/live-dashboard.mjs
+      - demo/templates/pages/dashboard.njk
+      - tests/dashboard-query.test.mjs
+      - tests/live-analytics.test.mjs
+    promotion_decisions:
+      - decision: Replace fixture-only dashboard charts with live privacy-safe aggregates.
+        reason: The dashboard must present captured ResearchOps analytics rather than imply fixtures are live evidence.
+      - decision: Exclude sensitive authentication inputs from all auto-capture.
+        reason: Count-only metadata can still reveal sensitive authentication-field activity.
+      - decision: Select the newest bounded event window before chronological display.
+        reason: Newer session narratives must not be omitted by an older high-volume session.
+    commands_run:
+      - command: npm test
+        result: passed
+        evidence: 103 tests passed.
+      - command: npm run demo:build
+        result: passed
+      - command: npm run validate
+        result: passed
+      - command: npm run security:secrets
+        result: passed
+      - command: npm run sbom
+        result: passed
+    recent_learnings:
+      - Structural capture must still exclude authentication fields.
+    security:
+      - No authentication content, labels or identifiers are exported.
+    privacy:
+      - Aggregates read only approved stored metadata and use neutral control keys.
+      - Email, telephone, password and one-time-code inputs are excluded from auto-capture.
+    accessibility:
+      - Live analytics use GOV.UK summary lists, headings and text lists.
+    risks:
+      - DPIA, full accessibility evidence, retention, production rate limiting and incident controls remain release blockers.

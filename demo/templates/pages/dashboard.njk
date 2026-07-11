@@ -5,13 +5,7 @@
 	<div class="govuk-grid-column-two-thirds">
 		<span class="govuk-caption-xl">Dashboard</span>
 		<h1 class="govuk-heading-xl">Behavioural signals</h1>
-		<div class="govuk-warning-text">
-			<span class="govuk-warning-text__icon" aria-hidden="true">!</span>
-			<strong class="govuk-warning-text__text">
-				<span class="govuk-visually-hidden">Warning</span>
-				The charts below remain the demo baseline. The live ResearchOps panel shows consented production sessions when you sign in.
-			</strong>
-		</div>
+		<p class="govuk-body">This dashboard presents consented, pseudonymous ResearchOps interaction analytics. It is evidence about service friction, never a judgement of an individual.</p>
 	</div>
 </div>
 
@@ -25,59 +19,11 @@
 		</table>
 		<h3 class="govuk-heading-m">Session journey narrative</h3>
 		<div data-flux-live-journeys></div>
+		<div data-flux-live-analytics></div>
 	</div>
 </div>
-
-<div class="govuk-grid-row">
-	<div class="govuk-grid-column-two-thirds">
-		<figure class="flux-chart" aria-describedby="field-friction-summary">
-			<h2 class="govuk-heading-l" id="field-friction-title">Median time spent per question</h2>
-			<p class="govuk-body" id="field-friction-summary">The licence reason question takes people around three times longer than any other question in the demo journey.</p>
-			<div id="field-friction-chart" class="flux-chart__graphic" data-flux-chart="bar" aria-hidden="true"></div>
-			<figcaption class="flux-chart__source govuk-body-s">Source: Flux Behaviour demo fixtures, consented sessions, June 2026</figcaption>
-		</figure>
-	</div>
-</div>
-
-<div class="govuk-grid-row">
-	<div class="govuk-grid-column-two-thirds">
-		<figure class="flux-chart" aria-describedby="validation-errors-summary">
-			<h2 class="govuk-heading-l" id="validation-errors-title">Validation errors per 100 sessions</h2>
-			<p class="govuk-body" id="validation-errors-summary">Validation errors fell across the week after the contact question hint text was rewritten on Wednesday.</p>
-			<div id="validation-errors-chart" class="flux-chart__graphic" data-flux-chart="line" aria-hidden="true"></div>
-			<figcaption class="flux-chart__source govuk-body-s">Source: Flux Behaviour demo fixtures, consented sessions, June 2026</figcaption>
-		</figure>
-	</div>
-</div>
-
-<div class="govuk-grid-row">
-	<div class="govuk-grid-column-two-thirds">
-		<h2 class="govuk-heading-l">Help requests by question</h2>
-		<table class="govuk-table">
-			<caption class="govuk-table__caption govuk-visually-hidden">Help requests by question</caption>
-			<thead class="govuk-table__head">
-				<tr class="govuk-table__row">
-					<th scope="col" class="govuk-table__header">Question</th>
-					<th scope="col" class="govuk-table__header govuk-table__header--numeric">Help requests per 100 sessions</th>
-				</tr>
-			</thead>
-			<tbody class="govuk-table__body">
-				{% for row in helpRequests %}
-				<tr class="govuk-table__row">
-					<th scope="row" class="govuk-table__header">{{ row.name }}</th>
-					<td class="govuk-table__cell govuk-table__cell--numeric">{{ row.value }}</td>
-				</tr>
-				{% endfor %}
-			</tbody>
-		</table>
-	</div>
-</div>
-
-<script type="application/json" id="flux-dashboard-data">{{ dashboardJson | safe }}</script>
 {% endblock %}
 
 {% block scripts %}
-<script src="/assets/vendor/d3.min.js"></script>
-<script type="module" src="/assets/demo/flux-charts.js"></script>
 <script type="module" src="/assets/flux/dashboard/live-dashboard.mjs"></script>
 {% endblock %}

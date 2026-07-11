@@ -29,10 +29,8 @@ test('demo build renders the GOV.UK prototype pages', () => {
     assert.match(journey, /data-flux-field="full-name"/);
     assert.match(journey, /flux-event-log/);
 
-    assert.match(dashboard, /field-friction-chart/);
-    assert.match(dashboard, /validation-errors-chart/);
-    assert.match(dashboard, /flux-dashboard-data/);
     assert.match(dashboard, /Live ResearchOps journeys/);
+    assert.match(dashboard, /data-flux-live-analytics/);
     assert.match(dashboard, /assets\/flux\/dashboard\/live-dashboard\.mjs/);
 
     assert.match(playground, /playground-score-bars/);
@@ -59,8 +57,10 @@ test('production runtime assets are sourced and copied as part of the demo build
 
     assert.match(source, /key_press_count/);
     assert.match(source, /backspace_count/);
-  assert.match(source, /fluxKey/);
-  assert.match(source, /auto\.\$\{kind\}/);
+    assert.match(source, /fluxKey/);
+    assert.match(source, /auto\.\$\{kind\}/);
+    assert.match(source, /one-time-code/);
+    assert.match(source, /removeEventListener\('input', state\.onInput\)/);
     assert.match(browser, /persistentVisitorId/);
     assert.match(browser, /persistentSessionId/);
     assert.match(copy, /src\/dashboard/);
