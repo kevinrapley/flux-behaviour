@@ -1,0 +1,36 @@
+evidence_records:
+  - task_id: flux-behaviour-dashboard-sparse-data-polish
+    mode: repo-fix
+    repository: kevinrapley/flux-behaviour
+    risk_level: medium
+    base_branch: main
+    working_branch: fix/analytics-dashboard-sparse-data
+    files_read:
+      - src/dashboard/live-dashboard.mjs
+      - tests/dashboard-dimensions.test.mjs
+    files_changed:
+      - src/dashboard/live-dashboard.mjs
+      - public/assets/flux/dashboard/live-dashboard.mjs
+      - tests/dashboard-dimensions.test.mjs
+      - RECENT_LEARNINGS.md
+    promotion_decisions:
+      - decision: Pluralise the sessions-per-visitor label from its calculated value.
+        reason: Production currently has exactly one session per visitor and exposed incorrect singular grammar.
+      - decision: Cap chart grid steps at the observed maximum for sparse integer counts.
+        reason: A maximum below four produced duplicate rounded axis labels.
+    commands_run:
+      - command: node --test tests/dashboard-dimensions.test.mjs tests/demo-build.test.mjs
+        result: passed
+        evidence: 4 focused tests passed.
+      - command: source-to-built dashboard parity check
+        result: passed
+    recent_learnings:
+      - Sparse authenticated production data must be part of dashboard verification.
+    security:
+      - No authentication, storage or collection behavior changed.
+    privacy:
+      - No new data is queried or rendered.
+    accessibility:
+      - Unique integer axis labels improve chart comprehension for sparse data.
+    risks:
+      - Existing release blockers remain unchanged.

@@ -8,6 +8,8 @@ test('live dashboard renders cumulative analytics and session indicators with in
   assert.match(source, /View all 20 behavioural indicators/);
   assert.match(source, /not classifications or judgements of a person/);
   assert.match(source, /Session indicators describe interaction patterns/);
+  assert.match(source, /session\$\{sessionsPerVisitor === 1 \? '' : 's'\} per visitor/);
+  assert.match(source, /gridSteps = Math\.min\(4, maximum\)/);
   assert.doesNotMatch(source, /session\.visitor_id/);
   const router = readFileSync('src/product/router.mjs', 'utf8');
   assert.doesNotMatch(router, /SELECT s\.id, s\.visitor_id/);

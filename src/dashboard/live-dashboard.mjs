@@ -121,10 +121,11 @@ function renderError() {
 }
 
 function overviewCards(current, previous) {
+  const sessionsPerVisitor = Number(current.session_count) / Math.max(1, Number(current.visitor_count));
   return [
     metricCard('Visitors', current.visitor_count, comparisonText(current.visitor_count, previous?.visitor_count), 'People with at least one consented session'),
     metricCard('Returning visitors', `${formatPercent(current.returning_visitor_rate)}`, rateComparison(current.returning_visitor_rate, previous?.returning_visitor_rate), `${numberFormat.format(current.returning_visitor_count ?? 0)} visitors came back`),
-    metricCard('Sessions', current.session_count, comparisonText(current.session_count, previous?.session_count), `${formatDecimal(current.session_count / Math.max(1, current.visitor_count))} sessions per visitor`),
+    metricCard('Sessions', current.session_count, comparisonText(current.session_count, previous?.session_count), `${formatDecimal(sessionsPerVisitor)} session${sessionsPerVisitor === 1 ? '' : 's'} per visitor`),
     metricCard('Interactions', current.event_count, comparisonText(current.event_count, previous?.event_count), `${formatDecimal(current.events_per_session)} per session`)
   ];
 }
@@ -154,10 +155,11 @@ function renderTrend(rows) {
   const maximum = Math.max(1, ...rows.flatMap((row) => [Number(row.visitors) || 0, Number(row.sessions) || 0]));
   const x = (index) => margin.left + (rows.length === 1 ? plotWidth / 2 : (index / (rows.length - 1)) * plotWidth);
   const y = (value) => margin.top + plotHeight - ((Number(value) || 0) / maximum) * plotHeight;
+  const gridSteps = Math.min(4, maximum);
   const svg = svgElement('svg', { class: 'flux-trend__chart', viewBox: `0 0 ${width} ${height}`, role: 'img', 'aria-labelledby': 'flux-trend-title flux-trend-desc' });
   svg.append(svgElement('title', { id: 'flux-trend-title' }, 'Daily visitors and sessions'), svgElement('desc', { id: 'flux-trend-desc' }, trendSummary(rows)));
-  for (let step = 0; step <= 4; step += 1) {
-    const value = Math.round((maximum / 4) * step);
+  for (let step = 0; step <= gridSteps; step += 1) {
+    const value = Math.round((maximum / gridSteps) * step);
     const lineY = y(value);
     svg.append(svgElement('line', { class: 'flux-trend__grid', x1: margin.left, x2: width - margin.right, y1: lineY, y2: lineY }));
     svg.append(svgElement('text', { class: 'flux-trend__axis-label', x: margin.left - 10, y: lineY + 4, 'text-anchor': 'end' }, numberFormat.format(value)));
