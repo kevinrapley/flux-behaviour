@@ -6,6 +6,7 @@ const periodCopy = document.querySelector('[data-flux-period-copy]');
 const trend = document.querySelector('[data-flux-trend]');
 const health = document.querySelector('[data-flux-health]');
 const interactions = document.querySelector('[data-flux-interactions]');
+const cohorts = document.querySelector('[data-flux-cohorts]');
 const signals = document.querySelector('[data-flux-signals]');
 const journeys = document.querySelector('[data-flux-live-journeys]');
 const refresh = document.querySelector('[data-flux-refresh]');
@@ -92,6 +93,7 @@ function renderDashboard(data) {
   trend.replaceChildren(renderTrend(analytics.trend ?? []));
   health.replaceChildren(renderHealth(summary));
   interactions.replaceChildren(renderInteractions(analytics.actions ?? []));
+  cohorts.replaceChildren(renderCohorts(analytics.cohorts ?? {}));
   signals.replaceChildren(renderSignals(analytics.dimension_scores ?? []));
   journeys.replaceChildren(...(data.journeys ?? []).map(journeyCard));
   if ((data.journeys ?? []).length === 0) journeys.replaceChildren(emptyState('No journeys in this period', 'Choose a wider date range or check again after visitors have used ResearchOps.'));
@@ -239,6 +241,68 @@ function renderInteractions(rows) {
     list.append(item);
   }
   return list;
+}
+
+function renderCohorts(data) {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'flux-cohorts';
+  wrapper.append(element('p', 'flux-cohorts__privacy', data.privacy_note ?? 'Named cohort results are shown only when at least 5 journeys share the pattern.'));
+  wrapper.append(
+    cohortGroup('Visit maturity', 'Whether journeys are first-time, returning or established.', data.visit_maturity),
+    cohortGroup('Outcome paths', 'Whether journeys completed smoothly, recovered from friction or did not reach an outcome.', data.outcome_paths),
+    cohortGroup('Interaction patterns', 'Heuristic journey patterns derived from supported, content-free signals.', data.journey_patterns, journeyPatternCoverage(data.journey_patterns))
+  );
+  return wrapper;
+}
+
+function cohortGroup(title, description, data = {}, coverage = '') {
+  const section = document.createElement('section');
+  section.className = 'flux-cohort-group';
+  section.append(element('h3', 'govuk-heading-m flux-cohort-group__title', title), element('p', 'govuk-body-s flux-cohort-group__copy', description));
+  if (coverage) section.append(element('p', 'govuk-body-s flux-cohort-group__coverage', coverage));
+  const rows = data?.rows ?? [];
+  if (rows.length === 0) {
+    const count = Number(data?.suppressed_session_count) || Number(data?.assessed_session_count) || 0;
+    section.append(emptyState('Building a privacy-safe cohort', count > 0
+      ? `${numberFormat.format(count)} journey${count === 1 ? '' : 's'} cannot yet be shown as a named cohort. At least ${numberFormat.format(data?.minimum_cohort_size ?? 5)} are required.`
+      : 'Cohort results will appear after enough consented journeys are recorded.'));
+    return section;
+  }
+  const list = document.createElement('div');
+  list.className = 'flux-cohort-list';
+  for (const row of rows) list.append(cohortCard(row));
+  section.append(list);
+  if (Number(data.suppressed_session_count) > 0) section.append(element('p', 'govuk-body-s flux-cohort-group__suppressed', `${numberFormat.format(data.suppressed_session_count)} additional journey${Number(data.suppressed_session_count) === 1 ? '' : 's'} remain suppressed because their cohort is smaller than ${numberFormat.format(data.minimum_cohort_size ?? 5)}.`));
+  return section;
+}
+
+function cohortCard(row) {
+  const card = document.createElement('article');
+  card.className = 'flux-cohort';
+  const heading = document.createElement('div');
+  heading.className = 'flux-cohort__heading';
+  heading.append(element('h4', 'flux-cohort__label', row.label), element('strong', 'flux-cohort__share', formatPercent(row.share)));
+  const metrics = document.createElement('dl');
+  metrics.className = 'flux-cohort__metrics';
+  for (const [label, value] of [
+    ['Journeys', numberFormat.format(row.session_count)],
+    ['Completion', formatPercent(row.completion_rate)],
+    ['Friction', formatPercent(row.friction_rate)],
+    ['Returning', formatPercent(row.returning_session_rate)]
+  ]) metrics.append(definition(label, value));
+  card.append(heading, element('p', 'flux-cohort__description', row.description), metrics);
+  return card;
+}
+
+function journeyPatternCoverage(data = {}) {
+  const parts = [];
+  if (Number(data.assessed_session_count) > 0) parts.push(`${numberFormat.format(data.assessed_session_count)} recent journey${Number(data.assessed_session_count) === 1 ? '' : 's'} assessed`);
+  if (data.is_sample_limited) parts.push(`most recent ${numberFormat.format(data.sample_limit)} of ${numberFormat.format(data.selected_session_count)} used`);
+  if (Number(data.incomplete_history_session_count) > 0) {
+    const count = Number(data.incomplete_history_session_count);
+    parts.push(`${numberFormat.format(count)} excluded because ${count === 1 ? 'its' : 'their'} full event history was not available`);
+  }
+  return parts.join(' · ');
 }
 
 function renderSignals(dimensions) {

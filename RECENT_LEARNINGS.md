@@ -4,6 +4,10 @@ Recent learnings created by the LLM agent in reverse-chronological order (most r
 
 ---
 
+## 2026-07-11 — Neutral evidence is not a behavioural cohort
+
+The original careful-checking thresholds include the neutral score of 50, so a session with no supported behavioural evidence—or only routine completion evidence—would otherwise be labelled as careful checking. Production cohorting needs an explicit deliberate-check signal, journey-not-person language, tenant-scoped complete-history checks and small-group suppression. Bounded event windows must retain the newest evidence before restoring chronological order. Separate deterministic visit and outcome cohorts from heuristic interaction-pattern cohorts, and disclose bounded coverage.
+
 ## 2026-07-11 — Sparse production data reveals dashboard copy and chart defects
 
 Fixture-rich previews can hide singular grammar and repeated axis ticks. Verify the authenticated dashboard with real sparse data: pluralise calculated rates and reduce grid steps when the chart maximum is below the normal tick count.

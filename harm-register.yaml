@@ -40,3 +40,17 @@ harms:
     owner: product-lead
     escalation_route: Product owner and security lead
     release_decision: blocked
+  - id: HARM-004
+    harm: Small or deficit-framed cohorts could enable re-identification, stereotyping or unfair conclusions about service users.
+    affected_groups:
+      - Disabled users
+      - Neurodivergent users
+      - Users with low digital confidence
+      - Users from small or marginalised groups
+    likelihood: medium
+    severity: high
+    mitigation: Describe cohorts as journey patterns rather than people, suppress every named cohort below five journeys, expose no visitor identifier, treat neutral evidence as no dominant pattern, prohibit protected-characteristic and education or personality inference, and require human-led service investigation with uncertainty and fairness review.
+    residual_risk: medium
+    owner: governance-lead
+    escalation_route: Product owner, data protection lead and ethics reviewer
+    release_decision: blocked

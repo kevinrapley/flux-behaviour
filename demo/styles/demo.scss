@@ -438,6 +438,97 @@
 	height: 100%;
 }
 
+.flux-dashboard__panel--cohorts {
+	background: #f7f9fb;
+}
+
+.flux-cohorts__privacy {
+	background: #e8f1f8;
+	border-left: 4px solid var(--flux-blue);
+	font-size: 15px;
+	margin: 0 0 28px;
+	padding: 12px 16px;
+}
+
+.flux-cohort-group + .flux-cohort-group {
+	border-top: 1px solid var(--flux-border);
+	margin-top: 30px;
+	padding-top: 28px;
+}
+
+.flux-cohort-group__title {
+	margin-bottom: 4px;
+}
+
+.flux-cohort-group__copy,
+.flux-cohort-group__coverage {
+	color: var(--flux-muted);
+	margin: 0 0 16px;
+}
+
+.flux-cohort-group__coverage {
+	font-weight: 700;
+	margin-top: -8px;
+}
+
+.flux-cohort-list {
+	display: grid;
+	gap: 14px;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.flux-cohort {
+	background: #ffffff;
+	border: 1px solid var(--flux-border);
+	border-radius: 3px;
+	padding: 18px;
+}
+
+.flux-cohort__heading {
+	align-items: baseline;
+	display: flex;
+	gap: 16px;
+	justify-content: space-between;
+}
+
+.flux-cohort__label {
+	font-size: 19px;
+	line-height: 1.25;
+	margin: 0;
+}
+
+.flux-cohort__share {
+	color: var(--flux-blue-dark);
+	font-size: 22px;
+}
+
+.flux-cohort__description {
+	color: var(--flux-muted);
+	font-size: 15px;
+	line-height: 1.45;
+	margin: 8px 0 16px;
+}
+
+.flux-cohort__metrics {
+	display: grid;
+	gap: 12px;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	margin: 0;
+}
+
+.flux-cohort__metrics div {
+	margin: 0;
+}
+
+.flux-cohort__metrics .flux-journey__metric-value {
+	font-weight: 700;
+}
+
+.flux-cohort-group__suppressed {
+	color: var(--flux-muted);
+	margin: 14px 0 0;
+}
+
 .flux-safeguard {
 	background: var(--flux-surface);
 	border-left: 4px solid var(--flux-blue);
@@ -678,6 +769,10 @@
 	.flux-dashboard__split {
 		grid-template-columns: 1fr;
 	}
+
+	.flux-cohort-list {
+		grid-template-columns: 1fr;
+	}
 }
 
 @media (max-width: 600px) {
@@ -755,5 +850,9 @@
 	.flux-timeline__item {
 		gap: 4px;
 		grid-template-columns: 1fr;
+	}
+
+	.flux-cohort__metrics {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 }

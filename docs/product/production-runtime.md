@@ -12,6 +12,8 @@ For each session, Flux calculates the 20 indicators used by the demo model and f
 
 The dashboard defaults to the last 30 days and supports 7-day, 90-day and all-time views. Visitors, returning visitors, sessions, interactions, completion and friction are calculated cumulatively for the selected period, with like-for-like comparison data and daily audience trends. The primary view is aggregate service evidence and does not expose raw pseudonymous visitor identifiers.
 
+The dashboard also compares privacy-preserving journey cohorts for visit maturity, outcome paths and supported interaction patterns. Named cohorts are suppressed until at least five journeys share the cohort. Visit-maturity and outcome cohorts cover the selected period; interaction patterns use up to the 250 most recent complete journey histories and disclose when the sample is limited. Cohorts describe journeys rather than people, neutral evidence produces no dominant pattern, and education, personality, protected-characteristic and browser-fingerprinting inferences are prohibited. See `docs/product/cohort-analytics.md`.
+
 Recent journeys use a bounded event window for responsive overview rendering, but each displayed journey offers an authenticated complete-history request. That request reads the session's full, tenant-scoped event sequence in chronological order and recomputes its indicators from that full sequence.
 
 Live collection is not release approval. DPIA, accessibility evidence, retention/deletion policy, production rate limiting and incident controls remain release blockers.
