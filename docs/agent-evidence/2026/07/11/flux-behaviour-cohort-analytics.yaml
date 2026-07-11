@@ -1,0 +1,78 @@
+evidence_records:
+  - task_id: flux-behaviour-cohort-analytics
+    mode: repo-build
+    repository: kevinrapley/flux-behaviour
+    risk_level: high
+    base_branch: main
+    working_branch: feature/cohort-behavioural-analytics
+    files_read:
+      - README.md
+      - AGENTS.md
+      - RECENT_LEARNINGS.md
+      - CONTRIBUTING.md
+      - SECURITY.md
+      - repository-contract.yaml
+      - github-settings.yaml
+      - conformance-matrix.yaml
+      - gap-register.yaml
+      - docs/product/behaviour-signal-map.md
+      - docs/instrumentation/event-taxonomy.md
+      - docs/governance/data-protection.md
+      - docs/governance/ethics-impact.md
+      - docs/product/production-runtime.md
+      - Google Drive Behaviour Model, Dimensional Analysis, Requirements, Potential Dashboard Stats, Things to think about, eCommerce Sales Funnel, Flux Behavioural Dashboard and NLP Admin Dashboard
+    files_changed:
+      - src/product/journey-cohorts.mjs
+      - src/product/router.mjs
+      - src/dashboard/live-dashboard.mjs
+      - demo/templates/pages/dashboard.njk
+      - demo/styles/demo.scss
+      - tests/journey-cohorts.test.mjs
+      - tests/dashboard-dimensions.test.mjs
+      - docs/product/cohort-analytics.md
+      - docs/product/production-runtime.md
+      - docs/product/behaviour-signal-map.md
+      - docs/governance/ethics-impact.md
+      - RECENT_LEARNINGS.md
+      - conformance-matrix.yaml
+      - gap-register.yaml
+      - harm-register.yaml
+      - agent-evidence.yaml
+    promotion_decisions:
+      - decision: Promote visit-maturity and outcome-path cohorts as deterministic service aggregates.
+        reason: They answer documented repeatability and completion questions without inferring personal traits.
+      - decision: Promote original journey-pattern rules only with neutral-evidence, complete-history, coverage and minimum-size controls.
+        reason: Missing evidence and small groups must not become behavioural labels.
+      - decision: Reject education, intelligence, personality, protected-characteristic, social-profile, visited-link, password-content and browser-fingerprint inference.
+        reason: These conflict with the governed service-improvement, privacy and ethics boundary.
+    commands_run:
+      - command: npm test
+        result: pass
+        evidence: 115 tests passed, including production-schema cohort SQL, neutral-evidence classification, small-group suppression and incomplete-history exclusion.
+      - command: npm run validate
+        result: pass
+        evidence: Repository governance file check passed for 19 files.
+      - command: npm run security:secrets
+        result: pass
+        evidence: Secret pattern sanity scan passed.
+      - command: npm run sbom
+        result: pass
+        evidence: CycloneDX SBOM generated successfully.
+      - command: cmp -s src/dashboard/live-dashboard.mjs public/assets/flux/dashboard/live-dashboard.mjs
+        result: pass
+        evidence: Source and deployed dashboard modules are identical.
+      - command: browser visual verification
+        result: pass
+        evidence: Desktop 1440x1000 and mobile 390x844 layouts checked with rich and suppressed cohort states; period switching and complete journey drill-down exercised; no mobile horizontal overflow observed.
+    recent_learnings:
+      - Neutral scores fall inside the historical careful-checking thresholds, so production rules require an explicit evidence guard.
+    security:
+      - No secret, direct identifier, typed value or raw free text is added to cohort responses.
+      - Named cohorts below five journeys are suppressed.
+    privacy:
+      - Cohorts describe journeys, not people, and expose aggregate counts and rates only.
+      - Incomplete histories are excluded from heuristic pattern classification.
+    accessibility:
+      - Cohort results use headings, prose, definition lists and readable empty states without colour-only meaning.
+    risks:
+      - Golden-corpus, fairness, DPIA and full accessibility evidence remain open release blockers.

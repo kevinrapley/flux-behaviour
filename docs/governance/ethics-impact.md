@@ -26,6 +26,8 @@ The product may over-flag normal behaviour as frustration, fatigue, confusion or
 
 Mitigation: use validation evidence, reviewer notes, trend-level interpretation and separate reporting for different user cohorts where ethically and legally appropriate.
 
+Cohort reporting must describe groups of journeys rather than kinds of people. Named cohorts require at least five journeys, smaller groups are suppressed, and the product must not segment by protected characteristics or infer education, intelligence, personality, disability or digital ability. Cohort differences are prompts for service investigation and require a fairness review before broader use.
+
 ### Interpretation risk
 
 The same behaviour can have multiple explanations. A long pause may indicate confusion, reading, reflection, interruption, assistive technology use or careful checking.

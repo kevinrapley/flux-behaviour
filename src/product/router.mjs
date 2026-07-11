@@ -2,6 +2,13 @@ import { describeInteraction } from './narrative.mjs';
 import { buildGoogleAuthorisationUrl } from './google-oauth.mjs';
 import { buildLiveAnalytics, buildOverviewMetrics, dashboardRange } from './live-analytics.mjs';
 import { scoreSessionDimensions } from './session-dimensions.mjs';
+import {
+  buildJourneyPatternCohorts,
+  JOURNEY_PATTERN_SAMPLE_LIMIT,
+  OUTCOME_COHORTS,
+  summariseCohortRows,
+  VISIT_MATURITY_COHORTS
+} from './journey-cohorts.mjs';
 import { validateEventRuntime } from '../events/validate-event-runtime.mjs';
 import { fluxEventSchema } from '../events/flux-event-schema.mjs';
 
@@ -119,6 +126,7 @@ async function dashboard(request, env) {
   const sessions = await env.FLUX_DB.prepare("SELECT s.id, s.started_at_ms, s.last_seen_at_ms, s.is_returning_visitor, COUNT(e.id) AS event_count, COUNT(DISTINCT CASE WHEN e.action = 'flow.submit' THEN e.id END) AS submit_count, COUNT(DISTINCT CASE WHEN e.action IN ('error.invalid', 'act.rage', 'field.revisit', 'assist.help') THEN e.id END) AS friction_event_count FROM sessions s LEFT JOIN events e ON e.session_id = s.id WHERE s.tenant_id = 'researchops' AND s.started_at_ms >= ? AND s.started_at_ms < ? GROUP BY s.id, s.started_at_ms, s.last_seen_at_ms, s.is_returning_visitor ORDER BY s.started_at_ms DESC LIMIT 12").bind(period.start_at_ms, period.end_at_ms).all();
   const events = await env.FLUX_DB.prepare("SELECT session_id, action, element_key, metadata_json, narrative, occurred_at_ms FROM (SELECT e.session_id, e.action, e.element_key, e.metadata_json, e.narrative, e.occurred_at_ms FROM events e WHERE e.tenant_id = 'researchops' AND e.session_id IN (SELECT id FROM sessions WHERE tenant_id = 'researchops' AND started_at_ms >= ? AND started_at_ms < ? ORDER BY started_at_ms DESC LIMIT 12) ORDER BY e.occurred_at_ms DESC LIMIT 500) ORDER BY occurred_at_ms ASC").bind(period.start_at_ms, period.end_at_ms).all();
   const journeys = groupJourneys(sessions.results, events.results).map((journey) => ({ ...journey, dimension_scores: scoreSessionDimensions(journey.events) }));
+  const cohorts = await dashboardCohorts(env, period.start_at_ms, period.end_at_ms, overview.session_count);
   return json({
     ok: true,
     sessions: sessions.results,
@@ -129,9 +137,34 @@ async function dashboard(request, env) {
       overview,
       comparison,
       trend: trend.results ?? [],
-      actions: actions.results ?? []
+      actions: actions.results ?? [],
+      cohorts
     }
   });
+}
+
+export async function dashboardCohorts(env, startAtMs, endAtMs, selectedSessionCount) {
+  const sessionSignals = "WITH session_signals AS (SELECT s.id, s.is_returning_visitor, v.session_count AS lifetime_session_count, MAX(0, s.last_seen_at_ms - s.started_at_ms) AS duration_ms, MAX(CASE WHEN e.action = 'flow.submit' THEN 1 ELSE 0 END) AS completed, MAX(CASE WHEN e.action IN ('error.invalid', 'act.rage', 'field.revisit', 'assist.help') THEN 1 ELSE 0 END) AS friction FROM sessions s INNER JOIN visitors v ON v.tenant_id = s.tenant_id AND v.visitor_id = s.visitor_id LEFT JOIN events e ON e.session_id = s.id AND e.tenant_id = s.tenant_id WHERE s.tenant_id = 'researchops' AND s.started_at_ms >= ? AND s.started_at_ms < ? GROUP BY s.id, s.is_returning_visitor, v.session_count, s.started_at_ms, s.last_seen_at_ms) ";
+  const lifecycleQuery = `${sessionSignals}SELECT CASE WHEN is_returning_visitor = 0 THEN 'first_time' WHEN lifetime_session_count >= 4 THEN 'established' ELSE 'returning' END AS cohort_key, COUNT(*) AS session_count, SUM(completed) AS completed_session_count, SUM(friction) AS friction_session_count, SUM(is_returning_visitor) AS returning_session_count, AVG(duration_ms) AS average_session_duration_ms FROM session_signals GROUP BY cohort_key`;
+  const outcomeQuery = `${sessionSignals}SELECT CASE WHEN completed = 1 AND friction = 0 THEN 'completed_smoothly' WHEN completed = 1 AND friction = 1 THEN 'completed_after_friction' WHEN completed = 0 AND friction = 1 THEN 'friction_unresolved' ELSE 'in_progress' END AS cohort_key, COUNT(*) AS session_count, SUM(completed) AS completed_session_count, SUM(friction) AS friction_session_count, SUM(is_returning_visitor) AS returning_session_count, AVG(duration_ms) AS average_session_duration_ms FROM session_signals GROUP BY cohort_key`;
+  const patternSessionsQuery = `SELECT s.id, s.started_at_ms, s.last_seen_at_ms, s.is_returning_visitor, COUNT(e.id) AS event_count, COUNT(DISTINCT CASE WHEN e.action = 'flow.submit' THEN e.id END) AS submit_count, COUNT(DISTINCT CASE WHEN e.action IN ('error.invalid', 'act.rage', 'field.revisit', 'assist.help') THEN e.id END) AS friction_event_count FROM sessions s LEFT JOIN events e ON e.session_id = s.id WHERE s.tenant_id = 'researchops' AND s.started_at_ms >= ? AND s.started_at_ms < ? GROUP BY s.id, s.started_at_ms, s.last_seen_at_ms, s.is_returning_visitor ORDER BY s.started_at_ms DESC LIMIT ${JOURNEY_PATTERN_SAMPLE_LIMIT}`;
+  const patternEventsQuery = `SELECT e.session_id, e.action, e.metadata_json, e.occurred_at_ms FROM events e WHERE e.tenant_id = 'researchops' AND e.session_id IN (SELECT id FROM sessions WHERE tenant_id = 'researchops' AND started_at_ms >= ? AND started_at_ms < ? ORDER BY started_at_ms DESC LIMIT ${JOURNEY_PATTERN_SAMPLE_LIMIT}) ORDER BY e.occurred_at_ms ASC LIMIT 10000`;
+  const [lifecycle, outcomes, patternSessions, patternEvents] = await Promise.all([
+    env.FLUX_DB.prepare(lifecycleQuery).bind(startAtMs, endAtMs).all(),
+    env.FLUX_DB.prepare(outcomeQuery).bind(startAtMs, endAtMs).all(),
+    env.FLUX_DB.prepare(patternSessionsQuery).bind(startAtMs, endAtMs).all(),
+    env.FLUX_DB.prepare(patternEventsQuery).bind(startAtMs, endAtMs).all()
+  ]);
+  const patternJourneys = groupJourneys(patternSessions.results ?? [], patternEvents.results ?? []).map((journey) => ({
+    ...journey,
+    dimension_scores: scoreSessionDimensions(journey.events)
+  }));
+  return {
+    privacy_note: 'Named cohort results are shown only when at least 5 journeys share the pattern.',
+    journey_patterns: buildJourneyPatternCohorts(patternJourneys, selectedSessionCount),
+    visit_maturity: summariseCohortRows(lifecycle.results ?? [], VISIT_MATURITY_COHORTS, selectedSessionCount),
+    outcome_paths: summariseCohortRows(outcomes.results ?? [], OUTCOME_COHORTS, selectedSessionCount)
+  };
 }
 
 async function dashboardOverview(env, startAtMs, endAtMs) {

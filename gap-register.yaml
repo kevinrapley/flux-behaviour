@@ -80,3 +80,12 @@ gaps:
     action: Record a consented Google browser sign-in and protected dashboard check before release approval.
     owner: security-lead
     status: open
+  - id: GAP-010
+    title: Journey-pattern cohorts need corpus and fairness validation
+    severity: medium
+    observed_state: The dashboard aggregates original Flux journey-pattern rules with a neutral-evidence guard, complete-history checks, a 250-session coverage limit and minimum named cohort size of five. The rules have not been validated across assistive technology, disability, neurodivergence, language, device or high-stress journey contexts.
+    expected_state: Golden-corpus, false-positive and cohort fairness evidence demonstrates that pattern differences support service investigation without proxy discrimination or deficit framing.
+    risk: Teams could over-interpret heuristic journey patterns or mistake accessibility and careful behaviour for low ability or friction.
+    action: Complete the golden corpus, run inclusive cohort reviews, publish uncertainty guidance and keep all cohort use human-led and service-improvement-only.
+    owner: governance-lead
+    status: open
