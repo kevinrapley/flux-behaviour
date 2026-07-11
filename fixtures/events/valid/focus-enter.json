@@ -1,6 +1,8 @@
 {
   "schema_version": "1.1.0",
   "session_id": "session-valid-001",
+  "visitor_id": "visitor-valid-001",
+  "tenant_id": "researchops",
   "consent": "yes",
   "origin": "formkit",
   "event_class": "focus",

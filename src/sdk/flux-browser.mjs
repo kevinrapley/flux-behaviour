@@ -27,6 +27,8 @@ export function installFluxBrowserTag(windowLike, config = {}) {
     endpoint,
     transport,
     sessionId: config.sessionId,
+    visitorId: config.visitorId,
+    tenantId: config.tenantId ?? readTenantFromScript(windowLike),
     consent: config.consent,
     now: config.now,
     onDrop: config.onDrop,
@@ -68,6 +70,12 @@ function readEndpointFromScript(windowLike) {
     ?? windowLike.document?.querySelector?.('script[data-flux-endpoint]');
   const endpoint = script?.dataset?.fluxEndpoint;
   return typeof endpoint === 'string' && endpoint !== '' ? endpoint : null;
+}
+
+function readTenantFromScript(windowLike) {
+  const script = windowLike.document?.currentScript
+    ?? windowLike.document?.querySelector?.('script[data-flux-tenant]');
+  return script?.dataset?.fluxTenant ?? null;
 }
 
 export function createBrowserTransport(windowLike) {

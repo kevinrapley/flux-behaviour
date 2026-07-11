@@ -9,12 +9,12 @@ gaps:
     owner: maintainer
     status: open
   - id: GAP-002
-    title: Runtime product code is not yet promoted
+    title: Runtime product code requires governed production assurance
     severity: medium
-    observed_state: Foundation exists without production collector, SDK, scoring engine or dashboard.
-    expected_state: Runtime code promoted through reviewed PRs.
-    risk: Repository is not a working product yet.
-    action: Promote source artefacts one by one using migration controls.
+    observed_state: Pages API, D1 model, browser SDK, account UI and dashboard have been promoted, but the work is awaiting reviewed PRs and release assurance.
+    expected_state: Runtime code is reviewed with DPIA, accessibility, retention, incident and rate-limit evidence before general availability.
+    risk: Live collection could be enabled without the assurance controls required for a public-service analytics product.
+    action: Complete release assurance and retain the production blocks in GAP-003, GAP-004 and GAP-005.
     owner: product-lead
     status: open
   - id: GAP-003
@@ -70,4 +70,13 @@ gaps:
     risk: Viewers could over-trust demo score movements as validated behavioural measurement.
     action: Validate the ported engine and mappings against the golden corpus cases when scoring is promoted.
     owner: product-lead
+    status: open
+  - id: GAP-009
+    title: Google OAuth client is not configured
+    severity: high
+    observed_state: Google sign-in routes and identity mapping are implemented, but the protected Google OAuth client credentials and callback registration are not configured.
+    expected_state: Google OAuth consent is configured for the production callback and an authorised account can sign in end to end.
+    risk: The dashboard cannot be accessed until the identity provider is configured.
+    action: Create a Google OAuth web client, register `https://flux-behaviour.pages.dev/api/auth/google/callback`, set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` as Pages secrets, apply migration 0002 and verify sign-in.
+    owner: security-lead
     status: open

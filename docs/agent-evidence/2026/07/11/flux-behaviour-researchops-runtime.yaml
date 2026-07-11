@@ -1,0 +1,41 @@
+evidence_records:
+  - task_id: flux-behaviour-researchops-runtime
+    mode: repo-build
+    repository: flux-behaviour
+    risk_level: high
+    base_branch: main
+    working_branch: feature/researchops-analytics
+    files_read:
+      - AGENTS.md
+      - docs/instrumentation/event-taxonomy.md
+      - docs/governance/data-protection.md
+      - docs/governance/ethics-impact.md
+    files_changed:
+      - migrations/0001_flux_behaviour.sql
+      - src/product/router.mjs
+      - src/product/narrative.mjs
+      - public/assets/flux/sdk/flux-auto-capture.mjs
+      - public/account/index.html
+      - public/dashboard/index.html
+    promotion_decisions:
+      - Runtime is a reviewed rewrite; no prototype configuration or secrets were copied.
+    commands_run:
+      - command: npm test
+        status: pass
+      - command: npm run validate
+        status: pass
+      - command: npm run security:secrets
+        status: pass
+      - command: wrangler d1 migrations apply flux-behaviour --remote
+        status: pass
+    recent_learnings:
+      - Cross-service behavioural analytics needs an origin-bound tenant contract.
+    security:
+      - Account email is stored only in D1 and not committed.
+      - Flux auth secret is stored as a Pages secret.
+    privacy:
+      - Events exclude typed values and direct identifiers; visitor/session IDs are pseudonymous.
+    accessibility:
+      - Consent prompt uses keyboard-accessible buttons and live status is exposed in account/dashboard views.
+    risks:
+      - OTP email delivery, DPIA, retention, deletion, incident controls and production rate limiting remain blocked in the gap register.

@@ -71,3 +71,9 @@ records:
     actual_evidence: Boundary control scaffold added on feature/collector-boundary-controls with storage still disabled
     status: present
     owner: product-lead
+  - id: CONF-013
+    rule: Stored behavioural analytics must be tenant-scoped, consented, pseudonymous and metadata-only
+    expected_evidence: D1 migration, product router, browser SDK and runtime tests exist
+    actual_evidence: D1 tenant/session/event model, consent-first browser SDK, cross-origin preflight controls and Google-identity dashboard access added on feature/researchops-analytics; production identity provider configuration remains blocked in GAP-005.
+    status: present-with-release-blockers
+    owner: product-lead

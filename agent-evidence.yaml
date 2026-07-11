@@ -77,3 +77,7 @@ agent_evidence_registry:
       date: 2026-07-05
       path: docs/agent-evidence/2026/07/05/flux-behaviour-pr-21-fixes.yaml
       status: externalised
+    - task_id: flux-behaviour-google-identity-and-review-remediation
+      date: 2026-07-11
+      path: docs/agent-evidence/2026/07/11/flux-behaviour-google-identity-and-review-remediation.yaml
+      status: externalised
