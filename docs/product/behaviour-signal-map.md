@@ -78,4 +78,4 @@ Coherence invariants, enforced by `tests/signal-coherence.test.mjs`:
 | Policy breach (simulated) | `policy.breach` | Ethics −10, Trust Alignment −5, Stability −2, Frustration +4, Cognitive Load +3, Social Trust −2 |
 | Long-session mark | `fatigue.mark` | Sustainability −3, Efficiency −2, Cognitive Load +3, Stability −1 |
 
-All of this is demonstration scoring pending golden-corpus validation (GAP-008), and every score display carries the interpretation policy: service improvement evidence only, never judgements about a person.
+The production session dashboard uses the subset of these signals that can be captured as consented, content-free metadata: field dwell, character and correction counts, tab progression, paste and shortcut categories, revisits, rage clicks, help disclosures, validation errors and submit attempts. It renders all 20 indicators, retaining neutral values when no safe signal exists. Golden-corpus validation remains required before any use beyond service-improvement evidence (GAP-008), and every score display carries the interpretation policy: never a judgement about a person.

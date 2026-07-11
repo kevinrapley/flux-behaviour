@@ -8,7 +8,7 @@ harms:
       - Users under stress
     likelihood: medium
     severity: high
-    mitigation: Use dual interpretations, human review, plain-English explanations and governance copy that frames signals as service-improvement evidence.
+    mitigation: Use neutral values for unsupported indicators, human review, plain-English explanations and governance copy that frames every score as service-improvement evidence rather than a user classification.
     residual_risk: medium
     owner: governance-lead
     escalation_route: Product owner and ethics reviewer

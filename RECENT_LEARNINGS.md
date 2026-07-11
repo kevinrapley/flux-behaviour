@@ -12,6 +12,10 @@ Static `public/` assets can make a feature appear to work until a normal build r
 
 Neutral element keys and count-only metadata do not make authentication telemetry appropriate. Exclude email, telephone, password and one-time-code fields from click, focus, dwell, character-count and correction capture; remove per-focus listeners when the focus session ends. Dashboard queries should take the newest bounded event window before ordering it chronologically, so an older long session cannot erase a newer journey.
 
+## 2026-07-11 — Neutral is the only safe score for unsupported session signals
+
+The 20-dimension demo model cannot justify inventing an indicator from generic page activity. Production session scoring must use only consented content-free signals that have an explicit mapping; where a service does not generate a safe signal, leave that dimension at neutral and explain that the score is a service-friction heuristic, never a judgement of a person.
+
 ## 2026-07-05 — Fetch with credentials omit and keepalive ensures compliant transit; secure randomness for session IDs
 
 We prefer `fetch` over `sendBeacon` because browser implementations of `sendBeacon` always append credentials (cookies, client certs) on same-site or credentialed endpoints, violating our strict credentials-omitted transport contract. Utilizing `fetch` with `credentials: 'omit'` and `keepalive: true` ensures safe, credentials-free delivery of behavioural analytics even during page unloads, falling back to `sendBeacon` only when `fetch` is unavailable. To resolve CodeQL's insecure randomness alert, we now prioritize the cryptographically secure `crypto.getRandomValues` (CSPRNG) API for generating session IDs, falling back to `Math.random` only when platform crypto APIs are unavailable. Additionally, we now dynamically generate CycloneDX SBOM components from `package-lock.json` dependencies to keep inventory controls complete as dependencies are added.

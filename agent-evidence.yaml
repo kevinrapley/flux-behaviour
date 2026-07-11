@@ -89,3 +89,7 @@ agent_evidence_registry:
       date: 2026-07-11
       path: docs/agent-evidence/2026/07/11/flux-behaviour-live-aggregates-and-review-remediation.yaml
       status: externalised
+    - task_id: flux-behaviour-production-session-dimensions
+      date: 2026-07-11
+      path: docs/agent-evidence/2026/07/11/flux-behaviour-production-session-dimensions.yaml
+      status: externalised

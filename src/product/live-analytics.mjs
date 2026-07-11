@@ -18,7 +18,7 @@ function metadata(value) {
   }
 }
 
-export function buildLiveAnalytics(sessions = [], events = []) {
+export function buildLiveAnalytics(sessions = [], events = [], journeys = []) {
   const actions = new Map();
   const controls = new Map();
   const fieldDwell = [];
@@ -46,7 +46,9 @@ export function buildLiveAnalytics(sessions = [], events = []) {
     typed_character_count: typedCharacters,
     correction_count: corrections,
     touch_interaction_count: touchInteractions,
+    dimension_scores: medianDimensionScores(journeys.map((journey) => journey.dimension_scores).filter(Boolean)),
     actions: [...actions.entries()].map(([action, count]) => ({ action, count })).sort((left, right) => right.count - left.count || left.action.localeCompare(right.action)),
     controls: [...controls.entries()].map(([element_key, count]) => ({ element_key, count })).sort((left, right) => right.count - left.count || left.element_key.localeCompare(right.element_key)).slice(0, 10)
   };
 }
+import { medianDimensionScores } from './session-dimensions.mjs';
