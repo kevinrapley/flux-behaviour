@@ -68,7 +68,7 @@ const pages = [
 ];
 
 for (const page of pages) {
-  const html = env.render(page.template, page.context);
+  const html = env.render(page.template, page.context).replace(/[ \t]+$/gm, '');
   const target = resolve(outputRoot, page.output);
   await mkdir(dirname(target), { recursive: true });
   await writeFile(target, html);

@@ -81,3 +81,7 @@ agent_evidence_registry:
       date: 2026-07-11
       path: docs/agent-evidence/2026/07/11/flux-behaviour-google-identity-and-review-remediation.yaml
       status: externalised
+    - task_id: flux-behaviour-runtime-source-parity-and-session-journeys
+      date: 2026-07-11
+      path: docs/agent-evidence/2026/07/11/flux-behaviour-runtime-source-parity-and-session-journeys.yaml
+      status: externalised

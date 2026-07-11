@@ -9,9 +9,22 @@
 			<span class="govuk-warning-text__icon" aria-hidden="true">!</span>
 			<strong class="govuk-warning-text__text">
 				<span class="govuk-visually-hidden">Warning</span>
-				This dashboard renders fixture data. Collector storage is disabled, so no real events feed these charts yet.
+				The charts below remain the demo baseline. The live ResearchOps panel shows consented production sessions when you sign in.
 			</strong>
 		</div>
+	</div>
+</div>
+
+<div class="govuk-grid-row">
+	<div class="govuk-grid-column-full">
+		<h2 class="govuk-heading-l">Live ResearchOps journeys</h2>
+		<p class="govuk-body" data-flux-live-status aria-live="polite">Loading live analytics…</p>
+		<table class="govuk-table">
+			<thead class="govuk-table__head"><tr class="govuk-table__row"><th class="govuk-table__header">Visitor</th><th class="govuk-table__header">Visitor type</th><th class="govuk-table__header">Session started</th></tr></thead>
+			<tbody class="govuk-table__body" data-flux-live-sessions></tbody>
+		</table>
+		<h3 class="govuk-heading-m">Session journey narrative</h3>
+		<div data-flux-live-journeys></div>
 	</div>
 </div>
 
@@ -66,4 +79,5 @@
 {% block scripts %}
 <script src="/assets/vendor/d3.min.js"></script>
 <script type="module" src="/assets/demo/flux-charts.js"></script>
+<script type="module" src="/assets/flux/dashboard/live-dashboard.mjs"></script>
 {% endblock %}

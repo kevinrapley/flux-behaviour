@@ -1,0 +1,55 @@
+evidence_records:
+  - task_id: flux-behaviour-runtime-source-parity-and-session-journeys
+    mode: repo-fix
+    repository: kevinrapley/flux-behaviour
+    risk_level: high
+    base_branch: main
+    working_branch: fix/flux-runtime-source-parity
+    files_read:
+      - src/sdk/flux-browser.mjs
+      - src/sdk/flux-tag.mjs
+      - scripts/demo/render-demo-pages.mjs
+      - demo/templates/pages/dashboard.njk
+      - src/product/router.mjs
+      - docs/product/production-runtime.md
+    files_changed:
+      - src/sdk/flux-auto-capture.mjs
+      - src/sdk/flux-browser.mjs
+      - src/dashboard/live-dashboard.mjs
+      - src/product/router.mjs
+      - scripts/demo/copy-demo-assets.mjs
+      - scripts/demo/render-demo-pages.mjs
+      - demo/templates/pages/dashboard.njk
+      - public/assets/flux/sdk/flux-auto-capture.mjs
+      - public/assets/flux/dashboard/live-dashboard.mjs
+      - public/dashboard/index.html
+    promotion_decisions:
+      - decision: Move generated tracker and dashboard runtime assets into source directories and copy them during the normal build.
+        reason: A production upload was serving corrected assets that normal builds could overwrite with older source.
+      - decision: Group dashboard narratives by pseudonymous session.
+        reason: The product requirement is a per-session journey, not a mixed chronological event feed.
+    commands_run:
+      - command: npm test
+        result: passed
+        evidence: 100 tests passed.
+      - command: npm run demo:build
+        result: passed
+      - command: npm run validate
+        result: pending-rerun-after-documentation
+      - command: npm run security:secrets
+        result: pending-rerun-after-documentation
+      - command: wrangler d1 migrations apply flux-behaviour --remote --config wrangler.toml
+        result: passed
+        evidence: Applied migration 0002_google_identity_and_demo_origin.sql.
+    recent_learnings:
+      - Runtime assets need a source-of-truth build path.
+    security:
+      - Google OAuth secret names were confirmed as platform secrets without reading values.
+      - The production Google OAuth start route returned a callback-bound redirect.
+    privacy:
+      - Structural fallback control keys do not read text, labels, values, IDs or URLs.
+      - Visitor and session identifiers remain pseudonymous and consent-gated.
+    accessibility:
+      - Dashboard session histories use headings and ordered lists.
+    risks:
+      - DPIA, full accessibility evidence, retention, production rate limiting and incident controls remain release blockers.
