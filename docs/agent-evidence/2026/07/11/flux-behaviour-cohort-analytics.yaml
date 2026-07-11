@@ -28,6 +28,7 @@ evidence_records:
       - demo/templates/pages/dashboard.njk
       - demo/styles/demo.scss
       - tests/journey-cohorts.test.mjs
+      - tests/dashboard-cohort-query.test.mjs
       - tests/dashboard-dimensions.test.mjs
       - docs/product/cohort-analytics.md
       - docs/product/production-runtime.md
@@ -38,6 +39,10 @@ evidence_records:
       - gap-register.yaml
       - harm-register.yaml
       - agent-evidence.yaml
+      - docs/agent-evidence/2026/07/11/flux-behaviour-cohort-analytics.yaml
+      - public/assets/flux/dashboard/live-dashboard.mjs
+      - public/assets/styles/demo.css
+      - public/dashboard/index.html
     promotion_decisions:
       - decision: Promote visit-maturity and outcome-path cohorts as deterministic service aggregates.
         reason: They answer documented repeatability and completion questions without inferring personal traits.
@@ -48,7 +53,10 @@ evidence_records:
     commands_run:
       - command: npm test
         result: pass
-        evidence: 115 tests passed, including production-schema cohort SQL, neutral-evidence classification, small-group suppression and incomplete-history exclusion.
+        evidence: 116 tests passed, including D1-shaped cohort query orchestration on the Node 20-compatible baseline, contract assurance actions, neutral-evidence classification, small-group suppression and incomplete-history exclusion.
+      - command: npx -y node@20 --test tests/*.test.mjs
+        result: pass
+        evidence: All 116 tests passed under the repository's declared Node 20 runtime baseline.
       - command: npm run validate
         result: pass
         evidence: Repository governance file check passed for 19 files.

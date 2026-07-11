@@ -57,3 +57,18 @@ test('journey-pattern cohorts aggregate service outcomes and exclude incomplete 
     { key: 'confident_navigator', session_count: 5, completion_rate: 100, returning_session_rate: 40 }
   ]);
 });
+
+test('contract assurance actions provide deliberate checking evidence', () => {
+  const journeys = Array.from({ length: 5 }, (_, index) => ({
+    id: `assurance-${index}`,
+    event_count: 1,
+    events: [{ action: 'trust.password.reveal' }],
+    dimension_scores: scores({ efficiency: 42, engagement: 64, wayfinding: 55, proficiency: 47, trust: 51, trust_align: 51, frustration: 45 }),
+    started_at_ms: 1000,
+    last_seen_at_ms: 2000
+  }));
+
+  assert.deepEqual(buildJourneyPatternCohorts(journeys).rows.map(({ key, session_count }) => ({ key, session_count })), [
+    { key: 'careful_checker', session_count: 5 }
+  ]);
+});

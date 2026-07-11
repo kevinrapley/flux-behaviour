@@ -100,7 +100,7 @@ function rate(numerator, denominator) {
 }
 
 function journeyEvidence(events = []) {
-  const deliberateChecks = new Set(['field.revisit', 'edit.undo', 'trust.assuranceTick', 'trust.passwordReveal', 'trust.passwordHide']);
+  const deliberateChecks = new Set(['field.revisit', 'edit.undo', 'trust.assurance.tick', 'trust.password.reveal', 'trust.password.hide']);
   return {
     deliberate_check_count: events.filter((event) => deliberateChecks.has(event.action)).length
   };
