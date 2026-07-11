@@ -26,8 +26,11 @@ export function installFluxBrowserTag(windowLike, config = {}) {
   const tag = createFluxTag({
     endpoint,
     transport,
-    sessionId: config.sessionId ?? persistentSessionId(windowLike),
-    visitorId: config.visitorId ?? persistentVisitorId(windowLike),
+    sessionId: config.sessionId,
+    visitorId: config.visitorId,
+    sessionIdFactory: () => persistentSessionId(windowLike),
+    visitorIdFactory: () => persistentVisitorId(windowLike),
+    resetIdentifiers: () => clearPersistentIdentifiers(windowLike),
     tenantId: config.tenantId ?? readTenantFromScript(windowLike),
     consent: config.consent,
     now: config.now,
@@ -94,6 +97,11 @@ function persistentSessionId(windowLike) {
   const id = `session-${generateRandomSuffix(windowLike)}`;
   windowLike.sessionStorage?.setItem(key, id);
   return id;
+}
+
+function clearPersistentIdentifiers(windowLike) {
+  windowLike.localStorage?.removeItem('flux.behaviour.visitor_id');
+  windowLike.sessionStorage?.removeItem('flux.behaviour.session_id');
 }
 
 function generateRandomSuffix(windowLike) {

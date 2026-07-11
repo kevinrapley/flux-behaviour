@@ -70,10 +70,11 @@ function endFocus(event) {
 
 function targetDetails(element) {
   const target = element?.closest?.('a,button,input,select,textarea,[role="button"],[tabindex]');
-  if (!target) return null;
-  return { role: target.matches('input,select,textarea') ? 'field' : target.matches('form') ? 'form' : 'control', element_key: stableKey(target) };
+  const key = stableKey(target);
+  if (!target || !key) return null;
+  return { role: target.matches('input,select,textarea') ? 'field' : target.matches('form') ? 'form' : 'control', element_key: key };
 }
 
-function editableTarget(element) { return element?.matches?.('input:not([type="hidden"]),textarea,select') ? { role: 'field', element_key: stableKey(element) } : null; }
-function stableKey(element) { return String(element.dataset.fluxKey || element.id || element.name || element.getAttribute('aria-label') || element.tagName).replace(/[^A-Za-z0-9._:-]+/g, '-').slice(0, 120); }
+function editableTarget(element) { const key = stableKey(element); return element?.matches?.('input:not([type="hidden"]),textarea,select') && key ? { role: 'field', element_key: key } : null; }
+function stableKey(element) { return typeof element?.dataset?.fluxKey === 'string' && /^[A-Za-z0-9._:-]{1,120}$/.test(element.dataset.fluxKey) ? element.dataset.fluxKey : null; }
 function pageKey() { return location.pathname.replace(/[^A-Za-z0-9._:-]+/g, '-').replace(/^-|-$/g, '') || 'home'; }

@@ -72,11 +72,11 @@ gaps:
     owner: product-lead
     status: open
   - id: GAP-009
-    title: OTP email delivery provider is not configured
+    title: Google OAuth client is not configured
     severity: high
-    observed_state: The account and OTP routes are deployed, but protected Resend sender credentials are not configured.
-    expected_state: A verified sending provider delivers one-time codes and is tested without exposing email contents or credentials.
-    risk: Account creation and sign-in cannot complete.
-    action: Configure `RESEND_API_KEY` and `FLUX_EMAIL_FROM` as Pages secrets, then verify an end-to-end sign-in.
+    observed_state: Google sign-in routes and identity mapping are implemented, but the protected Google OAuth client credentials and callback registration are not configured.
+    expected_state: Google OAuth consent is configured for the production callback and an authorised account can sign in end to end.
+    risk: The dashboard cannot be accessed until the identity provider is configured.
+    action: Create a Google OAuth web client, register `https://flux-behaviour.pages.dev/api/auth/google/callback`, set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` as Pages secrets, apply migration 0002 and verify sign-in.
     owner: security-lead
     status: open

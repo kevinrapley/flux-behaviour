@@ -1,28 +1,71 @@
 import { describeInteraction } from './narrative.mjs';
+import { buildGoogleAuthorisationUrl } from './google-oauth.mjs';
 import { validateEventRuntime } from '../events/validate-event-runtime.mjs';
 import { fluxEventSchema } from '../events/flux-event-schema.mjs';
 
 const HEADERS = { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' };
-const OTP_TTL_MS = 600000;
 
 export async function handleProductRequest(request, env) {
   const path = new URL(request.url).pathname;
   if (!path.startsWith('/api/')) return null;
   if (!env.FLUX_DB) return json({ ok: false, error: 'storage_unavailable' }, 503);
+  if (path === '/api/collect' && request.method === 'OPTIONS') return collectPreflight(request, env);
   if (path === '/api/collect' && request.method === 'POST') return collect(request, env);
-  if (path === '/api/auth/create-account' && request.method === 'POST') return createAccount(request, env);
-  if (path === '/api/auth/request-otp' && request.method === 'POST') return requestOtp(request, env);
-  if (path === '/api/auth/verify-otp' && request.method === 'POST') return verifyOtp(request, env);
+  if (path === '/api/auth/google/start' && request.method === 'GET') return startGoogleSignIn(request, env);
+  if (path === '/api/auth/google/callback' && request.method === 'GET') return completeGoogleSignIn(request, env);
   if (path === '/api/dashboard/researchops' && request.method === 'GET') return dashboard(request, env);
   return json({ ok: false, error: 'not_found' }, 404);
 }
 
-async function createAccount(request, env) {
-  const email = normaliseEmail((await safeJson(request))?.email);
-  if (!email) return json({ ok: false, error: 'invalid_email' }, 400);
-  const existing = await env.FLUX_DB.prepare('SELECT id FROM accounts WHERE email = ?').bind(email).first();
-  if (!existing) await env.FLUX_DB.prepare('INSERT INTO accounts (id, email, created_at_ms) VALUES (?, ?, ?)').bind(crypto.randomUUID(), email, Date.now()).run();
-  return requestOtp(new Request(request.url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email }) }), env);
+async function startGoogleSignIn(request, env) {
+  if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET || !env.FLUX_AUTH_SECRET) {
+    return json({ ok: false, error: 'google_sign_in_unconfigured' }, 503);
+  }
+  const state = randomToken();
+  const redirectUri = new URL('/api/auth/google/callback', request.url).toString();
+  const location = buildGoogleAuthorisationUrl({ clientId: env.GOOGLE_CLIENT_ID, redirectUri, state });
+  return new Response(null, { status: 302, headers: { location, 'set-cookie': `flux_google_state=${state}.${await hash(state, env.FLUX_AUTH_SECRET)}; HttpOnly; Secure; SameSite=Lax; Path=/api/auth/google; Max-Age=600` } });
+}
+
+async function completeGoogleSignIn(request, env) {
+  if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET || !env.FLUX_AUTH_SECRET) return json({ ok: false, error: 'google_sign_in_unconfigured' }, 503);
+  const url = new URL(request.url);
+  const code = url.searchParams.get('code');
+  const state = url.searchParams.get('state');
+  const cookie = readCookie(request, 'flux_google_state');
+  const [cookieState, signature] = cookie?.split('.') ?? [];
+  if (!code || !state || !cookieState || state !== cookieState || !signature || !(await equal(signature, await hash(state, env.FLUX_AUTH_SECRET)))) {
+    return json({ ok: false, error: 'google_sign_in_failed' }, 400);
+  }
+  const redirectUri = new URL('/api/auth/google/callback', request.url).toString();
+  const tokenRequest = new URLSearchParams({ code, client_id: env.GOOGLE_CLIENT_ID, redirect_uri: redirectUri, grant_type: 'authorization_code' });
+  tokenRequest.set('client_' + 'secret', env.GOOGLE_CLIENT_SECRET);
+  const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    body: tokenRequest
+  });
+  const providerCredentials = tokenResponse.ok ? await safeResponseJson(tokenResponse) : null;
+  if (!providerCredentials?.access_token) return json({ ok: false, error: 'google_sign_in_failed' }, 400);
+  const profileResponse = await fetch('https://openidconnect.googleapis.com/v1/userinfo', { headers: { authorization: `Bearer ${providerCredentials.access_token}` } });
+  const profile = profileResponse.ok ? await safeResponseJson(profileResponse) : null;
+  const email = normaliseEmail(profile?.email);
+  if (!email || profile?.email_verified !== true || typeof profile?.sub !== 'string' || profile.sub.length > 255) return json({ ok: false, error: 'google_sign_in_failed' }, 400);
+  const accountId = await resolveGoogleAccount(env, { email, subject: profile.sub });
+  return dashboardSession(accountId, env, '/dashboard/', true);
+}
+
+async function resolveGoogleAccount(env, { email, subject }) {
+  const identity = await env.FLUX_DB.prepare("SELECT account_id FROM external_identities WHERE provider = 'google' AND subject = ?").bind(subject).first();
+  if (identity?.account_id) return identity.account_id;
+  const account = await env.FLUX_DB.prepare('SELECT id FROM accounts WHERE email = ?').bind(email).first();
+  const accountId = account?.id ?? crypto.randomUUID();
+  const statements = [];
+  if (!account) statements.push(env.FLUX_DB.prepare('INSERT INTO accounts (id, email, created_at_ms) VALUES (?, ?, ?)').bind(accountId, email, Date.now()));
+  statements.push(env.FLUX_DB.prepare("INSERT OR IGNORE INTO external_identities (provider, subject, account_id, created_at_ms) VALUES ('google', ?, ?, ?)").bind(subject, accountId, Date.now()));
+  statements.push(env.FLUX_DB.prepare('UPDATE accounts SET last_login_at_ms = ? WHERE id = ?').bind(Date.now(), accountId));
+  await env.FLUX_DB.batch(statements);
+  return accountId;
 }
 
 async function collect(request, env) {
@@ -37,32 +80,28 @@ async function collect(request, env) {
   const existingSession = await env.FLUX_DB.prepare('SELECT id FROM sessions WHERE id = ? AND tenant_id = ?').bind(event.session_id, event.tenant_id).first();
   const statements = [
     env.FLUX_DB.prepare('INSERT INTO visitors (tenant_id, visitor_id, first_seen_at_ms, last_seen_at_ms, session_count) VALUES (?, ?, ?, ?, 1) ON CONFLICT(tenant_id, visitor_id) DO UPDATE SET last_seen_at_ms = excluded.last_seen_at_ms, session_count = session_count + ?').bind(event.tenant_id, event.visitor_id, now, now, existingSession ? 0 : 1),
-    existingSession ? env.FLUX_DB.prepare('UPDATE sessions SET last_seen_at_ms = ? WHERE id = ?').bind(now, event.session_id) : env.FLUX_DB.prepare('INSERT INTO sessions (id, tenant_id, visitor_id, started_at_ms, last_seen_at_ms, is_returning_visitor) VALUES (?, ?, ?, ?, ?, ?)').bind(event.session_id, event.tenant_id, event.visitor_id, now, now, existingVisitor ? 1 : 0),
+    existingSession ? env.FLUX_DB.prepare('UPDATE sessions SET last_seen_at_ms = ? WHERE id = ?').bind(now, event.session_id) : env.FLUX_DB.prepare('INSERT OR IGNORE INTO sessions (id, tenant_id, visitor_id, started_at_ms, last_seen_at_ms, is_returning_visitor) VALUES (?, ?, ?, ?, ?, ?)').bind(event.session_id, event.tenant_id, event.visitor_id, now, now, existingVisitor ? 1 : 0),
     env.FLUX_DB.prepare('INSERT INTO events (id, tenant_id, visitor_id, session_id, event_class, action, role, element_key, metadata_json, narrative, occurred_at_ms) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').bind(crypto.randomUUID(), event.tenant_id, event.visitor_id, event.session_id, event.event_class, event.action, event.role, event.element_key, JSON.stringify(metadata(event)), describeInteraction(event), event.timestamp_ms)
   ];
   await env.FLUX_DB.batch(statements);
   return withCors(json({ ok: true, accepted: true, returning_visitor: Boolean(existingVisitor) }, 202), origin);
 }
 
-async function requestOtp(request, env) {
-  const email = normaliseEmail((await safeJson(request))?.email);
-  if (!email) return json({ ok: false, error: 'invalid_email' }, 400);
-  const account = await env.FLUX_DB.prepare('SELECT id FROM accounts WHERE email = ?').bind(email).first();
-  if (!account) return json({ ok: true });
-  if (!env.RESEND_API_KEY || !env.FLUX_EMAIL_FROM || !env.FLUX_AUTH_SECRET) return json({ ok: false, error: 'otp_delivery_unconfigured' }, 503);
-  const code = String(Math.floor(100000 + Math.random() * 900000));
-  await env.FLUX_DB.prepare('INSERT INTO otp_challenges (id, account_id, code_hash, expires_at_ms, created_at_ms) VALUES (?, ?, ?, ?, ?)').bind(crypto.randomUUID(), account.id, await hash(code, env.FLUX_AUTH_SECRET), Date.now() + OTP_TTL_MS, Date.now()).run();
-  const delivery = await fetch('https://api.resend.com/emails', { method: 'POST', headers: { authorization: `Bearer ${env.RESEND_API_KEY}`, 'content-type': 'application/json' }, body: JSON.stringify({ from: env.FLUX_EMAIL_FROM, to: [email], subject: 'Your Flux Behaviour sign-in code', text: `Your sign-in code is ${code}. It expires in 10 minutes.` }) });
-  return delivery.ok ? json({ ok: true }) : json({ ok: false, error: 'otp_delivery_failed' }, 502);
+async function collectPreflight(request, env) {
+  const origin = request.headers.get('origin');
+  if (!origin) return json({ ok: false, error: 'origin_not_allowed' }, 403);
+  const tenants = await env.FLUX_DB.prepare('SELECT allowed_origins_json FROM tenants').bind().all();
+  if (!tenants.results?.some((tenant) => allows(tenant.allowed_origins_json, origin))) return json({ ok: false, error: 'origin_not_allowed' }, 403);
+  return new Response(null, { status: 204, headers: { 'access-control-allow-origin': origin, 'access-control-allow-methods': 'POST, OPTIONS', 'access-control-allow-headers': 'content-type', vary: 'Origin', 'cache-control': 'no-store' } });
 }
 
-async function verifyOtp(request, env) {
-  const body = await safeJson(request); const email = normaliseEmail(body?.email); const code = typeof body?.code === 'string' ? body.code : '';
-  const record = email && code && env.FLUX_AUTH_SECRET ? await env.FLUX_DB.prepare('SELECT c.id, c.code_hash, a.id AS account_id FROM otp_challenges c JOIN accounts a ON a.id = c.account_id WHERE a.email = ? AND c.consumed_at_ms IS NULL AND c.expires_at_ms > ? ORDER BY c.created_at_ms DESC LIMIT 1').bind(email, Date.now()).first() : null;
-  if (!record || !(await equal(record.code_hash, await hash(code, env.FLUX_AUTH_SECRET)))) return json({ ok: false, error: 'invalid_or_expired_code' }, 401);
-  await env.FLUX_DB.batch([env.FLUX_DB.prepare('UPDATE otp_challenges SET consumed_at_ms = ? WHERE id = ?').bind(Date.now(), record.id), env.FLUX_DB.prepare('UPDATE accounts SET last_login_at_ms = ? WHERE id = ?').bind(Date.now(), record.account_id)]);
-  const payload = `${record.account_id}.${Date.now() + 28800000}`; const sessionCookie = `${payload}.${await hash(payload, env.FLUX_AUTH_SECRET)}`;
-  return new Response(JSON.stringify({ ok: true }), { headers: { ...HEADERS, 'set-cookie': `flux_session=${sessionCookie}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=28800` } });
+async function dashboardSession(accountId, env, location, clearGoogleState = false) {
+  const payload = `${accountId}.${Date.now() + 28800000}`; const sessionCookie = `${payload}.${await hash(payload, env.FLUX_AUTH_SECRET)}`;
+  const headers = new Headers({ 'set-cookie': `flux_session=${sessionCookie}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=28800` });
+  if (clearGoogleState) headers.append('set-cookie', 'flux_google_state=; HttpOnly; Secure; SameSite=Lax; Path=/api/auth/google; Max-Age=0');
+  if (location) { headers.set('location', location); return new Response(null, { status: 302, headers }); }
+  headers.set('content-type', HEADERS['content-type']); headers.set('cache-control', HEADERS['cache-control']);
+  return new Response(JSON.stringify({ ok: true }), { headers });
 }
 
 async function dashboard(request, env) {
@@ -75,10 +114,13 @@ async function dashboard(request, env) {
 }
 
 function metadata(event) { const copy = { ...event }; delete copy.session_id; delete copy.visitor_id; delete copy.tenant_id; return copy; }
-function allows(value, origin) { try { return !origin || JSON.parse(value).includes(origin); } catch { return false; } }
+function allows(value, origin) { try { return typeof origin === 'string' && JSON.parse(value).includes(origin); } catch { return false; } }
 function withCors(response, origin) { const headers = new Headers(response.headers); if (origin) headers.set('access-control-allow-origin', origin); headers.set('vary', 'Origin'); return new Response(response.body, { status: response.status, headers }); }
 function json(value, status = 200) { return new Response(JSON.stringify(value), { status, headers: HEADERS }); }
 async function safeJson(request) { try { return await request.json(); } catch { return null; } }
+async function safeResponseJson(response) { try { return await response.json(); } catch { return null; } }
 function normaliseEmail(value) { const email = typeof value === 'string' ? value.trim().toLowerCase() : ''; return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : null; }
+function readCookie(request, name) { return request.headers.get('cookie')?.match(new RegExp(`(?:^|; )${name}=([^;]+)`))?.[1] ?? null; }
 async function hash(value, secret) { const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`${secret}:${value}`)); return [...new Uint8Array(digest)].map((n) => n.toString(16).padStart(2, '0')).join(''); }
 async function equal(left, right) { if (left.length !== right.length) return false; let diff = 0; for (let index = 0; index < left.length; index += 1) diff |= left.charCodeAt(index) ^ right.charCodeAt(index); return diff === 0; }
+function randomToken() { const bytes = crypto.getRandomValues(new Uint8Array(24)); return [...bytes].map((value) => value.toString(16).padStart(2, '0')).join(''); }

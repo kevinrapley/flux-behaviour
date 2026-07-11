@@ -21,7 +21,7 @@ harms:
       - Users completing high-stakes forms
     likelihood: medium
     severity: critical
-    mitigation: Enforce consent first, metadata-only collection, no text values and collector schema tests.
+    mitigation: Enforce consent first, create identifiers only after consent, clear them on revocation, require explicit safe element keys, metadata-only collection, no text values and collector schema tests.
     residual_risk: high
     owner: security-lead
     escalation_route: Product owner and data protection lead

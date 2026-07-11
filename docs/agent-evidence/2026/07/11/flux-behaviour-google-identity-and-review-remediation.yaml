@@ -1,0 +1,44 @@
+evidence_records:
+  - task_id: flux-behaviour-google-identity-and-review-remediation
+    mode: repo-build
+    repository: flux-behaviour
+    risk_level: high
+    base_branch: main
+    working_branch: feature/researchops-analytics
+    files_read:
+      - AGENTS.md
+      - SECURITY.md
+      - docs/product/production-runtime.md
+      - docs/governance/data-protection.md
+    files_changed:
+      - src/product/google-oauth.mjs
+      - src/product/router.mjs
+      - migrations/0002_google_identity_and_demo_origin.sql
+      - public/account/index.html
+      - public/assets/flux/sdk/flux-browser.mjs
+      - public/assets/flux/sdk/flux-tag.mjs
+      - public/assets/flux/sdk/flux-auto-capture.mjs
+    promotion_decisions:
+      - Replaced unconfigured OTP entry points with Google OAuth routes that remain disabled without provider credentials.
+      - Kept Google identity separate from behavioural visitor and session identities.
+    commands_run:
+      - command: node --test tests/google-oauth.test.mjs tests/account-google-sign-in.test.mjs tests/browser-consent.test.mjs tests/product-router-safety.test.mjs
+        status: pass
+      - command: npm test
+        status: pass
+      - command: npm run validate
+        status: pass
+      - command: npm run security:secrets
+        status: pass
+    recent_learnings:
+      - External identity is a separate concern from behavioural visitor identity.
+    security:
+      - OAuth state is signed, HttpOnly, Secure and short-lived.
+      - No OAuth client secret, account email or token is committed.
+    privacy:
+      - Persistent analytics IDs are deferred until consent and cleared when consent is revoked.
+      - Accessible labels are not used as analytics keys.
+    accessibility:
+      - The account page exposes a labelled Google sign-in link and explains access requirements.
+    risks:
+      - Google credentials, callback registration, migration application, accessibility review and release assurance remain required before production use.

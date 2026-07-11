@@ -33,11 +33,14 @@ export function createFluxTag(options = {}) {
   const transport = typeof options.transport === 'function' ? options.transport : null;
   const now = typeof options.now === 'function' ? options.now : Date.now;
   const onDrop = typeof options.onDrop === 'function' ? options.onDrop : () => {};
-  const sessionId = typeof options.sessionId === 'string' && options.sessionId !== ''
+  let sessionId = typeof options.sessionId === 'string' && options.sessionId !== ''
     ? options.sessionId
-    : generateSessionId(options.randomSource);
+    : null;
   const tenantId = typeof options.tenantId === 'string' ? options.tenantId : null;
-  const visitorId = typeof options.visitorId === 'string' ? options.visitorId : null;
+  let visitorId = typeof options.visitorId === 'string' ? options.visitorId : null;
+  const sessionIdFactory = typeof options.sessionIdFactory === 'function' ? options.sessionIdFactory : () => generateSessionId(options.randomSource);
+  const visitorIdFactory = typeof options.visitorIdFactory === 'function' ? options.visitorIdFactory : () => null;
+  const resetIdentifiers = typeof options.resetIdentifiers === 'function' ? options.resetIdentifiers : () => {};
 
   let consentGranted = options.consent === 'yes';
 
@@ -56,6 +59,9 @@ export function createFluxTag(options = {}) {
 
     revokeConsent() {
       consentGranted = false;
+      sessionId = null;
+      visitorId = null;
+      resetIdentifiers();
     },
 
     async track(eventClass, action, details = {}) {
@@ -68,6 +74,9 @@ export function createFluxTag(options = {}) {
         onDrop({ reason: 'not_configured', event_class: eventClass, action });
         return { sent: false, reason: 'not_configured' };
       }
+
+      sessionId ??= sessionIdFactory();
+      visitorId ??= visitorIdFactory();
 
       const event = buildEvent({ sessionId, tenantId, visitorId, eventClass, action, details, now });
       const validation = validateEventRuntime(event, fluxEventSchema);
