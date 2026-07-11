@@ -1,0 +1,47 @@
+evidence_records:
+  - task_id: flux-behaviour-production-session-dimensions
+    mode: repo-build
+    repository: kevinrapley/flux-behaviour
+    risk_level: high
+    base_branch: main
+    working_branch: feature/researchops-production-scoring
+    files_read:
+      - docs/product/behaviour-signal-map.md
+      - demo/data/playground-model.mjs
+      - demo/assets/flux-nudges.js
+      - src/product/router.mjs
+      - src/product/live-analytics.mjs
+    files_changed:
+      - src/product/session-dimensions.mjs
+      - src/product/router.mjs
+      - src/product/live-analytics.mjs
+      - src/dashboard/live-dashboard.mjs
+      - src/sdk/flux-auto-capture.mjs
+      - tests/session-dimensions.test.mjs
+    promotion_decisions:
+      - decision: Compute all twenty demo-model indicators per session from safe, consented metadata only.
+        reason: The dashboard must cover the requested model without exporting text, identity or protected-field activity.
+      - decision: Leave unsupported indicators neutral.
+        reason: Generic activity cannot justify inferring a person-level characteristic.
+    commands_run:
+      - command: npm test
+        result: passed
+        evidence: 105 tests passed.
+      - command: npm run demo:build
+        result: passed
+      - command: npm run validate
+        result: passed
+      - command: npm run security:secrets
+        result: passed
+      - command: npm run sbom
+        result: passed
+    recent_learnings:
+      - Neutral is the only safe score for unsupported session signals.
+    security:
+      - No typed text, identity, URL, label or protected-field activity enters scoring.
+    privacy:
+      - Scores are derived at dashboard read time from approved event metadata.
+    accessibility:
+      - The dashboard presents aggregate and per-session indicators with native details, headings and tables.
+    risks:
+      - Golden-corpus validation, DPIA, full accessibility evidence, retention, rate limiting and incident controls remain release blockers.

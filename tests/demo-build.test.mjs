@@ -61,6 +61,10 @@ test('production runtime assets are sourced and copied as part of the demo build
     assert.match(source, /auto\.\$\{kind\}/);
     assert.match(source, /one-time-code/);
     assert.match(source, /removeEventListener\('input', state\.onInput\)/);
+    assert.match(source, /edit\.paste/);
+    assert.match(source, /field\.revisit/);
+    assert.match(source, /flow\.submit/);
+    assert.match(source, /assist\.help/);
     assert.match(browser, /persistentVisitorId/);
     assert.match(browser, /persistentSessionId/);
     assert.match(copy, /src\/dashboard/);

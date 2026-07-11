@@ -65,10 +65,10 @@ gaps:
   - id: GAP-008
     title: Playground scoring is ported prototype logic, not corpus-validated scoring
     severity: low
-    observed_state: The playground ports the original v46.s engine and the original playground's signal mappings (applyAutoNudges, frustration soothing, persona deltas), with exploratory-dimension mappings derived from the v6.10 formula directions.
-    expected_state: Promoted scoring validated against the original repository's golden corpus (R pipeline) before any score leaves a demo context.
-    risk: Viewers could over-trust demo score movements as validated behavioural measurement.
-    action: Validate the ported engine and mappings against the golden corpus cases when scoring is promoted.
+    observed_state: The dashboard computes all 20 demo-model indicators from a deliberately constrained, metadata-only production signal set. Unsupported indicators remain neutral; the mapping has not been compared with the original repository's golden corpus.
+    expected_state: Promoted scoring validated against the original repository's golden corpus (R pipeline) before any score supports a production interpretation beyond human-led service improvement.
+    risk: Teams could over-trust a heuristic service-friction indicator as validated behavioural measurement.
+    action: Validate the promoted session mapping against golden corpus cases, publish interpretation guidance and retain the no-automated-decision boundary.
     owner: product-lead
     status: open
   - id: GAP-009
