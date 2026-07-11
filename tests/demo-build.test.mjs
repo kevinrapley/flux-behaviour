@@ -29,8 +29,11 @@ test('demo build renders the GOV.UK prototype pages', () => {
     assert.match(journey, /data-flux-field="full-name"/);
     assert.match(journey, /flux-event-log/);
 
-    assert.match(dashboard, /Live ResearchOps journeys/);
-    assert.match(dashboard, /data-flux-live-analytics/);
+    assert.match(dashboard, /Audience overview/);
+    assert.match(dashboard, /whether visitors come back/);
+    assert.match(dashboard, /data-flux-overview/);
+    assert.match(dashboard, /data-flux-trend/);
+    assert.match(dashboard, /Recent journeys/);
     assert.match(dashboard, /assets\/flux\/dashboard\/live-dashboard\.mjs/);
 
     assert.match(playground, /playground-score-bars/);

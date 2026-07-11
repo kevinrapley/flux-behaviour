@@ -1,0 +1,71 @@
+evidence_records:
+  - task_id: flux-behaviour-cumulative-analytics-dashboard
+    mode: repo-build
+    repository: kevinrapley/flux-behaviour
+    risk_level: high
+    base_branch: main
+    working_branch: feature/analytics-dashboard-experience
+    files_read:
+      - src/product/router.mjs
+      - src/product/live-analytics.mjs
+      - src/dashboard/live-dashboard.mjs
+      - demo/templates/pages/dashboard.njk
+      - demo/styles/demo.scss
+      - docs/product/production-runtime.md
+      - docs/governance/governance-playbook.md
+      - docs/governance/inclusivity-testing-plan.md
+    files_changed:
+      - src/product/router.mjs
+      - src/product/live-analytics.mjs
+      - src/dashboard/live-dashboard.mjs
+      - demo/templates/pages/dashboard.njk
+      - demo/styles/demo.scss
+      - tests/live-analytics.test.mjs
+      - tests/dashboard-dimensions.test.mjs
+      - tests/dashboard-query.test.mjs
+      - tests/session-history-route.test.mjs
+      - tests/demo-build.test.mjs
+      - docs/product/production-runtime.md
+      - docs/product/demo-prototype.md
+      - RECENT_LEARNINGS.md
+      - conformance-matrix.yaml
+      - gap-register.yaml
+      - harm-register.yaml
+    promotion_decisions:
+      - decision: Lead the dashboard with cumulative service-level analytics for an explicitly selected period.
+        reason: Visitors, returning visitors, sessions, interactions and trends support operational decisions better than a raw chronological session list.
+      - decision: Keep complete individual journeys behind an intentional authenticated drill-down and omit visitor identifiers from the primary view.
+        reason: Journey investigation remains available without giving pseudonymous identities unnecessary prominence.
+      - decision: Render the daily trend as responsive SVG with a text alternative and expandable data table.
+        reason: The chart remains useful at desktop and mobile sizes while preserving a non-visual route to the same values.
+    commands_run:
+      - command: npm test
+        result: passed
+        evidence: 111 tests passed.
+      - command: npm run validate
+        result: passed
+      - command: npm run security:secrets
+        result: passed
+      - command: npm run sbom
+        result: passed
+      - command: npm run demo:build
+        result: passed
+      - command: sqlite3 schema and cumulative dashboard aggregate queries
+        result: passed
+        evidence: Returning visitor, session, interaction, dwell, correction, touch and completion aggregates executed against the repository schema.
+      - command: browser verification at 1440x1000 and 390x844
+        result: passed
+        evidence: Period switching, journey drill-down, signed-out state, error recovery, chart legibility and horizontal overflow were checked; a mobile chart scaling defect was fixed and reverified.
+    recent_learnings:
+      - Cumulative service evidence belongs in the dashboard; session chronology belongs in a drill-down.
+    security:
+      - Dashboard authentication and tenant access checks are unchanged.
+      - Aggregate queries remain tenant-scoped and parameterised by allow-listed date ranges.
+    privacy:
+      - The primary dashboard no longer renders raw pseudonymous visitor identifiers.
+      - All analytics remain derived from consented metadata-only events.
+    accessibility:
+      - The audience chart has an accessible name, text description and source-data table.
+      - Desktop and mobile layouts, focusable controls, signed-out, error and journey states were browser-verified.
+    risks:
+      - Full keyboard and screen-reader audit, DPIA, retention, rate limiting, incident controls and scoring-corpus validation remain release blockers recorded in the gap and harm registers.

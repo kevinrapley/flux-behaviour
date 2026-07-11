@@ -1,25 +1,80 @@
 {% extends "layout.njk" %}
 
 {% block content %}
-<div class="govuk-grid-row">
-	<div class="govuk-grid-column-two-thirds">
-		<span class="govuk-caption-xl">Dashboard</span>
-		<h1 class="govuk-heading-xl">Behavioural signals</h1>
-		<p class="govuk-body">This dashboard presents consented, pseudonymous ResearchOps interaction analytics. It is evidence about service friction, never a judgement of an individual.</p>
-	</div>
-</div>
+<div class="flux-dashboard" data-flux-dashboard aria-busy="true">
+	<header class="flux-dashboard__header">
+		<div>
+			<span class="govuk-caption-l">ResearchOps</span>
+			<h1 class="govuk-heading-xl flux-dashboard__title">Behavioural analytics</h1>
+			<p class="govuk-body-l flux-dashboard__lede">See how people move through the service, where journeys slow down, and whether visitors come back.</p>
+		</div>
+		<div class="flux-dashboard__controls" aria-label="Dashboard period">
+			<div class="flux-dashboard__range" role="group" aria-label="Choose reporting period">
+				<button type="button" class="flux-dashboard__range-button" data-flux-range="7d">7 days</button>
+				<button type="button" class="flux-dashboard__range-button flux-dashboard__range-button--active" data-flux-range="30d" aria-pressed="true">30 days</button>
+				<button type="button" class="flux-dashboard__range-button" data-flux-range="90d">90 days</button>
+				<button type="button" class="flux-dashboard__range-button" data-flux-range="all">All time</button>
+			</div>
+			<button type="button" class="flux-dashboard__refresh" data-flux-refresh>Refresh data</button>
+		</div>
+	</header>
 
-<div class="govuk-grid-row">
-	<div class="govuk-grid-column-full">
-		<h2 class="govuk-heading-l">Live ResearchOps journeys</h2>
-		<p class="govuk-body" data-flux-live-status aria-live="polite">Loading live analytics…</p>
-		<table class="govuk-table">
-			<thead class="govuk-table__head"><tr class="govuk-table__row"><th class="govuk-table__header">Visitor</th><th class="govuk-table__header">Visitor type</th><th class="govuk-table__header">Session started</th></tr></thead>
-			<tbody class="govuk-table__body" data-flux-live-sessions></tbody>
-		</table>
-		<h3 class="govuk-heading-m">Session journey narrative</h3>
-		<div data-flux-live-journeys></div>
-		<div data-flux-live-analytics></div>
+	<p class="flux-dashboard__status" data-flux-live-status aria-live="polite">Loading ResearchOps analytics…</p>
+
+	<div data-flux-dashboard-content hidden>
+		<section aria-labelledby="overview-heading">
+			<div class="flux-dashboard__section-heading">
+				<div>
+					<h2 class="govuk-heading-l" id="overview-heading">Audience overview</h2>
+					<p class="govuk-body flux-dashboard__section-copy" data-flux-period-copy></p>
+				</div>
+			</div>
+			<div class="flux-metric-grid" data-flux-overview></div>
+		</section>
+
+		<section class="flux-dashboard__panel flux-dashboard__panel--trend" aria-labelledby="trend-heading">
+			<div class="flux-dashboard__section-heading">
+				<div>
+					<h2 class="govuk-heading-l" id="trend-heading">Audience activity</h2>
+					<p class="govuk-body flux-dashboard__section-copy">Daily visitors and sessions show whether engagement is building over time.</p>
+				</div>
+				<div class="flux-chart-legend" aria-hidden="true"><span><i class="flux-chart-legend__key flux-chart-legend__key--visitors"></i>Visitors</span><span><i class="flux-chart-legend__key flux-chart-legend__key--sessions"></i>Sessions</span></div>
+			</div>
+			<div data-flux-trend></div>
+		</section>
+
+		<div class="flux-dashboard__split">
+			<section class="flux-dashboard__panel" aria-labelledby="health-heading">
+				<h2 class="govuk-heading-l" id="health-heading">Journey health</h2>
+				<p class="govuk-body flux-dashboard__section-copy">Signals that reveal effort, recovery and completion across the selected period.</p>
+				<div data-flux-health></div>
+			</section>
+			<section class="flux-dashboard__panel" aria-labelledby="interactions-heading">
+				<h2 class="govuk-heading-l" id="interactions-heading">Top interactions</h2>
+				<p class="govuk-body flux-dashboard__section-copy">The behaviours people use most often while navigating ResearchOps.</p>
+				<div data-flux-interactions></div>
+			</section>
+		</div>
+
+		<section class="flux-dashboard__panel" aria-labelledby="signals-heading">
+			<div class="flux-dashboard__section-heading">
+				<div>
+					<h2 class="govuk-heading-l" id="signals-heading">Behavioural signals</h2>
+					<p class="govuk-body flux-dashboard__section-copy">Median service-friction indicators across recent sessions in this period.</p>
+				</div>
+			</div>
+			<div data-flux-signals></div>
+		</section>
+
+		<section aria-labelledby="journeys-heading">
+			<div class="flux-dashboard__section-heading">
+				<div>
+					<h2 class="govuk-heading-l" id="journeys-heading">Recent journeys</h2>
+					<p class="govuk-body flux-dashboard__section-copy">Open a journey to understand its sequence of consented interactions. Visitor identities remain pseudonymous.</p>
+				</div>
+			</div>
+			<div class="flux-journey-list" data-flux-live-journeys></div>
+		</section>
 	</div>
 </div>
 {% endblock %}
