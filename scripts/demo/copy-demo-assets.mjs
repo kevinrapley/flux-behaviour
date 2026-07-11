@@ -7,6 +7,7 @@ const outputRoot = resolve(root, process.argv[2] ?? 'public');
 const directoryTargets = [
   ['node_modules/govuk-frontend/dist/govuk/assets', 'assets/govuk/assets'],
   ['src/sdk', 'assets/flux/sdk'],
+  ['src/dashboard', 'assets/flux/dashboard'],
   ['src/events', 'assets/flux/events'],
   ['demo/assets', 'assets/demo']
 ];

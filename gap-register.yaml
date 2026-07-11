@@ -72,11 +72,11 @@ gaps:
     owner: product-lead
     status: open
   - id: GAP-009
-    title: Google OAuth client is not configured
-    severity: high
-    observed_state: Google sign-in routes and identity mapping are implemented, but the protected Google OAuth client credentials and callback registration are not configured.
-    expected_state: Google OAuth consent is configured for the production callback and an authorised account can sign in end to end.
-    risk: The dashboard cannot be accessed until the identity provider is configured.
-    action: Create a Google OAuth web client, register `https://flux-behaviour.pages.dev/api/auth/google/callback`, set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` as Pages secrets, apply migration 0002 and verify sign-in.
+    title: Google OAuth end-to-end account sign-in needs browser-session evidence
+    severity: medium
+    observed_state: Production secret names, callback redirect, D1 identity migration and the seeded ResearchOps account access were verified. The provider-consent browser completion has not yet been recorded as release evidence.
+    expected_state: An authorised account completes Google consent, reaches the protected dashboard and is recorded in `external_identities` without exposing visitor analytics identity.
+    risk: A provider-side configuration issue could still prevent a real dashboard session.
+    action: Record a consented Google browser sign-in and protected dashboard check before release approval.
     owner: security-lead
     status: open

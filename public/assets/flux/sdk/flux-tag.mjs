@@ -36,10 +36,10 @@ export function createFluxTag(options = {}) {
   let sessionId = typeof options.sessionId === 'string' && options.sessionId !== ''
     ? options.sessionId
     : null;
-  const tenantId = typeof options.tenantId === 'string' ? options.tenantId : null;
-  let visitorId = typeof options.visitorId === 'string' ? options.visitorId : null;
+  const tenantId = typeof options.tenantId === 'string' && options.tenantId !== '' ? options.tenantId : 'default';
+  let visitorId = typeof options.visitorId === 'string' && options.visitorId !== '' ? options.visitorId : null;
   const sessionIdFactory = typeof options.sessionIdFactory === 'function' ? options.sessionIdFactory : () => generateSessionId(options.randomSource);
-  const visitorIdFactory = typeof options.visitorIdFactory === 'function' ? options.visitorIdFactory : () => null;
+  const visitorIdFactory = typeof options.visitorIdFactory === 'function' ? options.visitorIdFactory : () => generateVisitorId(options.randomSource);
   const resetIdentifiers = typeof options.resetIdentifiers === 'function' ? options.resetIdentifiers : () => {};
 
   let consentGranted = options.consent === 'yes';
@@ -77,8 +77,7 @@ export function createFluxTag(options = {}) {
 
       sessionId ??= sessionIdFactory();
       visitorId ??= visitorIdFactory();
-
-      const event = buildEvent({ sessionId, tenantId, visitorId, eventClass, action, details, now });
+      const event = buildEvent({ sessionId, visitorId, tenantId, eventClass, action, details, now });
       const validation = validateEventRuntime(event, fluxEventSchema);
 
       if (!validation.valid) {
@@ -99,7 +98,26 @@ export function createFluxTag(options = {}) {
 }
 
 export function generateSessionId(randomSource) {
-  const random = typeof randomSource === 'function' ? randomSource : Math.random;
+  let random = randomSource;
+  if (typeof random !== 'function') {
+    const cryptoObj = typeof globalThis !== 'undefined' && globalThis.crypto
+      ? globalThis.crypto
+      : (typeof window !== 'undefined' ? window.crypto : null);
+
+    if (cryptoObj && typeof cryptoObj.getRandomValues === 'function') {
+      const alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
+      const array = new Uint32Array(24);
+      cryptoObj.getRandomValues(array);
+      let suffix = '';
+      for (let i = 0; i < 24; i++) {
+        const floatVal = array[i] / 4294967296;
+        suffix += alphabet[Math.floor(floatVal * alphabet.length)];
+      }
+      return `flux-${suffix}`;
+    }
+    random = Math.random;
+  }
+
   const alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
   let suffix = '';
 
@@ -110,7 +128,11 @@ export function generateSessionId(randomSource) {
   return `flux-${suffix}`;
 }
 
-function buildEvent({ sessionId, tenantId, visitorId, eventClass, action, details, now }) {
+function generateVisitorId(randomSource) {
+  return `visitor-${generateSessionId(randomSource).slice('flux-'.length)}`;
+}
+
+function buildEvent({ sessionId, visitorId, tenantId, eventClass, action, details, now }) {
   const event = {
     schema_version: SCHEMA_VERSION,
     session_id: sessionId,

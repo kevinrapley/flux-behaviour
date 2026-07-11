@@ -32,7 +32,8 @@ test('demo build renders the GOV.UK prototype pages', () => {
     assert.match(dashboard, /field-friction-chart/);
     assert.match(dashboard, /validation-errors-chart/);
     assert.match(dashboard, /flux-dashboard-data/);
-    assert.match(dashboard, /fixture data/i);
+    assert.match(dashboard, /Live ResearchOps journeys/);
+    assert.match(dashboard, /assets\/flux\/dashboard\/live-dashboard\.mjs/);
 
     assert.match(playground, /playground-score-bars/);
     assert.match(playground, /playground-score-lines/);
@@ -40,6 +41,31 @@ test('demo build renders the GOV.UK prototype pages', () => {
     assert.match(playground, /"neutral":\s*50/);
     assert.match(playground, /Efficiency/);
     assert.match(playground, /never be read as judgements/i);
+  } finally {
+    rmSync(outputRoot, { recursive: true, force: true });
+  }
+});
+
+test('production runtime assets are sourced and copied as part of the demo build', () => {
+  const source = readFileSync('src/sdk/flux-auto-capture.mjs', 'utf8');
+  const browser = readFileSync('src/sdk/flux-browser.mjs', 'utf8');
+  const copy = readFileSync('scripts/demo/copy-demo-assets.mjs', 'utf8');
+  const outputRoot = mkdtempSync(join(tmpdir(), 'flux-assets-'));
+
+  try {
+    execFileSync(process.execPath, ['scripts/demo/copy-demo-assets.mjs', outputRoot]);
+    const copiedCapture = readFileSync(join(outputRoot, 'assets/flux/sdk/flux-auto-capture.mjs'), 'utf8');
+    const copiedDashboard = readFileSync(join(outputRoot, 'assets/flux/dashboard/live-dashboard.mjs'), 'utf8');
+
+    assert.match(source, /key_press_count/);
+    assert.match(source, /backspace_count/);
+  assert.match(source, /fluxKey/);
+  assert.match(source, /auto\.\$\{kind\}/);
+    assert.match(browser, /persistentVisitorId/);
+    assert.match(browser, /persistentSessionId/);
+    assert.match(copy, /src\/dashboard/);
+    assert.equal(copiedCapture, source);
+    assert.match(copiedDashboard, /api\/dashboard\/researchops/);
   } finally {
     rmSync(outputRoot, { recursive: true, force: true });
   }

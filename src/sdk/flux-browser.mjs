@@ -28,6 +28,9 @@ export function installFluxBrowserTag(windowLike, config = {}) {
     transport,
     sessionId: config.sessionId,
     visitorId: config.visitorId,
+    sessionIdFactory: () => persistentSessionId(windowLike),
+    visitorIdFactory: () => persistentVisitorId(windowLike),
+    resetIdentifiers: () => clearPersistentIdentifiers(windowLike),
     tenantId: config.tenantId ?? readTenantFromScript(windowLike),
     consent: config.consent,
     now: config.now,
@@ -76,6 +79,37 @@ function readTenantFromScript(windowLike) {
   const script = windowLike.document?.currentScript
     ?? windowLike.document?.querySelector?.('script[data-flux-tenant]');
   return script?.dataset?.fluxTenant ?? null;
+}
+
+function persistentVisitorId(windowLike) {
+  return persistentIdentifier(windowLike.localStorage, 'flux.behaviour.visitor_id', 'visitor', windowLike);
+}
+
+function persistentSessionId(windowLike) {
+  return persistentIdentifier(windowLike.sessionStorage, 'flux.behaviour.session_id', 'session', windowLike);
+}
+
+function persistentIdentifier(storage, key, prefix, windowLike) {
+  const existing = storage?.getItem(key);
+  if (existing) return existing;
+  const id = `${prefix}-${randomSuffix(windowLike)}`;
+  storage?.setItem(key, id);
+  return id;
+}
+
+function clearPersistentIdentifiers(windowLike) {
+  windowLike.localStorage?.removeItem('flux.behaviour.visitor_id');
+  windowLike.sessionStorage?.removeItem('flux.behaviour.session_id');
+}
+
+function randomSuffix(windowLike) {
+  if (typeof windowLike.crypto?.randomUUID === 'function') return windowLike.crypto.randomUUID().replace(/-/g, '');
+  const bytes = new Uint8Array(16);
+  if (typeof windowLike.crypto?.getRandomValues === 'function') {
+    windowLike.crypto.getRandomValues(bytes);
+    return [...bytes].map((byte) => byte.toString(16).padStart(2, '0')).join('');
+  }
+  return Math.random().toString(36).slice(2).padEnd(24, '0');
 }
 
 export function createBrowserTransport(windowLike) {

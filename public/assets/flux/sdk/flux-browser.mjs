@@ -82,20 +82,18 @@ function readTenantFromScript(windowLike) {
 }
 
 function persistentVisitorId(windowLike) {
-  const key = 'flux.behaviour.visitor_id';
-  const existing = windowLike.localStorage?.getItem(key);
-  if (existing) return existing;
-  const id = `visitor-${generateRandomSuffix(windowLike)}`;
-  windowLike.localStorage?.setItem(key, id);
-  return id;
+  return persistentIdentifier(windowLike.localStorage, 'flux.behaviour.visitor_id', 'visitor', windowLike);
 }
 
 function persistentSessionId(windowLike) {
-  const key = 'flux.behaviour.session_id';
-  const existing = windowLike.sessionStorage?.getItem(key);
+  return persistentIdentifier(windowLike.sessionStorage, 'flux.behaviour.session_id', 'session', windowLike);
+}
+
+function persistentIdentifier(storage, key, prefix, windowLike) {
+  const existing = storage?.getItem(key);
   if (existing) return existing;
-  const id = `session-${generateRandomSuffix(windowLike)}`;
-  windowLike.sessionStorage?.setItem(key, id);
+  const id = `${prefix}-${randomSuffix(windowLike)}`;
+  storage?.setItem(key, id);
   return id;
 }
 
@@ -104,28 +102,40 @@ function clearPersistentIdentifiers(windowLike) {
   windowLike.sessionStorage?.removeItem('flux.behaviour.session_id');
 }
 
-function generateRandomSuffix(windowLike) {
-  if (windowLike.crypto?.randomUUID) return windowLike.crypto.randomUUID().replace(/-/g, '');
+function randomSuffix(windowLike) {
+  if (typeof windowLike.crypto?.randomUUID === 'function') return windowLike.crypto.randomUUID().replace(/-/g, '');
+  const bytes = new Uint8Array(16);
+  if (typeof windowLike.crypto?.getRandomValues === 'function') {
+    windowLike.crypto.getRandomValues(bytes);
+    return [...bytes].map((byte) => byte.toString(16).padStart(2, '0')).join('');
+  }
   return Math.random().toString(36).slice(2).padEnd(24, '0');
 }
 
 export function createBrowserTransport(windowLike) {
   return async ({ endpoint, body }) => {
-    const navigatorLike = windowLike.navigator;
+    // Prefer fetch with keepalive: true and credentials: 'omit' to ensure credentials are not sent.
+    if (typeof windowLike.fetch === 'function') {
+      try {
+        await windowLike.fetch(endpoint, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body,
+          keepalive: true,
+          credentials: 'omit'
+        });
+        return;
+      } catch (err) {
+        // Fall back to sendBeacon if fetch fails (e.g. keepalive size limits or network issue).
+      }
+    }
 
+    const navigatorLike = windowLike.navigator;
     if (navigatorLike && typeof navigatorLike.sendBeacon === 'function') {
       const payload = new windowLike.Blob([body], { type: 'application/json' });
       if (navigatorLike.sendBeacon(endpoint, payload)) {
         return;
       }
     }
-
-    await windowLike.fetch(endpoint, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body,
-      keepalive: true,
-      credentials: 'omit'
-    });
   };
 }
