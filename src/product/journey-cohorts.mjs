@@ -66,7 +66,7 @@ function dimensions(scoreResult = {}) {
   return Object.fromEntries((scoreResult.dimensions ?? []).map(({ key, score }) => [key, Number(score)]));
 }
 
-export function classifyJourneyPattern(scoreResult = {}) {
+export function classifyJourneyPattern(scoreResult = {}, evidence = {}) {
   const scores = dimensions(scoreResult);
   const required = ['efficiency', 'engagement', 'wayfinding', 'proficiency', 'trust', 'trust_align', 'frustration', 'adaptability', 'stability'];
   if (!required.every((key) => Number.isFinite(scores[key]))) return 'no_dominant_pattern';
@@ -79,7 +79,7 @@ export function classifyJourneyPattern(scoreResult = {}) {
   const cautious = (value) => value >= 46 && value <= 56;
 
   if (momentum <= 35) return 'frustrated_explorer';
-  if (scores.engagement >= 50 && momentum <= 58 && (cautious(scores.trust) || cautious(scores.trust_align))) return 'careful_checker';
+  if (number(evidence.deliberate_check_count) > 0 && scores.engagement >= 50 && momentum <= 58 && (cautious(scores.trust) || cautious(scores.trust_align))) return 'careful_checker';
   if ((scores.trust <= 42 || scores.trust_align <= 42) && scores.engagement >= 50) return 'distrustful_checker';
   if (momentum <= 45 && (scores.wayfinding < 45 || scores.efficiency < 45) && scores.frustration >= 55) return 'frustrated_explorer';
   if (
@@ -97,6 +97,13 @@ function number(value) {
 
 function rate(numerator, denominator) {
   return denominator ? Math.round((number(numerator) / denominator) * 1000) / 10 : 0;
+}
+
+function journeyEvidence(events = []) {
+  const deliberateChecks = new Set(['field.revisit', 'edit.undo', 'trust.assuranceTick', 'trust.passwordReveal', 'trust.passwordHide']);
+  return {
+    deliberate_check_count: events.filter((event) => deliberateChecks.has(event.action)).length
+  };
 }
 
 export function summariseCohortRows(rows = [], definitions = {}, totalSessionCount = 0, minimumSize = MINIMUM_COHORT_SIZE) {
@@ -143,7 +150,7 @@ export function buildJourneyPatternCohorts(journeys = [], selectedSessionCount =
       incompleteHistorySessionCount += 1;
       continue;
     }
-    const key = classifyJourneyPattern(journey.dimension_scores);
+    const key = classifyJourneyPattern(journey.dimension_scores, journeyEvidence(journey.events));
     const group = groups.get(key) ?? {
       cohort_key: key,
       session_count: 0,

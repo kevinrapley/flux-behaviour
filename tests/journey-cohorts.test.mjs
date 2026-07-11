@@ -17,7 +17,8 @@ function scores(values = {}) {
 
 test('journey patterns preserve neutral uncertainty instead of treating no evidence as careful checking', () => {
   assert.equal(classifyJourneyPattern(scores()), 'no_dominant_pattern');
-  assert.equal(classifyJourneyPattern(scores({ efficiency: 42, engagement: 64, wayfinding: 55, proficiency: 47, trust: 51, trust_align: 51, frustration: 45 })), 'careful_checker');
+  assert.equal(classifyJourneyPattern(scores({ efficiency: 52, engagement: 52 })), 'no_dominant_pattern');
+  assert.equal(classifyJourneyPattern(scores({ efficiency: 42, engagement: 64, wayfinding: 55, proficiency: 47, trust: 51, trust_align: 51, frustration: 45 }), { deliberate_check_count: 1 }), 'careful_checker');
   assert.equal(classifyJourneyPattern(scores({ efficiency: 75, engagement: 72, wayfinding: 70, proficiency: 64, trust: 57, frustration: 42 })), 'confident_navigator');
 });
 
@@ -37,8 +38,8 @@ test('named cohorts smaller than five sessions are suppressed from the response'
 test('journey-pattern cohorts aggregate service outcomes and exclude incomplete histories', () => {
   const complete = Array.from({ length: 5 }, (_, index) => ({
     id: `complete-${index}`,
-    event_count: 1,
-    events: [{ action: 'flow.submit' }],
+    events: [{ action: 'flow.submit' }, { action: 'field.revisit' }],
+    event_count: 2,
     dimension_scores: scores({ efficiency: 75, engagement: 72, wayfinding: 70, proficiency: 64, trust: 57, frustration: 42 }),
     submit_count: 1,
     friction_event_count: 0,
@@ -46,7 +47,7 @@ test('journey-pattern cohorts aggregate service outcomes and exclude incomplete 
     started_at_ms: 1000,
     last_seen_at_ms: 6000
   }));
-  const incomplete = { ...complete[0], id: 'incomplete', event_count: 2 };
+  const incomplete = { ...complete[0], id: 'incomplete', event_count: 3 };
   const result = buildJourneyPatternCohorts([...complete, incomplete], 10);
 
   assert.equal(result.assessed_session_count, 5);

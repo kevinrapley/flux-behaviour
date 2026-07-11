@@ -46,7 +46,7 @@ The original journey-pattern rules are retained with safer labels and a neutral 
 - assurance seeking;
 - no dominant pattern.
 
-A fully neutral score set always produces **no dominant pattern**. This prevents missing evidence from being misreported as careful checking. Pattern calculations use at most the 250 most recent complete journey histories in the selected period and declare when coverage is limited.
+A fully neutral score set always produces **no dominant pattern**, and careful checking additionally requires a deliberate revisit, undo or supported assurance interaction. This prevents missing or routine completion evidence from being misreported as careful checking. Pattern calculations use at most the 250 most recent complete journey histories in the selected period and declare when coverage is limited. Event caps retain the newest evidence before restoring chronological order, so older high-volume sessions cannot displace recent journeys.
 
 ## Privacy and interpretation controls
 

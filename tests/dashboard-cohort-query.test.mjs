@@ -24,6 +24,7 @@ function d1(database) {
 test('dashboard cohort queries run against the production schema and enforce aggregate suppression', async () => {
   const database = new DatabaseSync(':memory:');
   database.exec(readFileSync('migrations/0001_flux_behaviour.sql', 'utf8'));
+  database.prepare("INSERT INTO tenants (id, name, allowed_origins_json, created_at_ms) VALUES ('other', 'Other', '[]', 0)").run();
   const visitor = database.prepare('INSERT INTO visitors (tenant_id, visitor_id, first_seen_at_ms, last_seen_at_ms, session_count) VALUES (?, ?, ?, ?, ?)');
   const session = database.prepare('INSERT INTO sessions (id, tenant_id, visitor_id, started_at_ms, last_seen_at_ms, is_returning_visitor) VALUES (?, ?, ?, ?, ?, ?)');
   const event = database.prepare('INSERT INTO events (id, tenant_id, visitor_id, session_id, event_class, action, role, element_key, metadata_json, narrative, occurred_at_ms) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
@@ -34,6 +35,8 @@ test('dashboard cohort queries run against the production schema and enforce agg
     visitor.run('researchops', visitorId, 1000, 2000, 1);
     session.run(sessionId, 'researchops', visitorId, 1000 + index, 2000 + index, 0);
     event.run(`event-${index}`, 'researchops', visitorId, sessionId, 'flow', 'flow.submit', 'form', 'researchops.form.1', '{}', 'Submit form.', 1500 + index);
+    event.run(`revisit-${index}`, 'researchops', visitorId, sessionId, 'focus', 'field.revisit', 'field', 'researchops.field.1', '{"revisit_count":1}', 'Revisit field.', 1600 + index);
+    event.run(`cross-tenant-${index}`, 'other', visitorId, sessionId, 'flow', 'flow.submit', 'form', 'other.form.1', '{}', 'Submit other form.', 1700 + index);
   }
   visitor.run('researchops', 'visitor-small', 1000, 2000, 1);
   session.run('session-small', 'researchops', 'visitor-small', 1100, 1100, 0);
@@ -41,10 +44,13 @@ test('dashboard cohort queries run against the production schema and enforce agg
   const result = await dashboardCohorts({ FLUX_DB: d1(database) }, 0, 10000, 6);
 
   assert.deepEqual(result.visit_maturity.rows.map(({ key, session_count }) => ({ key, session_count })), [{ key: 'first_time', session_count: 6 }]);
-  assert.deepEqual(result.outcome_paths.rows.map(({ key, session_count }) => ({ key, session_count })), [{ key: 'completed_smoothly', session_count: 5 }]);
+  assert.deepEqual(result.outcome_paths.rows.map(({ key, session_count }) => ({ key, session_count })), [{ key: 'completed_after_friction', session_count: 5 }]);
   assert.equal(result.outcome_paths.suppressed_session_count, 1);
   assert.deepEqual(result.journey_patterns.rows.map(({ key, session_count }) => ({ key, session_count })), [{ key: 'careful_checker', session_count: 5 }]);
   assert.equal(result.journey_patterns.suppressed_session_count, 1);
   assert.doesNotMatch(JSON.stringify(result), /visitor_id|session_id|visitor-/);
+  const router = readFileSync('src/product/router.mjs', 'utf8');
+  assert.match(router, /LEFT JOIN events e ON e\.session_id = s\.id AND e\.tenant_id = s\.tenant_id/);
+  assert.match(router, /ORDER BY e\.occurred_at_ms DESC LIMIT 10000\) ORDER BY occurred_at_ms ASC/);
   database.close();
 });
