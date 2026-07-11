@@ -18,15 +18,18 @@ evidence_records:
       - src/dashboard/live-dashboard.mjs
       - src/sdk/flux-auto-capture.mjs
       - tests/session-dimensions.test.mjs
+      - tests/session-history-route.test.mjs
     promotion_decisions:
       - decision: Compute all twenty demo-model indicators per session from safe, consented metadata only.
         reason: The dashboard must cover the requested model without exporting text, identity or protected-field activity.
       - decision: Leave unsupported indicators neutral.
         reason: Generic activity cannot justify inferring a person-level characteristic.
+      - decision: Retrieve a selected session's complete event history through an authenticated tenant-scoped route.
+        reason: The dashboard overview is bounded for responsiveness, while personal journey review requires the full chronological history.
     commands_run:
       - command: npm test
         result: passed
-        evidence: 105 tests passed.
+        evidence: 108 tests passed.
       - command: npm run demo:build
         result: passed
       - command: npm run validate
