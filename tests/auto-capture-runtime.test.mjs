@@ -218,6 +218,19 @@ test('does not report Space on a link as activation', () => {
   assert.equal(events.some((args) => args[2] === 'control.activate'), false);
 });
 
+test('does not capture focus-management containers with negative tabindex as controls', () => {
+  const { context, events } = harness(async () => ({}));
+  const main = {
+    dataset: {},
+    tagName: 'MAIN',
+    closest: () => null,
+    matches: () => false,
+  };
+  context.main = main;
+  vm.runInContext('trackClick({ target: main });', context);
+  assert.equal(events.some((args) => args[2] === 'control.click'), false);
+});
+
 test('emits only the final Tab destination when typing begins', () => {
   const { context, events } = harness(async () => ({}));
   const home = link('link.navigation.home');

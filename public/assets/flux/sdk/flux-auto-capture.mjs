@@ -8,6 +8,7 @@ const fieldVisits = new Map();
 const recentClicks = [];
 const SAFE_ROLES = new Set(['field', 'form', 'control', 'page', 'service', 'environment']);
 const AUTH_SCOPED_KEY = /(^|[.:-])auth(?=[.:-]|$)/i;
+const CONTROL_SELECTOR = 'a,button,input,select,textarea,[role="button"],[tabindex]:not([tabindex^="-"])';
 const AUTH_PENDING_KEY = 'flux.behaviour.auth_otp_verification_pending';
 const recordedAutocomplete = new WeakMap();
 let lastPointerType = 'unknown';
@@ -333,7 +334,7 @@ function recordRage(target) {
 }
 
 function targetDetails(element) {
-  const target = element?.closest?.('a,button,input,select,textarea,[role="button"],[tabindex]');
+  const target = element?.closest?.(CONTROL_SELECTOR);
   if (isExcludedSensitiveInput(target)) return null;
   const key = stableKey(target);
   if (!target || !key) return null;
@@ -390,8 +391,8 @@ function stableKey(element) {
     element.setAttribute?.('data-flux-role', semanticControlType(element) === 'field' ? 'field' : 'control');
     return semanticKey;
   }
-  if (!element?.matches?.('a,button,input,select,textarea,[role="button"],[tabindex]')) return null;
-  const controls = [...document.querySelectorAll('a,button,input,select,textarea,[role="button"],[tabindex]')];
+  if (!element?.matches?.(CONTROL_SELECTOR)) return null;
+  const controls = [...document.querySelectorAll(CONTROL_SELECTOR)];
   const position = controls.indexOf(element);
   if (position < 0) return null;
   const kind = element.tagName.toLowerCase();

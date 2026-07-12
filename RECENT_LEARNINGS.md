@@ -1,5 +1,9 @@
 # Recent Learnings
 
+## 2026-07-12 — Negative tabindex is focus infrastructure, not a control
+
+Containers such as `main tabindex="-1"` support skip-link focus management but are not user-operable controls. Exclude negative-tabindex elements from automatic interaction targeting so background clicks do not become unlabelled control events.
+
 Recent learnings created by the LLM agent in reverse-chronological order (most recent first).
 
 ---
