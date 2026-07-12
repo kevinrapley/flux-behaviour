@@ -247,8 +247,8 @@ function endFocus(event) {
   void Promise.resolve(analyser(localValue))
     .then((signals) => {
       const writingSignals = safeWritingSignals(signals);
-      const wordsPerMinute = typingDurationMs > 0 && Number.isInteger(writingSignals.word_count)
-        ? Math.min(1000, Math.round((writingSignals.word_count * 60000) / typingDurationMs))
+      const wordsPerMinute = typingDurationMs > 0 && state.keyPressCount > 0
+        ? Math.min(1000, Math.round(((state.keyPressCount / 5) * 60000) / typingDurationMs))
         : 0;
       window.flux('event', 'input', 'field.writing-analysis', {
         ...state.target,

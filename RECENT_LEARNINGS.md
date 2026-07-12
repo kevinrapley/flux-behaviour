@@ -1,5 +1,9 @@
 # Recent Learnings
 
+## 2026-07-12 — Typing speed must exclude prefilled content
+
+The writing analyser's final word count describes the whole field, so dividing it by the current edit interval inflates WPM whenever a visitor edits existing text. Calculate standard gross WPM from printable keystrokes divided by five over active typing time; keep whole-field word counts only for the separately labelled on-device writing analysis.
+
 ## 2026-07-12 — Negative tabindex is focus infrastructure, not a control
 
 Containers such as `main tabindex="-1"` support skip-link focus management but are not user-operable controls. Exclude negative-tabindex elements from automatic interaction targeting so background clicks do not become unlabelled control events.

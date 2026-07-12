@@ -13,6 +13,13 @@ records:
     status: present-with-release-blockers
     owner: governance-lead
 
+  - id: CONF-017
+    rule: Typing speed for edited fields must measure the current interaction rather than pre-existing content
+    expected_evidence: Hosted capture calculates standard gross WPM from printable keystrokes over active typing time and regression coverage includes a prefilled textarea
+    actual_evidence: The auto-capture runtime divides current printable keystrokes by five over the first-to-last typing interval; tests prove a 100-word prefilled field cannot inflate a 150-keystroke, 30-second edit beyond 60 WPM.
+    status: present
+    owner: product-lead
+
   - id: CONF-001
     rule: Security policy exists
     expected_evidence: SECURITY.md exists

@@ -128,7 +128,7 @@ function harness(analyse) {
   return { clock, context, events };
 }
 
-test('calculates typing speed from analysed word count and active typing time', async () => {
+test('calculates typing speed from printable keystrokes and active typing time', async () => {
   const { clock, context, events } = harness(async () => ({
     writing_language: 'en-GB',
     word_count: 39,
@@ -143,7 +143,7 @@ test('calculates typing speed from analysed word count and active typing time', 
 
   vm.runInContext('beginFocus({ target: textarea });', context);
   clock.now = 3_300;
-  vm.runInContext("trackKeyboard({ target: textarea, key: 'x', metaKey: false, ctrlKey: false });", context);
+  vm.runInContext("for (let index = 0; index < 194; index += 1) trackKeyboard({ target: textarea, key: 'x', metaKey: false, ctrlKey: false });", context);
   clock.now = 46_800;
   vm.runInContext("trackKeyboard({ target: textarea, key: 'x', metaKey: false, ctrlKey: false });", context);
   vm.runInContext('endFocus({ target: textarea });', context);
@@ -153,6 +153,32 @@ test('calculates typing speed from analysed word count and active typing time', 
   assert.equal(analysis.words_per_minute, 54);
   assert.equal(Object.hasOwn(analysis, 'chars_per_minute'), false);
   assert.equal(JSON.stringify(analysis).includes(textarea.value), false);
+});
+
+test('calculates typing speed from current keystrokes rather than prefilled words', async () => {
+  const { clock, context, events } = harness(async () => ({
+    writing_language: 'en-GB',
+    word_count: 100,
+    spelling_issue_count: 0,
+    grammar_issue_count: 0,
+    uppercase_letter_count: 8,
+    lowercase_letter_count: 492,
+    all_caps_word_count: 0,
+  }));
+  const textarea = field('one hundred prefilled words remain local');
+  context.textarea = textarea;
+
+  vm.runInContext('beginFocus({ target: textarea });', context);
+  clock.now = 2_100;
+  vm.runInContext("for (let index = 0; index < 149; index += 1) trackKeyboard({ target: textarea, key: 'x', metaKey: false, ctrlKey: false });", context);
+  clock.now = 32_100;
+  vm.runInContext("trackKeyboard({ target: textarea, key: 'x', metaKey: false, ctrlKey: false });", context);
+  vm.runInContext('endFocus({ target: textarea });', context);
+  await new Promise((resolve) => setImmediate(resolve));
+
+  const analysis = events.find((args) => args[2] === 'field.writing-analysis')?.[3];
+  assert.equal(analysis.word_count, 100);
+  assert.equal(analysis.words_per_minute, 60);
 });
 
 test('emits blur immediately before asynchronous writing analysis completes', async () => {

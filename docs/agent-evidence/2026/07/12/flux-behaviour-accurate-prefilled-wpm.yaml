@@ -1,0 +1,66 @@
+evidence_records:
+  - task_id: flux-behaviour-accurate-prefilled-wpm
+    mode: repo-fix
+    repository: kevinrapley/flux-behaviour
+    risk_level: high
+    base_branch: main
+    working_branch: fix/accurate-prefilled-wpm
+    files_read:
+      - src/sdk/flux-auto-capture.mjs
+      - tests/auto-capture-runtime.test.mjs
+      - docs/instrumentation/tag-integration.md
+      - docs/product/production-runtime.md
+      - RECENT_LEARNINGS.md
+      - conformance-matrix.yaml
+      - gap-register.yaml
+      - harm-register.yaml
+    files_changed:
+      - src/sdk/flux-auto-capture.mjs
+      - public/assets/flux/sdk/flux-auto-capture.mjs
+      - tests/auto-capture-runtime.test.mjs
+      - docs/instrumentation/tag-integration.md
+      - docs/product/production-runtime.md
+      - RECENT_LEARNINGS.md
+      - agent-evidence.yaml
+      - conformance-matrix.yaml
+      - gap-register.yaml
+      - harm-register.yaml
+    promotion_decisions:
+      - Calculate standard gross WPM from printable keystrokes divided by five over active typing time.
+      - Retain the whole-field word count only for separately labelled on-device writing analysis.
+    commands_run:
+      - command: node --test --test-name-pattern="prefilled words" tests/auto-capture-runtime.test.mjs
+        status: failed-as-expected-before-fix
+        evidence: Existing calculation returned 200 WPM instead of 60 WPM.
+      - command: node --test --test-name-pattern="prefilled words" tests/auto-capture-runtime.test.mjs
+        status: passed-after-fix
+      - command: npm run demo:assets
+        status: failed
+        evidence: Clean worktree had no node_modules GOV.UK asset source; no generated asset was updated.
+      - command: npm ci
+        status: passed
+        evidence: Installed the locked dependency graph with zero reported vulnerabilities.
+      - command: npm run demo:assets
+        status: passed
+        evidence: Copied the canonical source runtime into the deployed public asset tree.
+      - command: npm test
+        status: passed
+        evidence: 196 tests passed.
+      - command: npm run validate
+        status: passed
+        evidence: Repository governance file check passed for 19 files.
+      - command: npm run security:secrets
+        status: passed
+        evidence: Secret pattern sanity scan passed.
+      - command: git diff --check
+        status: passed
+    recent_learnings:
+      - Whole-field word count cannot be combined with a current edit interval to infer typing speed.
+    security:
+      - No secrets or new external dependencies introduced.
+    privacy:
+      - The calculation uses only bounded printable-key counts and timing; typed content and individual key identity remain local and unexported.
+    accessibility:
+      - No interaction or presentation semantics changed.
+    risks:
+      - Standard gross WPM is an estimate and must remain service-friction evidence rather than a judgement about an individual.
