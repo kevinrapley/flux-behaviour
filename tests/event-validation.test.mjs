@@ -140,6 +140,21 @@ test('event validation rejects authentication form submits', () => {
   assert.ok(result.errors.some((error) => error.code === EVENT_VALIDATION_ERROR_CODES.PRIVACY_POLICY));
 });
 
+test('event validation rejects authentication control interactions', () => {
+  const event = JSON.parse(readFileSync('fixtures/events/valid/focus-enter.json', 'utf8'));
+  Object.assign(event, {
+    event_class: 'nav',
+    action: 'control.click',
+    role: 'control',
+    element_key: 'button.auth.verify-code',
+  });
+
+  const result = validateEvent(event, schema);
+
+  assert.equal(result.valid, false);
+  assert.ok(result.errors.some((error) => error.code === EVENT_VALIDATION_ERROR_CODES.PRIVACY_POLICY));
+});
+
 test('event validation rejects unchanged field lengths', () => {
   const event = JSON.parse(readFileSync('fixtures/events/valid/focus-enter.json', 'utf8'));
   Object.assign(event, {

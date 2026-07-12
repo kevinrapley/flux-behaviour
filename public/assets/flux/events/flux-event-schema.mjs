@@ -39,11 +39,8 @@ export const fluxEventSchema = Object.freeze({
     }
   }, {
     if: {
-      properties: {
-        action: { const: 'flow.submit' },
-        element_key: { pattern: '^form\\.auth(?:[.:-]|$)' }
-      },
-      required: ['action', 'element_key']
+      properties: { element_key: { pattern: '^(button|field|form|link|tab)\\.auth(?:[.:-]|$)' } },
+      required: ['element_key']
     },
     then: false
   }, {

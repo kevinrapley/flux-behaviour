@@ -56,10 +56,9 @@
     {
       "if": {
         "properties": {
-          "action": { "const": "flow.submit" },
-          "element_key": { "pattern": "^form\\.auth(?:[.:-]|$)" }
+          "element_key": { "pattern": "^(button|field|form|link|tab)\\.auth(?:[.:-]|$)" }
         },
-        "required": ["action", "element_key"]
+        "required": ["element_key"]
       },
       "then": false
     },

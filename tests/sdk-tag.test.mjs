@@ -132,6 +132,20 @@ test('sdk tag drops manually instrumented authentication form submits', async ()
   assert.equal(sent.length, 0);
 });
 
+test('sdk tag drops manually instrumented authentication control interactions', async () => {
+  const { tag, sent } = createTag();
+  tag.grantConsent();
+
+  const result = await tag.track('nav', 'control.click', {
+    role: 'control',
+    element_key: 'button.auth.verify-code',
+    pointer_type: 'mouse',
+  });
+
+  assert.deepEqual(result, { sent: false, reason: 'invalid_event' });
+  assert.equal(sent.length, 0);
+});
+
 test('sdk tag drops unchanged field value lengths', async () => {
   const { tag, sent } = createTag();
   tag.grantConsent();

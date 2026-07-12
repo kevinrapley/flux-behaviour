@@ -22,6 +22,10 @@ export function isAuthFormSubmit(event) {
   return event?.action === 'flow.submit' && /^form\.auth(?:[.:-]|$)/.test(event?.element_key ?? '');
 }
 
+export function isAuthScopedInteraction(event) {
+  return /^(button|field|form|link|tab)\.auth(?:[.:-]|$)/.test(event?.element_key ?? '');
+}
+
 export function hasUnchangedFieldLength(event) {
   if (event?.action !== 'field.blur' || !Object.hasOwn(event, 'value_length')) return false;
   return !['key_press_count', 'edit_count', 'paste_count'].some((key) => Number.isInteger(event[key]) && event[key] > 0);
@@ -39,6 +43,6 @@ export function isNeutralAuthMilestone(event) {
 
 export function violatesEventPrivacy(event) {
   return (isAuthOtpAction(event?.action) && !isNeutralAuthMilestone(event))
-    || isAuthFormSubmit(event)
+    || isAuthScopedInteraction(event)
     || hasUnchangedFieldLength(event);
 }

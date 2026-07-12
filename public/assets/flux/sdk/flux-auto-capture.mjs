@@ -155,7 +155,7 @@ function editableTarget(element) {
 
 function isExcludedSensitiveInput(element) {
   if (element?.dataset?.fluxSensitive === 'true') return true;
-  if (/^field\.auth(?:[.:-]|$)/.test(element?.dataset?.fluxKey ?? '')) return true;
+  if (/^(button|field|form|link|tab)\.auth(?:[.:-]|$)/.test(element?.dataset?.fluxKey ?? '')) return true;
   if (!element?.matches?.('input')) return false;
   const type = (element.type || 'text').toLowerCase();
   const autocomplete = (element.autocomplete || '').toLowerCase();

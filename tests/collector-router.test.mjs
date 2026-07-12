@@ -83,6 +83,24 @@ test('collector rejects authentication form submits', async () => {
   assert.ok(body.error.details.some((detail) => detail.code === 'privacy_policy'));
 });
 
+test('collector rejects authentication control interactions', async () => {
+  const event = JSON.parse(readFileSync('fixtures/events/valid/focus-enter.json', 'utf8'));
+  Object.assign(event, {
+    event_class: 'nav',
+    action: 'control.click',
+    role: 'control',
+    element_key: 'button.auth.verify-code',
+  });
+  const response = await handleCollectorRequest(request('/collect', {
+    method: 'POST',
+    body: JSON.stringify(event),
+  }));
+  const body = await json(response);
+
+  assert.equal(response.status, 400);
+  assert.ok(body.error.details.some((detail) => detail.code === 'privacy_policy'));
+});
+
 test('collector rejects unchanged field value lengths', async () => {
   const event = JSON.parse(readFileSync('fixtures/events/valid/focus-enter.json', 'utf8'));
   Object.assign(event, {
