@@ -1,7 +1,7 @@
 import { fluxEventSchema } from '../events/flux-event-schema.mjs';
 import { validateEventRuntime } from '../events/validate-event-runtime.mjs';
 
-const SCHEMA_VERSION = '1.1.0';
+const SCHEMA_VERSION = '1.2.0';
 const SDK_ORIGIN = 'sdk';
 
 const OPTIONAL_METADATA_KEYS = Object.freeze([

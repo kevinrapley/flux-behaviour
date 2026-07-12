@@ -132,7 +132,7 @@ export const fluxEventSchema = Object.freeze({
   properties: {
     schema_version: {
       type: 'string',
-      const: '1.1.0'
+      const: '1.2.0'
     },
     session_id: {
       type: 'string',

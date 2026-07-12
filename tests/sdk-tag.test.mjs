@@ -344,6 +344,22 @@ test('browser tag starts a new session after 30 minutes of inactivity', async ()
   assert.equal(sent[0].body.visitor_id, sent[1].body.visitor_id);
 });
 
+test('browser tag keeps one in-memory session when sessionStorage is unavailable', async () => {
+  const { sent, transport } = createCapturingTransport();
+  let sequence = 0;
+  const windowLike = {
+    localStorage: undefined,
+    sessionStorage: undefined,
+    crypto: { randomUUID: () => `00000000-0000-4000-8000-${String(++sequence).padStart(12, '0')}` },
+  };
+  installFluxBrowserTag(windowLike, { endpoint: 'https://collector.example.test/collect', transport });
+  windowLike.flux('consent', 'granted');
+  windowLike.flux('event', 'nav', 'page.loaded', { role: 'page', element_key: 'page.home' });
+  windowLike.flux('event', 'nav', 'page.loaded', { role: 'page', element_key: 'page.projects' });
+  await Promise.resolve();
+  assert.equal(sent[0].body.session_id, sent[1].body.session_id);
+});
+
 test('browser transport prefers fetch and falls back to sendBeacon', async () => {
   const beaconCalls = [];
   const fetchCalls = [];

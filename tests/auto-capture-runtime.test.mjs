@@ -26,6 +26,7 @@ function field(value = '') {
     matches: (selector) => selector.includes('textarea'),
     addEventListener: (name, handler) => listeners.set(name, handler),
     removeEventListener: (name) => listeners.delete(name),
+    dispatchInput: (inputType = 'insertText') => listeners.get('input')?.({ target: node, inputType }),
   };
   return node;
 }
@@ -148,10 +149,26 @@ test('calculates typing speed from analysed word count and active typing time', 
   vm.runInContext('endFocus({ target: textarea });', context);
   await new Promise((resolve) => setImmediate(resolve));
 
-  const blur = events.find((args) => args[2] === 'field.blur')?.[3];
-  assert.equal(blur.words_per_minute, 54);
-  assert.equal(Object.hasOwn(blur, 'chars_per_minute'), false);
-  assert.equal(JSON.stringify(blur).includes(textarea.value), false);
+  const analysis = events.find((args) => args[2] === 'field.writing-analysis')?.[3];
+  assert.equal(analysis.words_per_minute, 54);
+  assert.equal(Object.hasOwn(analysis, 'chars_per_minute'), false);
+  assert.equal(JSON.stringify(analysis).includes(textarea.value), false);
+});
+
+test('emits blur immediately before asynchronous writing analysis completes', async () => {
+  let finishAnalysis;
+  const { context, events } = harness(() => new Promise((resolve) => { finishAnalysis = resolve; }));
+  const textarea = field('local content');
+  context.textarea = textarea;
+  vm.runInContext('beginFocus({ target: textarea });', context);
+  vm.runInContext("trackKeyboard({ target: textarea, key: 'x', metaKey: false, ctrlKey: false });", context);
+  vm.runInContext('endFocus({ target: textarea });', context);
+
+  assert.equal(events.some((args) => args[2] === 'field.blur'), true);
+  assert.equal(events.some((args) => args[2] === 'field.writing-analysis'), false);
+  finishAnalysis({ writing_language: 'en-GB', word_count: 1, spelling_issue_count: 0, grammar_issue_count: 0, uppercase_letter_count: 0, lowercase_letter_count: 5, all_caps_word_count: 0 });
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(events.some((args) => args[2] === 'field.writing-analysis'), true);
 });
 
 test('keeps only the final Tab destination before Enter navigation', () => {
@@ -188,6 +205,17 @@ test('records keyboard focus origin for a field reached with Tab', () => {
   const focus = events.find((args) => args[2] === 'field.focus.keyboard');
   assert.equal(focus?.[3].element_key, 'field.project.objective-editor');
   assert.equal(focus?.[3].pointer_type, 'keyboard');
+  vm.runInContext('endFocus({ target: textarea });', context);
+  const blur = events.find((args) => args[2] === 'field.blur');
+  assert.equal(blur?.[3].pointer_type, 'keyboard');
+});
+
+test('does not report Space on a link as activation', () => {
+  const { context, events } = harness(async () => ({}));
+  const sourcebook = link('link.navigation.sourcebook');
+  context.sourcebook = sourcebook;
+  vm.runInContext("trackKeyboard({ target: sourcebook, key: ' ', metaKey: false, ctrlKey: false });", context);
+  assert.equal(events.some((args) => args[2] === 'control.activate'), false);
 });
 
 test('emits only the final Tab destination when typing begins', () => {
@@ -218,6 +246,34 @@ test('records ordinary browser autocomplete against the semantic field', () => {
   assert.equal(JSON.stringify(autocomplete).includes(textarea.value), false);
 });
 
+test('autocomplete does not turn autofilled content into blur length or writing metadata', async () => {
+  let analysisCalls = 0;
+  const { context, events } = harness(async () => { analysisCalls += 1; return {}; });
+  const textarea = field('autofilled content must remain local');
+  context.textarea = textarea;
+  vm.runInContext('beginFocus({ target: textarea });', context);
+  vm.runInContext("trackAutocomplete({ target: textarea, inputType: 'insertReplacementText' });", context);
+  textarea.dispatchInput('insertReplacementText');
+  vm.runInContext('endFocus({ target: textarea });', context);
+  await new Promise((resolve) => setImmediate(resolve));
+
+  const blur = events.find((args) => args[2] === 'field.blur')?.[3];
+  assert.equal(Object.hasOwn(blur, 'value_length'), false);
+  assert.equal(events.some((args) => args[2] === 'field.writing-analysis'), false);
+  assert.equal(analysisCalls, 0);
+});
+
+test('does not analyse an untouched prefilled value', async () => {
+  let analysisCalls = 0;
+  const { context, events } = harness(async () => { analysisCalls += 1; return {}; });
+  const textarea = field('prefilled by the publisher');
+  context.textarea = textarea;
+  vm.runInContext('beginFocus({ target: textarea }); endFocus({ target: textarea });', context);
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(analysisCalls, 0);
+  assert.equal(events.some((args) => args[2] === 'field.writing-analysis'), false);
+});
+
 test('records sensitive browser autocomplete by fixed field category without content or length', () => {
   const { context, events } = harness(async () => ({}));
   const email = emailField();
@@ -238,6 +294,8 @@ test('captures password, one-time-code, telephone and payment autocompletes as s
     ['text', 'one-time-code', 'one-time-code'],
     ['tel', 'tel', 'telephone'],
     ['text', 'cc-number', 'payment'],
+    ['text', 'section-checkout cc-number', 'payment'],
+    ['text', 'section-login one-time-code', 'one-time-code'],
   ]) {
     const { context, events } = harness(async () => ({}));
     const input = sensitiveInput(type, autocompleteName);
@@ -249,15 +307,19 @@ test('captures password, one-time-code, telephone and payment autocompletes as s
   }
 });
 
-test('derives a purpose-led fallback inside Flux when publisher attributes are missing', () => {
-  const { context, events } = harness(async () => ({}));
-  const sourcebook = link('', '/pages/sourcebook/environment/');
-  context.sourcebook = sourcebook;
+test('does not derive a semantic key from a potentially identifying link URL', () => {
+  const { context } = harness(async () => ({}));
+  const caseLink = link('', '/cases/kevin-rapley-private-case');
+  context.caseLink = caseLink;
+  assert.equal(vm.runInContext('semanticFallbackKey(caseLink)', context), null);
+});
 
-  vm.runInContext("trackClick({ target: sourcebook });", context);
-
-  const click = events.find((args) => args[2] === 'control.click');
-  assert.equal(click?.[3].element_key, 'link.navigation.sourcebook-environment');
+test('treats a form containing payment autocomplete tokens as sensitive', () => {
+  const { context } = harness(async () => ({}));
+  const payment = sensitiveInput('text', 'section-checkout cc-number');
+  const form = { dataset: {}, querySelector: () => null, querySelectorAll: (selector) => selector === 'input[autocomplete]' ? [payment] : [] };
+  context.form = form;
+  assert.equal(vm.runInContext('isSensitiveForm(form)', context), true);
 });
 
 test('derives safe OTP outcomes from attributed auth journey state', () => {

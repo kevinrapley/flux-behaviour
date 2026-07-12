@@ -36,7 +36,7 @@ test('event validation rejects invalid fixture events', () => {
 
 test('event validation reports structured errors without submitted values', () => {
   const event = {
-    schema_version: '1.1.0',
+    schema_version: '1.2.0',
     session_id: 'session-invalid-unsafe',
     visitor_id: 'visitor-invalid-unsafe',
     tenant_id: 'researchops',
@@ -64,7 +64,7 @@ test('event validation reports structured errors without submitted values', () =
 
 test('event validation does not echo untrusted additional-property names', () => {
   const event = {
-    schema_version: '1.1.0',
+    schema_version: '1.2.0',
     session_id: 'session-invalid-key',
     visitor_id: 'visitor-invalid-key',
     tenant_id: 'researchops',

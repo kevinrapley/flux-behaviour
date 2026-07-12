@@ -52,7 +52,7 @@ test('preserves a stored neutral authentication milestone outcome', () => {
     role: 'service',
     element_key: 'auth.otp',
     metadata_json: JSON.stringify({
-      schema_version: '1.1.0',
+      schema_version: '1.2.0',
       consent: 'yes',
       origin: 'sdk',
       event_class: 'trust',
@@ -80,4 +80,20 @@ test('collapses historical Tab runs to the final destination before an interacti
     ['control.click', 'link.navigation.sourcebook'],
   ]);
   assert.equal(events[1].narrative, 'Opened the Sourcebook link using a keyboard.');
+});
+
+test('collapses Tab runs independently for interleaved sessions', () => {
+  const events = presentJourneyEvents([
+    { session_id: 'session-a', action: 'control.tab', role: 'control', element_key: 'link.navigation.home', metadata_json: '{}', occurred_at_ms: 1 },
+    { session_id: 'session-b', action: 'control.tab', role: 'control', element_key: 'link.navigation.projects', metadata_json: '{}', occurred_at_ms: 2 },
+    { session_id: 'session-a', action: 'control.click', role: 'control', element_key: 'link.navigation.home', metadata_json: '{}', occurred_at_ms: 3 },
+    { session_id: 'session-b', action: 'control.click', role: 'control', element_key: 'link.navigation.projects', metadata_json: '{}', occurred_at_ms: 4 },
+  ]);
+
+  assert.deepEqual(events.map(({ session_id, action }) => [session_id, action]), [
+    ['session-a', 'control.tab'],
+    ['session-b', 'control.tab'],
+    ['session-a', 'control.click'],
+    ['session-b', 'control.click'],
+  ]);
 });

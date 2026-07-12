@@ -21,7 +21,7 @@ test('every session receives all twenty demo-model indicators without event cont
 
 test('typing-speed scoring uses words per minute rather than character volume', () => {
   const result = scoreSessionDimensions([{
-    action: 'field.blur',
+    action: 'field.writing-analysis',
     element_key: 'field.project.objective-editor',
     metadata_json: JSON.stringify({
       key_press_count: 300,
@@ -42,7 +42,7 @@ test('unsupported dimensions remain neutral instead of being inferred', () => {
 
 test('UK English issue indicators contribute only bounded service-friction evidence', () => {
   const result = scoreSessionDimensions([{
-    action: 'field.blur',
+    action: 'field.writing-analysis',
     element_key: 'field.project.objective-editor',
     metadata_json: JSON.stringify({
       key_press_count: 60,

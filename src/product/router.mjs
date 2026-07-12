@@ -232,17 +232,20 @@ export function presentEvent(event) {
 
 export function presentJourneyEvents(events = []) {
   const presented = [];
-  let pendingTab = null;
+  const pendingTabs = new Map();
   for (const event of events) {
+    const sessionKey = event.session_id ?? '__unscoped__';
     if (event.action === 'control.tab') {
-      pendingTab = event;
+      pendingTabs.set(sessionKey, event);
       continue;
     }
+    const pendingTab = pendingTabs.get(sessionKey);
     if (pendingTab) presented.push(presentEvent(pendingTab));
-    pendingTab = null;
+    pendingTabs.delete(sessionKey);
     presented.push(presentEvent(event));
   }
-  if (pendingTab) presented.push(presentEvent(pendingTab));
+  for (const pendingTab of pendingTabs.values()) presented.push(presentEvent(pendingTab));
+  presented.sort((left, right) => (left.occurred_at_ms ?? 0) - (right.occurred_at_ms ?? 0));
   return presented;
 }
 

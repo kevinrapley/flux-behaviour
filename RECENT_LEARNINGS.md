@@ -70,7 +70,7 @@ Scouring the original repository surfaced substantially more than the governed r
 
 ## 2026-07-04 — Rich behavioural capture can stay content-free
 
-Typing speed, corrections, clipboard use, revisits and input method are all measurable as bounded counts and timings without recording key identity or content. Contract v1.1.0 adds these as optional metadata; the capture layer reduces keys to printable/backspace/other at the point of listening, so content never exists in the pipeline. Contract version bumps ripple through fixtures, tests and the SDK constant — the drift test between the schema module and the JSON contract catches misses.
+Typing speed, corrections, clipboard use, revisits and input method are all measurable as bounded counts and timings without recording key identity or content. Contract v1.2.0 adds these as optional metadata and autocomplete milestones; the capture layer reduces keys to printable/backspace/other at the point of listening, so content never exists in the pipeline. Contract version bumps ripple through fixtures, tests and the SDK constant — the drift test between the schema module and the JSON contract catches misses.
 
 ## 2026-07-04 — Playground scores need engine fidelity and interpretation guardrails together
 

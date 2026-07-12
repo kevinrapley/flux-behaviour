@@ -159,6 +159,11 @@ export function describeInteraction(event) {
   const pasteCount = Number.isInteger(metadata.paste_count) ? metadata.paste_count : 0;
   const changed = (keyPresses ?? 0) > 0 || editCount > 0 || pasteCount > 0;
 
+  if (event.action === 'field.writing-analysis' && element?.type === 'field') {
+    const speed = typingRate !== null && typingRate > 0 ? ` at ${typingRate} words per minute` : '';
+    return `Analysed the writing in ${element.phrase}${speed}.${writingQualityText(metadata)}`;
+  }
+
   if (event.action === 'field.blur' && element?.type === 'field' && !changed) {
     const duration = dwell === null ? '' : ` for ${durationText(dwell)}`;
     return `Dwelled on ${element.phrase}${duration} without changing it.${exitText(metadata)}`;

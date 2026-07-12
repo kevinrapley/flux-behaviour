@@ -68,6 +68,18 @@ export function scoreSessionDimensions(events = []) {
     const details = metadata(event.metadata_json);
     const action = event.action;
 
+    if (action === 'field.writing-analysis') {
+      const wordsPerMinute = count(details.words_per_minute);
+      if (wordsPerMinute > 50) apply(scores, { proficiency: 2, ict: 1, predictive: 0.5, engagement: 1 });
+      else if (wordsPerMinute > 25) apply(scores, { proficiency: 1, ict: 0.5, engagement: 0.75 });
+      const wordCount = count(details.word_count);
+      const writingIssues = count(details.spelling_issue_count) + count(details.grammar_issue_count);
+      if (details.writing_language === 'en-GB' && wordCount >= 5 && writingIssues / wordCount >= 0.2) {
+        apply(scores, { cogload: 1.5, frustration: 0.75 });
+      }
+      continue;
+    }
+
     if (action === 'field.blur') {
       const keys = count(details.key_press_count);
       const corrections = count(details.backspace_count);
@@ -78,18 +90,12 @@ export function scoreSessionDimensions(events = []) {
         ? count(details.dwell_before_input_ms) / 1000
         : changed ? 0 : count(details.duration_ms) / 1000;
       const typingSeconds = count(details.typing_duration_ms) / 1000;
-      const wordsPerMinute = count(details.words_per_minute);
       previousFieldWasCompleted = keys > 0 || edits > 0;
-      if (keys > 0) apply(scores, wordsPerMinute > 50 ? { proficiency: 2, ict: 1, predictive: 0.5, engagement: 1 } : wordsPerMinute > 25 ? { proficiency: 1, ict: 0.5, engagement: 0.75 } : { engagement: 0.5 });
+      if (keys > 0) apply(scores, { engagement: 0.5 });
       if (keys >= 5 && corrections / keys > 0.25) apply(scores, { proficiency: -1, frustration: 1.5, predictive: -0.5 });
       if (keys > 0) apply(scores, typingSeconds >= 8 ? { engagement: 1, cogload: 0.5 } : { engagement: 0.5 });
       if (dwellSeconds >= 8) apply(scores, { cogload: 2, efficiency: -1 });
       else if (dwellSeconds >= 4) apply(scores, { cogload: 1 });
-      const wordCount = count(details.word_count);
-      const writingIssues = count(details.spelling_issue_count) + count(details.grammar_issue_count);
-      if (details.writing_language === 'en-GB' && wordCount >= 5 && writingIssues / wordCount >= 0.2) {
-        apply(scores, { cogload: 1.5, frustration: 0.75 });
-      }
       continue;
     }
 

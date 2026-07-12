@@ -2,14 +2,14 @@ records:
   - id: CONF-017
     rule: Publisher services consume a hosted Flux capture engine rather than copying analytics logic or linguistic resources
     expected_evidence: Flux owns the versioned auto-capture module, session lifecycle, keyboard semantics, autocomplete privacy milestone, UK-English analyser and dictionary build; publisher integration is an include plus controlled attributes
-    actual_evidence: src/sdk/flux-auto-capture.mjs and src/writing now provide the hosted runtime, with regression tests for WPM, final Tab destination, Enter activation, autocomplete, OTP outcomes, inactivity rollover and purpose-led fallback.
+    actual_evidence: src/sdk/flux-auto-capture.mjs and src/writing provide the hosted runtime, with regression tests for WPM, session-scoped final Tab destinations, key-accurate activation, autocomplete privacy, OTP outcomes, inactivity rollover and publisher-controlled semantic keys.
     status: present-with-release-blockers
     owner: product-lead
 
   - id: CONF-016
     rule: UK English writing signals must be consented, on-device, atomic, bounded and non-reversible
     expected_evidence: The event contract, SDK, collector presentation and tests accept only the complete en-GB count bundle and never entered text or words
-    actual_evidence: Contract v1.1.0 permits the optional seven-field en-GB bundle, runtime privacy validation rejects partial bundles, the SDK allow-lists only those counts, and narrative and scoring tests use possible-issue service-friction language.
+    actual_evidence: Contract v1.2.0 permits the optional seven-field en-GB bundle, runtime privacy validation rejects partial bundles, the SDK allow-lists only those counts, and narrative and scoring tests use possible-issue service-friction language.
     status: present-with-release-blockers
     owner: governance-lead
 

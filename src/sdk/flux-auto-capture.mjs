@@ -77,10 +77,12 @@ function trackClick(event) {
 
 function trackKeyboard(event) {
   if (event.key === 'Tab') {
+    const state = focusState.get(event.target);
+    if (state) state.exitPointerType = 'keyboard';
     awaitingTabDestination = true;
     return;
   }
-  if ((event.key === 'Enter' || event.key === ' ') && !editableTarget(event.target)) {
+  if (activatesControl(event) && !editableTarget(event.target)) {
     const target = targetDetails(event.target);
     flushPendingTabDestination();
     if (target) {
@@ -103,6 +105,12 @@ function trackKeyboard(event) {
     state.backspaceCount += 1;
     recordTyping(state);
   }
+}
+
+function activatesControl(event) {
+  if (event.key === 'Enter') return true;
+  if (event.key !== ' ') return false;
+  return Boolean(event.target?.matches?.('button,[role="button"],input[type="button"],input[type="submit"],input[type="reset"]'));
 }
 
 function trackPaste(event) {
@@ -129,6 +137,8 @@ function trackAutocomplete(event) {
   }
   if (!browserAutofill) return;
   recordedAutocomplete.set(target, now);
+  const state = focusState.get(target);
+  if (state) state.autocompleteHandled = true;
   const details = editableTarget(target);
   if (details) {
     window.flux('event', 'input', 'field.autocomplete.used', details);
@@ -184,10 +194,11 @@ function beginFocus(event) {
     ...target,
     ...(pointerType ? { pointer_type: pointerType } : {}),
   });
-  const state = { startedAt: performance.now(), firstInteractionAt: null, firstTypingAt: null, lastTypingAt: null, keyPressCount: 0, backspaceCount: 0, edits: 0, pasteCount: 0, revisitCount, target, onInput: null };
-  state.onInput = () => {
+  const state = { startedAt: performance.now(), firstInteractionAt: null, firstTypingAt: null, lastTypingAt: null, keyPressCount: 0, backspaceCount: 0, edits: 0, pasteCount: 0, revisitCount, target, onInput: null, autocompleteHandled: false, exitPointerType: pointerType ?? null };
+  state.onInput = (inputEvent) => {
     const current = focusState.get(event.target);
     if (current === state) {
+      if (inputEvent?.inputType === 'insertReplacementText' || current.autocompleteHandled) return;
       recordFirstInteraction(current);
       current.edits += 1;
     }
@@ -222,11 +233,13 @@ function endFocus(event) {
     paste_count: state.pasteCount,
     revisit_count: state.revisitCount,
     ...(changed ? { value_length: typeof event.target.value === 'string' ? event.target.value.length : 0 } : {}),
-    pointer_type: lastPointerType
+    pointer_type: state.exitPointerType ?? lastPointerType
   };
-  const analyser = supportsWritingAnalysis(event.target) ? window.fluxWriting?.analyse : null;
+  window.flux('event', 'input', 'field.blur', details);
+  const analyser = changed && !state.autocompleteHandled && supportsWritingAnalysis(event.target)
+    ? window.fluxWriting?.analyse
+    : null;
   if (typeof analyser !== 'function') {
-    window.flux('event', 'input', 'field.blur', details);
     return;
   }
   const localValue = typeof event.target.value === 'string' ? event.target.value : '';
@@ -236,13 +249,13 @@ function endFocus(event) {
       const wordsPerMinute = typingDurationMs > 0 && Number.isInteger(writingSignals.word_count)
         ? Math.min(1000, Math.round((writingSignals.word_count * 60000) / typingDurationMs))
         : 0;
-      window.flux('event', 'input', 'field.blur', {
-        ...details,
+      window.flux('event', 'input', 'field.writing-analysis', {
+        ...state.target,
         ...writingSignals,
         words_per_minute: wordsPerMinute,
       });
     })
-    .catch(() => window.flux('event', 'input', 'field.blur', details));
+    .catch(() => {});
 }
 
 function supportsWritingAnalysis(element) {
@@ -341,16 +354,20 @@ function isExcludedSensitiveInput(element) {
   if (ownerForm && isSensitiveForm(ownerForm)) return true;
   if (!element?.matches?.('input')) return false;
   const type = (element.type || 'text').toLowerCase();
-  const autocomplete = (element.autocomplete || '').toLowerCase();
+  const autocomplete = autocompleteTokens(element);
   return ['password', 'email', 'tel'].includes(type)
-    || ['one-time-code', 'current-password', 'new-password'].includes(autocomplete)
-    || autocomplete.split(/\s+/).some((token) => token.startsWith('cc-'));
+    || autocomplete.some((token) => ['one-time-code', 'current-password', 'new-password'].includes(token) || token.startsWith('cc-'));
+}
+
+function autocompleteTokens(element) {
+  return String(element?.autocomplete || '').toLowerCase().split(/\s+/).filter(Boolean);
 }
 
 function isSensitiveForm(form) {
   if (form?.dataset?.fluxSensitive === 'true') return true;
   if (isSensitiveKey(form?.dataset?.fluxKey)) return true;
-  if (form?.querySelector?.('[data-flux-sensitive="true"],input[type="password"],input[type="email"],input[type="tel"],input[autocomplete="one-time-code"],input[autocomplete="current-password"],input[autocomplete="new-password"]')) return true;
+  if (form?.querySelector?.('[data-flux-sensitive="true"],input[type="password"],input[type="email"],input[type="tel"]')) return true;
+  if ([...(form?.querySelectorAll?.('input[autocomplete]') ?? [])].some((input) => autocompleteTokens(input).some((token) => ['one-time-code', 'current-password', 'new-password'].includes(token) || token.startsWith('cc-')))) return true;
   return [...(form?.querySelectorAll?.('[data-flux-key]') ?? [])].some((element) => isSensitiveKey(element.dataset.fluxKey));
 }
 
@@ -385,11 +402,10 @@ function stableKey(element) {
 function semanticFallbackKey(element) {
   const type = semanticControlType(element);
   if (!type) return null;
-  const purpose = type === 'link'
-    ? semanticHref(element.getAttribute?.('href') || element.href)
-    : semanticSlug(element.id || element.name);
+  if (type === 'link') return null;
+  const purpose = semanticSlug(element.id || element.name);
   if (!purpose) return null;
-  const scope = type === 'link' ? 'navigation' : pageScope();
+  const scope = pageScope();
   return `${type}.${scope}.${purpose}`.slice(0, 120);
 }
 
@@ -399,20 +415,6 @@ function semanticControlType(element) {
   if (['input', 'select', 'textarea'].includes(tag)) return 'field';
   if (tag === 'button' || element?.matches?.('[role="button"]')) return 'button';
   return null;
-}
-
-function semanticHref(value) {
-  const href = String(value || '').trim();
-  if (!href || href === '#') return '';
-  try {
-    const url = new URL(href, window.location?.origin || 'https://publisher.invalid');
-    if (url.protocol === 'mailto:') return 'contact-email';
-    if (url.protocol === 'tel:') return 'contact-telephone';
-    const path = url.pathname.replace(/^\/pages\/?/, '').replace(/^\/+|\/+$/g, '');
-    return semanticSlug(url.hash.replace(/^#/, '') || path || (url.pathname === '/' ? 'home' : ''));
-  } catch {
-    return '';
-  }
 }
 
 function pageScope() {

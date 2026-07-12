@@ -41,7 +41,7 @@ flux('event', 'input', 'field.blur', {
 });
 ```
 
-Contract version 1.1.0 adds richer interaction metadata, all of it content-free:
+Contract version 1.2.0 adds richer interaction metadata and autocomplete milestones, all of it content-free:
 
 - `key_press_count`, `backspace_count` — typing volume and corrections; key identity is never recorded, only "printable", "backspace/delete" or "other"
 - `dwell_before_input_ms` — the inactive interval between focus and the first keyboard, input or paste interaction

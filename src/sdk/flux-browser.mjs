@@ -23,14 +23,24 @@ export function installFluxBrowserTag(windowLike, config = {}) {
   const endpoint = config.endpoint ?? readEndpointFromScript(windowLike);
   const transport = config.transport ?? createBrowserTransport(windowLike);
 
+  let memorySessionId = null;
   const tag = createFluxTag({
     endpoint,
     transport,
     sessionId: config.sessionId,
     visitorId: config.visitorId,
-    sessionIdFactory: () => persistentSessionId(windowLike, config.now),
+    sessionIdFactory: () => {
+      if (!windowLike.sessionStorage) {
+        memorySessionId ??= `session-${randomSuffix(windowLike)}`;
+        return memorySessionId;
+      }
+      return persistentSessionId(windowLike, config.now);
+    },
     visitorIdFactory: () => persistentVisitorId(windowLike),
-    resetIdentifiers: () => clearPersistentIdentifiers(windowLike),
+    resetIdentifiers: () => {
+      memorySessionId = null;
+      clearPersistentIdentifiers(windowLike);
+    },
     tenantId: config.tenantId ?? readTenantFromScript(windowLike),
     consent: config.consent,
     now: config.now,
