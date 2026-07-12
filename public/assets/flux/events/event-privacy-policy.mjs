@@ -18,6 +18,15 @@ export function isAuthOtpAction(action) {
   return typeof action === 'string' && AUTH_OTP_ACTION.test(action);
 }
 
+export function isAuthFormSubmit(event) {
+  return event?.action === 'flow.submit' && /^form\.auth(?:[.:-]|$)/.test(event?.element_key ?? '');
+}
+
+export function hasUnchangedFieldLength(event) {
+  if (event?.action !== 'field.blur' || !Object.hasOwn(event, 'value_length')) return false;
+  return !['key_press_count', 'edit_count', 'paste_count'].some((key) => Number.isInteger(event[key]) && event[key] > 0);
+}
+
 export function isNeutralAuthMilestone(event) {
   if (!isAuthOtpAction(event?.action)) return false;
   if (event.event_class !== 'trust' || event.role !== 'service' || event.element_key !== 'auth.otp') return false;
@@ -28,6 +37,8 @@ export function isNeutralAuthMilestone(event) {
   return !Object.keys(event).some((key) => key !== 'metadata' && !BASE_EVENT_KEYS.has(key));
 }
 
-export function violatesAuthMilestonePrivacy(event) {
-  return isAuthOtpAction(event?.action) && !isNeutralAuthMilestone(event);
+export function violatesEventPrivacy(event) {
+  return (isAuthOtpAction(event?.action) && !isNeutralAuthMilestone(event))
+    || isAuthFormSubmit(event)
+    || hasUnchangedFieldLength(event);
 }

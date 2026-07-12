@@ -1,3 +1,5 @@
+import { isAuthFormSubmit, isAuthOtpAction, isNeutralAuthMilestone } from '../events/event-privacy-policy.mjs';
+
 const ACTION_LABELS = Object.freeze({ click: 'Click', touch: 'Touch', tab: 'Tab', focus: 'Focus', input: 'Type', nav: 'Navigate', kbd: 'Key interaction', assist: 'Open help' });
 const SEMANTIC_CONTROL_TYPES = new Set(['button', 'field', 'form', 'link', 'tab']);
 const CONTROL_SCOPES = new Set(['analysis', 'auth', 'journal', 'navigation', 'project']);
@@ -25,9 +27,13 @@ function sentenceCase(value) {
 }
 
 function semanticElement(elementKey) {
+  const controlledKey = String(elementKey ?? '');
   const tokens = words(elementKey);
   const type = tokens[0];
-  if (type === 'page') return { label: sentenceCase(tokens.slice(1).join(' ')), type: 'page' };
+  if (type === 'page') {
+    if (!/^page\.[A-Za-z0-9]+(?:[._:-][A-Za-z0-9]+)*$/.test(controlledKey)) return null;
+    return { label: sentenceCase(tokens.slice(1).join(' ')), type: 'page' };
+  }
   if (!SEMANTIC_CONTROL_TYPES.has(type)) return null;
   // Positional form fallbacks are deliberately generic, even though they use
   // the form.* namespace. Only a publisher-declared form key is narrative-safe.
@@ -47,6 +53,7 @@ export function describeInteraction(event) {
   const outcome = isNeutralAuthMilestone(event) ? AUTH_OUTCOMES[event.action] : null;
   if (outcome) return outcome;
   if (isAuthOtpAction(event.action)) return 'Ignored an invalid authentication milestone.';
+  if (isAuthFormSubmit(event)) return 'Ignored a sensitive authentication interaction.';
 
   if (event.action === 'page.loaded' && semantic?.type === 'page') {
     return `Opened the ${semantic.label} page.`;
@@ -100,4 +107,3 @@ export function describeInteraction(event) {
   if (metadata.pointer_type && metadata.pointer_type !== 'unknown') parts.push(`using ${metadata.pointer_type}`);
   return `${parts.join(', ')}.`;
 }
-import { isAuthOtpAction, isNeutralAuthMilestone } from '../events/event-privacy-policy.mjs';

@@ -63,13 +63,17 @@ evidence_records:
         reason: A prefilled value length describes existing content, not an interaction in the current session.
       - decision: Suppress sensitive and auth form submit capture and auto-prefix structural page fallbacks.
         reason: Neutral lifecycle events should represent authentication, and URL segments must never be promoted into controlled service meaning.
+      - decision: Enforce auth-form suppression, auth-field exclusion and edited-value evidence for manual instrumentation as well as auto-capture.
+        reason: A service must not be able to bypass privacy rules by calling the SDK or collector directly.
+      - decision: Require a literal page. prefix before rendering purpose-led page meaning.
+        reason: Legacy hyphenated and URL-derived keys can begin with the word page without being controlled semantic declarations.
     commands_run:
       - command: npm test
         result: pass
-        evidence: All 133 tests passed, including SDK and collector privacy-policy enforcement plus narrative regressions for prefilled values, URL fallbacks, sensitive forms and metadata-free authentication outcomes.
+        evidence: All 141 tests passed, including manual SDK and collector privacy-policy enforcement plus narrative regressions for prefilled values, legacy page keys, auth-scoped fields, auth forms and metadata-free authentication outcomes.
       - command: npx --yes node@20 --test tests/*.test.mjs
         result: pass
-        evidence: All 133 tests passed under Node 20.20.2, the repository's declared runtime baseline.
+        evidence: All 141 tests passed under Node 20.20.2, the repository's declared runtime baseline.
       - command: npm run validate
         result: pass
         evidence: Repository governance file check passed for 19 files.

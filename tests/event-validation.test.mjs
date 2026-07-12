@@ -124,3 +124,37 @@ test('event validation rejects optional metadata on authentication milestones', 
   assert.equal(result.valid, false);
   assert.ok(result.errors.some((error) => error.code === EVENT_VALIDATION_ERROR_CODES.PRIVACY_POLICY));
 });
+
+test('event validation rejects authentication form submits', () => {
+  const event = JSON.parse(readFileSync('fixtures/events/valid/focus-enter.json', 'utf8'));
+  Object.assign(event, {
+    event_class: 'nav',
+    action: 'flow.submit',
+    role: 'form',
+    element_key: 'form.auth.otp-verify',
+  });
+
+  const result = validateEvent(event, schema);
+
+  assert.equal(result.valid, false);
+  assert.ok(result.errors.some((error) => error.code === EVENT_VALIDATION_ERROR_CODES.PRIVACY_POLICY));
+});
+
+test('event validation rejects unchanged field lengths', () => {
+  const event = JSON.parse(readFileSync('fixtures/events/valid/focus-enter.json', 'utf8'));
+  Object.assign(event, {
+    event_class: 'input',
+    action: 'field.blur',
+    role: 'field',
+    element_key: 'field.case.reference',
+    value_length: 12,
+    key_press_count: 0,
+    edit_count: 0,
+    paste_count: 0,
+  });
+
+  const result = validateEvent(event, schema);
+
+  assert.equal(result.valid, false);
+  assert.ok(result.errors.some((error) => error.code === EVENT_VALIDATION_ERROR_CODES.PRIVACY_POLICY));
+});

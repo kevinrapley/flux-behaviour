@@ -52,6 +52,29 @@
           ]
         }
       }
+    },
+    {
+      "if": {
+        "properties": {
+          "action": { "const": "flow.submit" },
+          "element_key": { "pattern": "^form\\.auth(?:[.:-]|$)" }
+        },
+        "required": ["action", "element_key"]
+      },
+      "then": false
+    },
+    {
+      "if": {
+        "properties": { "action": { "const": "field.blur" } },
+        "required": ["action", "value_length"]
+      },
+      "then": {
+        "anyOf": [
+          { "properties": { "key_press_count": { "minimum": 1 } }, "required": ["key_press_count"] },
+          { "properties": { "edit_count": { "minimum": 1 } }, "required": ["edit_count"] },
+          { "properties": { "paste_count": { "minimum": 1 } }, "required": ["paste_count"] }
+        ]
+      }
     }
   ],
   "properties": {

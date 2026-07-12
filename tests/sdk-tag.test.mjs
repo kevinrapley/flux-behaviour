@@ -119,6 +119,36 @@ test('sdk tag drops metadata-bearing authentication milestones', async () => {
   assert.equal(drops[0].reason, 'invalid_event');
 });
 
+test('sdk tag drops manually instrumented authentication form submits', async () => {
+  const { tag, sent } = createTag();
+  tag.grantConsent();
+
+  const result = await tag.track('nav', 'flow.submit', {
+    role: 'form',
+    element_key: 'form.auth.otp-verify',
+  });
+
+  assert.deepEqual(result, { sent: false, reason: 'invalid_event' });
+  assert.equal(sent.length, 0);
+});
+
+test('sdk tag drops unchanged field value lengths', async () => {
+  const { tag, sent } = createTag();
+  tag.grantConsent();
+
+  const result = await tag.track('input', 'field.blur', {
+    role: 'field',
+    element_key: 'field.case.reference',
+    value_length: 12,
+    key_press_count: 0,
+    edit_count: 0,
+    paste_count: 0,
+  });
+
+  assert.deepEqual(result, { sent: false, reason: 'invalid_event' });
+  assert.equal(sent.length, 0);
+});
+
 test('sdk tag reports transport failure without throwing', async () => {
   const tag = createFluxTag({
     endpoint: 'https://collector.example.test/collect',

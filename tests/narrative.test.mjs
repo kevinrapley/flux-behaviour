@@ -107,6 +107,32 @@ test('keeps URL-derived page fallbacks generic', () => {
   );
 });
 
+test('keeps legacy hyphenated page keys generic', () => {
+  assert.equal(
+    describeInteraction({
+      event_class: 'nav',
+      action: 'page.loaded',
+      role: 'page',
+      element_key: 'page-john-smith',
+      metadata: {},
+    }),
+    'Navigate on page “page john smith”.',
+  );
+});
+
+test('defensively ignores authentication form submits', () => {
+  assert.equal(
+    describeInteraction({
+      event_class: 'nav',
+      action: 'flow.submit',
+      role: 'form',
+      element_key: 'form.auth.otp-verify',
+      metadata: {},
+    }),
+    'Ignored a sensitive authentication interaction.',
+  );
+});
+
 test('describes keyboard tab movement from the control where it began', () => {
   assert.equal(
     describeInteraction({

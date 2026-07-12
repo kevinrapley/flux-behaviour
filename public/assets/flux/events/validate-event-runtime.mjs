@@ -1,6 +1,6 @@
 import { createValidationError, EVENT_VALIDATION_ERROR_CODES } from './event-validation-errors.mjs';
 import { fluxEventSchema } from './flux-event-schema.mjs';
-import { violatesAuthMilestonePrivacy } from './event-privacy-policy.mjs';
+import { violatesEventPrivacy } from './event-privacy-policy.mjs';
 
 export function validateEventRuntime(event, schema = fluxEventSchema) {
   const errors = [];
@@ -63,11 +63,11 @@ export function validateEventRuntime(event, schema = fluxEventSchema) {
     }
   }
 
-  if (violatesAuthMilestonePrivacy(event)) {
+  if (violatesEventPrivacy(event)) {
     errors.push(createValidationError(
       EVENT_VALIDATION_ERROR_CODES.PRIVACY_POLICY,
       null,
-      'Authentication milestones must use the neutral event shape without optional metadata.'
+      'Event violates the metadata-only privacy policy.'
     ));
   }
 
