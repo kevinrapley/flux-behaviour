@@ -83,3 +83,9 @@ records:
     actual_evidence: Visit-maturity, outcome-path and interaction-pattern cohorts are calculated from consented metadata; named groups require five journeys, neutral evidence remains unclassified, incomplete pattern histories are excluded and sample limits are disclosed.
     status: present-with-release-blockers
     owner: governance-lead
+  - id: CONF-015
+    rule: Journey narratives must not expose generated DOM identifiers or misattribute focus-exit input to typing
+    expected_evidence: Narrative and journey-presentation tests cover semantic focus, keyboard entry, focus exit and historical auto-key fallbacks
+    actual_evidence: Controlled text-area keys produce purpose-led focus and typing prose; generated keys are shown only as unlabelled control types; stored events are re-presented on read.
+    status: present
+    owner: product-lead

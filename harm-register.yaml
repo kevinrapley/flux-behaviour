@@ -54,3 +54,15 @@ harms:
     owner: governance-lead
     escalation_route: Product owner, data protection lead and ethics reviewer
     release_decision: blocked
+  - id: HARM-005
+    harm: Misleading journey prose could attribute pointer use to typing or present implementation identifiers as meaningful service controls.
+    affected_groups:
+      - Service analysts
+      - Keyboard and assistive-technology users
+    likelihood: low
+    severity: medium
+    mitigation: Separate focus origin, keyboard entry and focus-exit method; translate only controlled semantic keys; render generated keys as unlabelled control types; and regression-test historical presentation.
+    residual_risk: low
+    owner: product-lead
+    escalation_route: Product owner and accessibility lead
+    release_decision: proceed-with-monitoring

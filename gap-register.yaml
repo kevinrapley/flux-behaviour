@@ -89,3 +89,12 @@ gaps:
     action: Complete the golden corpus, run inclusive cohort reviews, publish uncertainty guidance and keep all cohort use human-led and service-improvement-only.
     owner: governance-lead
     status: open
+  - id: GAP-011
+    title: Historical generated keys cannot recover missing service purpose
+    severity: low
+    observed_state: Read-time presentation removes auto identifiers and ordinals from historical journeys, but events captured without a controlled data-flux-key contain no reliable purpose label.
+    expected_state: Instrumented services provide stable semantic keys for important controls before collection.
+    risk: Older events remain less informative than newly instrumented journeys.
+    action: Continue semantic instrumentation at the publisher and never infer purpose from DOM position.
+    owner: product-lead
+    status: open

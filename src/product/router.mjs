@@ -124,15 +124,16 @@ async function dashboard(request, env) {
   const trend = await env.FLUX_DB.prepare("SELECT date(started_at_ms / 1000, 'unixepoch') AS day, COUNT(DISTINCT visitor_id) AS visitors, COUNT(*) AS sessions, COUNT(DISTINCT CASE WHEN is_returning_visitor = 0 THEN visitor_id END) AS new_visitors, COUNT(DISTINCT CASE WHEN is_returning_visitor = 1 THEN visitor_id END) AS returning_visitors FROM sessions WHERE tenant_id = 'researchops' AND started_at_ms >= ? AND started_at_ms < ? GROUP BY day ORDER BY day ASC").bind(period.start_at_ms, period.end_at_ms).all();
   const actions = await env.FLUX_DB.prepare("SELECT e.action, COUNT(*) AS count FROM events e INNER JOIN sessions s ON s.id = e.session_id WHERE s.tenant_id = 'researchops' AND s.started_at_ms >= ? AND s.started_at_ms < ? GROUP BY e.action ORDER BY count DESC, e.action ASC LIMIT 8").bind(period.start_at_ms, period.end_at_ms).all();
   const sessions = await env.FLUX_DB.prepare("SELECT s.id, s.started_at_ms, s.last_seen_at_ms, s.is_returning_visitor, COUNT(e.id) AS event_count, COUNT(DISTINCT CASE WHEN e.action = 'flow.submit' THEN e.id END) AS submit_count, COUNT(DISTINCT CASE WHEN e.action IN ('error.invalid', 'act.rage', 'field.revisit', 'assist.help') THEN e.id END) AS friction_event_count FROM sessions s LEFT JOIN events e ON e.session_id = s.id WHERE s.tenant_id = 'researchops' AND s.started_at_ms >= ? AND s.started_at_ms < ? GROUP BY s.id, s.started_at_ms, s.last_seen_at_ms, s.is_returning_visitor ORDER BY s.started_at_ms DESC LIMIT 12").bind(period.start_at_ms, period.end_at_ms).all();
-  const events = await env.FLUX_DB.prepare("SELECT session_id, action, element_key, metadata_json, narrative, occurred_at_ms FROM (SELECT e.session_id, e.action, e.element_key, e.metadata_json, e.narrative, e.occurred_at_ms FROM events e WHERE e.tenant_id = 'researchops' AND e.session_id IN (SELECT id FROM sessions WHERE tenant_id = 'researchops' AND started_at_ms >= ? AND started_at_ms < ? ORDER BY started_at_ms DESC LIMIT 12) ORDER BY e.occurred_at_ms DESC LIMIT 500) ORDER BY occurred_at_ms ASC").bind(period.start_at_ms, period.end_at_ms).all();
-  const journeys = groupJourneys(sessions.results, events.results).map((journey) => ({ ...journey, dimension_scores: scoreSessionDimensions(journey.events) }));
+  const events = await env.FLUX_DB.prepare("SELECT session_id, event_class, action, role, element_key, metadata_json, narrative, occurred_at_ms FROM (SELECT e.session_id, e.event_class, e.action, e.role, e.element_key, e.metadata_json, e.narrative, e.occurred_at_ms FROM events e WHERE e.tenant_id = 'researchops' AND e.session_id IN (SELECT id FROM sessions WHERE tenant_id = 'researchops' AND started_at_ms >= ? AND started_at_ms < ? ORDER BY started_at_ms DESC LIMIT 12) ORDER BY e.occurred_at_ms DESC LIMIT 500) ORDER BY occurred_at_ms ASC").bind(period.start_at_ms, period.end_at_ms).all();
+  const presentedEvents = (events.results ?? []).map(presentEvent);
+  const journeys = groupJourneys(sessions.results, presentedEvents).map((journey) => ({ ...journey, dimension_scores: scoreSessionDimensions(journey.events) }));
   const cohorts = await dashboardCohorts(env, period.start_at_ms, period.end_at_ms, overview.session_count);
   return json({
     ok: true,
     sessions: sessions.results,
     journeys,
     analytics: {
-      ...buildLiveAnalytics(sessions.results, events.results, journeys),
+      ...buildLiveAnalytics(sessions.results, presentedEvents, journeys),
       period,
       overview,
       comparison,
@@ -181,8 +182,20 @@ async function sessionHistory(request, env, path) {
   if (!/^[A-Za-z0-9._:-]{8,128}$/.test(sessionId)) return json({ ok: false, error: 'not_found' }, 404);
   const session = await env.FLUX_DB.prepare("SELECT id, started_at_ms, last_seen_at_ms, is_returning_visitor FROM sessions WHERE id = ? AND tenant_id = 'researchops'").bind(sessionId).first();
   if (!session) return json({ ok: false, error: 'not_found' }, 404);
-  const events = await env.FLUX_DB.prepare("SELECT session_id, action, element_key, metadata_json, narrative, occurred_at_ms FROM events WHERE tenant_id = 'researchops' AND session_id = ? ORDER BY occurred_at_ms ASC").bind(sessionId).all();
-  return json({ ok: true, journey: { ...session, events: events.results, dimension_scores: scoreSessionDimensions(events.results) } });
+  const events = await env.FLUX_DB.prepare("SELECT session_id, event_class, action, role, element_key, metadata_json, narrative, occurred_at_ms FROM events WHERE tenant_id = 'researchops' AND session_id = ? ORDER BY occurred_at_ms ASC").bind(sessionId).all();
+  const presentedEvents = (events.results ?? []).map(presentEvent);
+  return json({ ok: true, journey: { ...session, events: presentedEvents, dimension_scores: scoreSessionDimensions(presentedEvents) } });
+}
+
+export function presentEvent(event) {
+  let parsedMetadata = {};
+  try {
+    const parsed = JSON.parse(event.metadata_json ?? '{}');
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) parsedMetadata = parsed;
+  } catch {
+    parsedMetadata = {};
+  }
+  return { ...event, narrative: describeInteraction({ ...event, metadata: parsedMetadata }) };
 }
 
 export function groupJourneys(sessions = [], events = []) {

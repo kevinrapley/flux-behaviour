@@ -1,0 +1,60 @@
+evidence_records:
+  - task_id: flux-behaviour-richer-journey-presentation
+    mode: repo-fix
+    repository: kevinrapley/flux-behaviour
+    risk_level: high
+    base_branch: main
+    working_branch: fix/richer-journey-narratives
+    files_read:
+      - README.md
+      - AGENTS.md
+      - RECENT_LEARNINGS.md
+      - CONTRIBUTING.md
+      - SECURITY.md
+      - repository-contract.yaml
+      - github-settings.yaml
+      - conformance-matrix.yaml
+      - gap-register.yaml
+      - harm-register.yaml
+      - docs/instrumentation/event-validation.md
+      - docs/instrumentation/event-taxonomy.md
+    files_changed:
+      - src/product/narrative.mjs
+      - src/product/router.mjs
+      - tests/narrative.test.mjs
+      - tests/journey-presentation.test.mjs
+      - RECENT_LEARNINGS.md
+      - conformance-matrix.yaml
+      - gap-register.yaml
+      - harm-register.yaml
+      - agent-evidence.yaml
+    promotion_decisions:
+      - decision: Rebuild journey prose from stored structured events when the dashboard reads them.
+        reason: Narrative improvements should apply after refresh without mutating historical evidence rows.
+      - decision: Render generated keys as unlabelled control types.
+        reason: DOM tags and ordinals cannot establish service purpose.
+      - decision: Describe key presses as keyboard input and pointer metadata on blur as the focus-exit method.
+        reason: A mouse can end focus but cannot type characters.
+    commands_run:
+      - command: node --test tests/narrative.test.mjs tests/journey-presentation.test.mjs tests/product-router-safety.test.mjs
+        result: pass
+        evidence: 24 focused tests passed.
+      - command: npm test
+        result: pass
+        evidence: All 160 tests passed with the clean worktree linked to the repository dependency installation.
+      - command: npm run validate
+        result: pass
+        evidence: Repository governance file check passed for 19 files.
+      - command: npm run security:secrets
+        result: pass
+        evidence: Secret pattern sanity scan passed.
+    recent_learnings:
+      - Generated identifiers are diagnostic data, not journey language.
+    security:
+      - No authentication privacy boundary or authorisation check changed.
+    privacy:
+      - Historical presentation uses already stored metadata and never introduces content capture.
+    accessibility:
+      - Plain-language narratives distinguish keyboard entry from pointer focus exit.
+    risks:
+      - Missing historical service purpose cannot be reconstructed from generated keys.
