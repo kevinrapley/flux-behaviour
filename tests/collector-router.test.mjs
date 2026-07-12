@@ -46,6 +46,104 @@ test('collector collect route accepts valid metadata-only event without storing 
   assert.equal(body.storage, 'disabled');
 });
 
+test('collector rejects metadata-bearing authentication milestones', async () => {
+  const event = JSON.parse(readFileSync('fixtures/events/valid/focus-enter.json', 'utf8'));
+  Object.assign(event, {
+    event_class: 'trust',
+    action: 'auth.otp.succeeded',
+    role: 'service',
+    element_key: 'auth.otp',
+    value_length: 6,
+  });
+  const response = await handleCollectorRequest(request('/collect', {
+    method: 'POST',
+    body: JSON.stringify(event),
+  }));
+  const body = await json(response);
+
+  assert.equal(response.status, 400);
+  assert.ok(body.error.details.some((detail) => detail.code === 'privacy_policy'));
+});
+
+test('collector rejects authentication form submits', async () => {
+  const event = JSON.parse(readFileSync('fixtures/events/valid/focus-enter.json', 'utf8'));
+  Object.assign(event, {
+    event_class: 'nav',
+    action: 'flow.submit',
+    role: 'form',
+    element_key: 'form.auth.otp-verify',
+  });
+  const response = await handleCollectorRequest(request('/collect', {
+    method: 'POST',
+    body: JSON.stringify(event),
+  }));
+  const body = await json(response);
+
+  assert.equal(response.status, 400);
+  assert.ok(body.error.details.some((detail) => detail.code === 'privacy_policy'));
+});
+
+test('collector rejects authentication control interactions', async () => {
+  const event = JSON.parse(readFileSync('fixtures/events/valid/focus-enter.json', 'utf8'));
+  Object.assign(event, {
+    event_class: 'nav',
+    action: 'control.click',
+    role: 'control',
+    element_key: 'button.auth.verify-code',
+  });
+  const response = await handleCollectorRequest(request('/collect', {
+    method: 'POST',
+    body: JSON.stringify(event),
+  }));
+  const body = await json(response);
+
+  assert.equal(response.status, 400);
+  assert.ok(body.error.details.some((detail) => detail.code === 'privacy_policy'));
+});
+
+test('collector rejects case-variant authentication controls', async () => {
+  const event = JSON.parse(readFileSync('fixtures/events/valid/focus-enter.json', 'utf8'));
+  Object.assign(event, { event_class: 'nav', action: 'control.click', role: 'control', element_key: 'button.Auth.verify-code' });
+  const response = await handleCollectorRequest(request('/collect', { method: 'POST', body: JSON.stringify(event) }));
+  assert.equal(response.status, 400);
+});
+
+test('collector rejects nested authentication scopes', async () => {
+  const event = JSON.parse(readFileSync('fixtures/events/valid/focus-enter.json', 'utf8'));
+  Object.assign(event, { event_class: 'nav', action: 'control.click', role: 'control', element_key: 'control.navigation.Auth.verify' });
+  const response = await handleCollectorRequest(request('/collect', { method: 'POST', body: JSON.stringify(event) }));
+  assert.equal(response.status, 400);
+});
+
+test('collector reserves auth.otp for neutral milestones', async () => {
+  const event = JSON.parse(readFileSync('fixtures/events/valid/focus-enter.json', 'utf8'));
+  Object.assign(event, { event_class: 'nav', action: 'control.click', role: 'control', element_key: 'auth.otp' });
+  const response = await handleCollectorRequest(request('/collect', { method: 'POST', body: JSON.stringify(event) }));
+  assert.equal(response.status, 400);
+});
+
+test('collector rejects unchanged field value lengths', async () => {
+  const event = JSON.parse(readFileSync('fixtures/events/valid/focus-enter.json', 'utf8'));
+  Object.assign(event, {
+    event_class: 'input',
+    action: 'field.blur',
+    role: 'field',
+    element_key: 'field.case.reference',
+    value_length: 12,
+    key_press_count: 0,
+    edit_count: 0,
+    paste_count: 0,
+  });
+  const response = await handleCollectorRequest(request('/collect', {
+    method: 'POST',
+    body: JSON.stringify(event),
+  }));
+  const body = await json(response);
+
+  assert.equal(response.status, 400);
+  assert.ok(body.error.details.some((detail) => detail.code === 'privacy_policy'));
+});
+
 test('collector collect route rejects unsupported methods', async () => {
   const response = await handleCollectorRequest(request('/collect'));
   const body = await json(response);

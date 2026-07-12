@@ -1,0 +1,101 @@
+evidence_records:
+  - task_id: flux-behaviour-semantic-journey-narratives
+    mode: repo-build
+    repository: kevinrapley/flux-behaviour
+    risk_level: high
+    base_branch: main
+    working_branch: feature/semantic-journey-narratives
+    files_read:
+      - README.md
+      - AGENTS.md
+      - RECENT_LEARNINGS.md
+      - CONTRIBUTING.md
+      - SECURITY.md
+      - repository-contract.yaml
+      - github-settings.yaml
+      - conformance-matrix.yaml
+      - gap-register.yaml
+      - harm-register.yaml
+      - docs/instrumentation/event-taxonomy.md
+      - docs/product/production-runtime.md
+    files_changed:
+      - src/product/narrative.mjs
+      - src/events/event-privacy-policy.mjs
+      - src/events/event-validation-errors.mjs
+      - src/events/flux-event-schema.mjs
+      - src/events/validate-event.mjs
+      - src/events/validate-event-runtime.mjs
+      - src/sdk/flux-auto-capture.mjs
+      - contracts/events/flux-event.schema.json
+      - public/assets/flux/events/event-privacy-policy.mjs
+      - public/assets/flux/events/event-validation-errors.mjs
+      - public/assets/flux/events/flux-event-schema.mjs
+      - public/assets/flux/events/validate-event.mjs
+      - public/assets/flux/events/validate-event-runtime.mjs
+      - public/assets/flux/sdk/flux-auto-capture.mjs
+      - tests/narrative.test.mjs
+      - tests/browser-consent.test.mjs
+      - tests/collector-router.test.mjs
+      - tests/event-validation.test.mjs
+      - tests/sdk-tag.test.mjs
+      - docs/instrumentation/event-taxonomy.md
+      - docs/product/production-runtime.md
+      - RECENT_LEARNINGS.md
+      - conformance-matrix.yaml
+      - gap-register.yaml
+      - harm-register.yaml
+      - agent-evidence.yaml
+      - docs/agent-evidence/2026/07/12/flux-behaviour-semantic-journey-narratives.yaml
+    promotion_decisions:
+      - decision: Translate only controlled type-first semantic keys into purpose-led labels.
+        reason: Positional keys cannot safely establish interface meaning and visible text may contain personal or dynamic content.
+      - decision: Describe OTP lifecycle outcomes without capturing authentication input.
+        reason: A successful service milestone answers the journey question while keeping code, length, email, challenge and account identity outside analytics.
+      - decision: Treat zero-character field blur as focus without input.
+        reason: Reporting zero typed characters as typing is a materially false journey narrative.
+      - decision: Distinguish keyboard entry from paste and autofill using metadata-only edit, paste and final-length counts.
+        reason: A zero key-press count does not mean the field was untouched when another privacy-safe input signal shows a change.
+      - decision: Require trust class, service role and the neutral auth.otp key before translating an authentication action into an outcome.
+        reason: An action name alone cannot safely establish that OTP verification happened.
+      - decision: Reject every optional metadata property on an authentication milestone at SDK and collector validation boundaries.
+        reason: Even otherwise bounded metadata such as value length can reveal authentication-code characteristics.
+      - decision: Treat a value as visitor input only when keypress, edit or paste evidence exists.
+        reason: A prefilled value length describes existing content, not an interaction in the current session.
+      - decision: Suppress sensitive and auth form submit capture and auto-prefix structural page fallbacks.
+        reason: Neutral lifecycle events should represent authentication, and URL segments must never be promoted into controlled service meaning.
+      - decision: Enforce auth-form suppression, auth-field exclusion and edited-value evidence for manual instrumentation as well as auto-capture.
+        reason: A service must not be able to bypass privacy rules by calling the SDK or collector directly.
+      - decision: Require a literal page. prefix before rendering purpose-led page meaning.
+        reason: Legacy hyphenated and URL-derived keys can begin with the word page without being controlled semantic declarations.
+      - decision: Reject every auth-scoped semantic control outside the neutral lifecycle API.
+        reason: Button, link and tab capture can reveal authentication interaction just as fields and forms can.
+      - decision: Normalise auth scopes case-insensitively, propagate form sensitivity to descendants and reserve auth.otp exclusively.
+        reason: Marker inheritance, key casing and reserved-key misuse must not create alternate paths around authentication privacy controls.
+      - decision: Detect auth tokens at any semantic-key segment and propagate every sensitive ancestor marker.
+        reason: Nested namespaces and non-form sensitive containers must not weaken the same privacy boundary.
+    commands_run:
+      - command: npm test
+        result: pass
+        evidence: All 156 tests passed, including manual SDK and collector privacy-policy enforcement plus narrative regressions for prefilled values, legacy page keys, sensitive ancestry, nested auth scopes, case variants, reserved-key misuse and metadata-free authentication outcomes.
+      - command: npx --yes node@20 --test tests/*.test.mjs
+        result: pass
+        evidence: All 156 tests passed under Node 20.20.2, the repository's declared runtime baseline.
+      - command: npm run validate
+        result: pass
+        evidence: Repository governance file check passed for 19 files.
+      - command: npm run security:secrets
+        result: pass
+        evidence: Secret pattern sanity scan passed.
+      - command: npm run sbom
+        result: pass
+        evidence: CycloneDX SBOM generated successfully.
+    recent_learnings:
+      - Controlled semantic attributes provide useful service meaning without weakening the metadata-only privacy boundary.
+    security:
+      - Authentication milestones require the allow-listed action, neutral service shape and no optional metadata at SDK and collector boundaries.
+    privacy:
+      - No visible text, typed value, email, authentication code, challenge identifier or account identity is introduced.
+    accessibility:
+      - Narrative text remains plain-language prose and does not alter dashboard interaction or visual structure.
+    risks:
+      - Positional fallback events remain generic until the instrumented service supplies a controlled semantic key.

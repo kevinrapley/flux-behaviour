@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { createValidationError, EVENT_VALIDATION_ERROR_CODES } from './event-validation-errors.mjs';
+import { violatesEventPrivacy } from './event-privacy-policy.mjs';
 
 const DEFAULT_SCHEMA_PATH = 'contracts/events/flux-event.schema.json';
 
@@ -53,6 +54,14 @@ export function validateEvent(event, schema = loadEventSchema()) {
     validatePattern(errors, field, value, rules);
     validateLength(errors, field, value, rules);
     validateNumericBounds(errors, field, value, rules);
+  }
+
+  if (violatesEventPrivacy(event)) {
+    errors.push(createValidationError(
+      EVENT_VALIDATION_ERROR_CODES.PRIVACY_POLICY,
+      null,
+      'Event violates the metadata-only privacy policy.'
+    ));
   }
 
   return {

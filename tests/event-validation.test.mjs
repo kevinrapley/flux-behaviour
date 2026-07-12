@@ -108,3 +108,113 @@ test('event validation rejects non-object events', () => {
     message: 'Event must be a JSON object.'
   }]);
 });
+
+test('event validation rejects optional metadata on authentication milestones', () => {
+  const event = JSON.parse(readFileSync('fixtures/events/valid/focus-enter.json', 'utf8'));
+  Object.assign(event, {
+    event_class: 'trust',
+    action: 'auth.otp.succeeded',
+    role: 'service',
+    element_key: 'auth.otp',
+    value_length: 6,
+  });
+
+  const result = validateEvent(event, schema);
+
+  assert.equal(result.valid, false);
+  assert.ok(result.errors.some((error) => error.code === EVENT_VALIDATION_ERROR_CODES.PRIVACY_POLICY));
+});
+
+test('event validation rejects authentication form submits', () => {
+  const event = JSON.parse(readFileSync('fixtures/events/valid/focus-enter.json', 'utf8'));
+  Object.assign(event, {
+    event_class: 'nav',
+    action: 'flow.submit',
+    role: 'form',
+    element_key: 'form.auth.otp-verify',
+  });
+
+  const result = validateEvent(event, schema);
+
+  assert.equal(result.valid, false);
+  assert.ok(result.errors.some((error) => error.code === EVENT_VALIDATION_ERROR_CODES.PRIVACY_POLICY));
+});
+
+test('event validation rejects authentication control interactions', () => {
+  const event = JSON.parse(readFileSync('fixtures/events/valid/focus-enter.json', 'utf8'));
+  Object.assign(event, {
+    event_class: 'nav',
+    action: 'control.click',
+    role: 'control',
+    element_key: 'button.auth.verify-code',
+  });
+
+  const result = validateEvent(event, schema);
+
+  assert.equal(result.valid, false);
+  assert.ok(result.errors.some((error) => error.code === EVENT_VALIDATION_ERROR_CODES.PRIVACY_POLICY));
+});
+
+test('event validation rejects case-variant authentication controls', () => {
+  const event = JSON.parse(readFileSync('fixtures/events/valid/focus-enter.json', 'utf8'));
+  Object.assign(event, {
+    event_class: 'nav',
+    action: 'control.click',
+    role: 'control',
+    element_key: 'button.Auth.verify-code',
+  });
+
+  const result = validateEvent(event, schema);
+
+  assert.equal(result.valid, false);
+  assert.ok(result.errors.some((error) => error.code === EVENT_VALIDATION_ERROR_CODES.PRIVACY_POLICY));
+});
+
+test('event validation rejects nested authentication scopes', () => {
+  const event = JSON.parse(readFileSync('fixtures/events/valid/focus-enter.json', 'utf8'));
+  Object.assign(event, {
+    event_class: 'nav',
+    action: 'control.click',
+    role: 'control',
+    element_key: 'control.navigation.Auth.verify',
+  });
+
+  const result = validateEvent(event, schema);
+
+  assert.equal(result.valid, false);
+  assert.ok(result.errors.some((error) => error.code === EVENT_VALIDATION_ERROR_CODES.PRIVACY_POLICY));
+});
+
+test('event validation reserves auth.otp for neutral milestones', () => {
+  const event = JSON.parse(readFileSync('fixtures/events/valid/focus-enter.json', 'utf8'));
+  Object.assign(event, {
+    event_class: 'nav',
+    action: 'control.click',
+    role: 'control',
+    element_key: 'auth.otp',
+  });
+
+  const result = validateEvent(event, schema);
+
+  assert.equal(result.valid, false);
+  assert.ok(result.errors.some((error) => error.code === EVENT_VALIDATION_ERROR_CODES.PRIVACY_POLICY));
+});
+
+test('event validation rejects unchanged field lengths', () => {
+  const event = JSON.parse(readFileSync('fixtures/events/valid/focus-enter.json', 'utf8'));
+  Object.assign(event, {
+    event_class: 'input',
+    action: 'field.blur',
+    role: 'field',
+    element_key: 'field.case.reference',
+    value_length: 12,
+    key_press_count: 0,
+    edit_count: 0,
+    paste_count: 0,
+  });
+
+  const result = validateEvent(event, schema);
+
+  assert.equal(result.valid, false);
+  assert.ok(result.errors.some((error) => error.code === EVENT_VALIDATION_ERROR_CODES.PRIVACY_POLICY));
+});

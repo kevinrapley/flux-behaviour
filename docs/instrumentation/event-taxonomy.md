@@ -29,6 +29,14 @@ Events must not contain:
 - direct identifiers;
 - unconsented telemetry.
 
+## Semantic element keys
+
+Instrumented services should provide controlled, content-free semantic keys for important pages and controls. Keys use a type-first convention such as `page.account.sign-in`, `link.navigation.projects`, `button.analysis.code-retrieval`, `field.analysis.code-retrieval` and `form.auth.otp-verify`.
+
+The key describes the control's service purpose, not its current visible text, record, user or entered value. Dynamic identifiers, query-string values, email addresses, names and free text are prohibited. A service may separately declare a schema-valid role such as `page`, `control`, `field` or `form`.
+
+Authentication inputs remain excluded from interaction capture even when they have semantic attributes. A service may emit an allow-listed, consent-gated lifecycle milestone such as `auth.otp.requested`, `auth.otp.succeeded` or `auth.otp.failed` with the neutral key `auth.otp`. It must not include the code, email, challenge identifier, code length or account identity.
+
 ## Required event fields
 
 | Field | Purpose |
@@ -68,7 +76,7 @@ Events must not contain:
 | `drop` | Drag-drop metadata only. |
 | `file` | File chooser metadata only. |
 | `picker` | Date, time and picker interaction metadata. |
-| `trust` | Password reveal toggle, confirmation and assurance interactions. |
+| `trust` | Password reveal, confirmation and assurance interactions; authentication lifecycle milestones require the neutral service shape and prohibit all optional metadata. |
 | `assist` | Help, error summary and guidance interactions. |
 | `a11y` | Skip link, keyboard-only and assistive interaction indicators. |
 | `env` | Network and device context metadata. |

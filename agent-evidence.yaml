@@ -105,3 +105,7 @@ agent_evidence_registry:
       date: 2026-07-11
       path: docs/agent-evidence/2026/07/11/flux-behaviour-cohort-analytics.yaml
       status: externalised
+    - task_id: flux-behaviour-semantic-journey-narratives
+      date: 2026-07-12
+      path: docs/agent-evidence/2026/07/12/flux-behaviour-semantic-journey-narratives.yaml
+      status: externalised
