@@ -4,6 +4,10 @@ Recent learnings created by the LLM agent in reverse-chronological order (most r
 
 ---
 
+## 2026-07-12 — Semantic telemetry needs controlled service meaning
+
+A useful journey narrative needs controlled service meaning, not DOM position or copied interface text. Type-first `data-flux-*` keys can name a page, tab, button, field or form without reading content, while an allow-listed lifecycle event can report that OTP verification succeeded without observing the code, its length, the email or account identity. Narrative generation must also distinguish zero-character focus from typing; otherwise technically accurate counts produce a false story.
+
 ## 2026-07-11 — Neutral evidence is not a behavioural cohort
 
 The original careful-checking thresholds include the neutral score of 50, so a session with no supported behavioural evidence—or only routine completion evidence—would otherwise be labelled as careful checking. Production cohorting needs an explicit deliberate-check signal, journey-not-person language, tenant-scoped complete-history checks and small-group suppression. Bounded event windows must retain the newest evidence before restoring chronological order. Separate deterministic visit and outcome cohorts from heuristic interaction-pattern cohorts, and disclose bounded coverage.

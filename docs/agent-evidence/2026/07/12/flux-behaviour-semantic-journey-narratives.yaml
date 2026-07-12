@@ -1,0 +1,64 @@
+evidence_records:
+  - task_id: flux-behaviour-semantic-journey-narratives
+    mode: repo-build
+    repository: kevinrapley/flux-behaviour
+    risk_level: high
+    base_branch: main
+    working_branch: feature/semantic-journey-narratives
+    files_read:
+      - README.md
+      - AGENTS.md
+      - RECENT_LEARNINGS.md
+      - CONTRIBUTING.md
+      - SECURITY.md
+      - repository-contract.yaml
+      - github-settings.yaml
+      - conformance-matrix.yaml
+      - gap-register.yaml
+      - harm-register.yaml
+      - docs/instrumentation/event-taxonomy.md
+      - docs/product/production-runtime.md
+    files_changed:
+      - src/product/narrative.mjs
+      - tests/narrative.test.mjs
+      - docs/instrumentation/event-taxonomy.md
+      - docs/product/production-runtime.md
+      - RECENT_LEARNINGS.md
+      - conformance-matrix.yaml
+      - gap-register.yaml
+      - harm-register.yaml
+      - agent-evidence.yaml
+      - docs/agent-evidence/2026/07/12/flux-behaviour-semantic-journey-narratives.yaml
+    promotion_decisions:
+      - decision: Translate only controlled type-first semantic keys into purpose-led labels.
+        reason: Positional keys cannot safely establish interface meaning and visible text may contain personal or dynamic content.
+      - decision: Describe OTP lifecycle outcomes without capturing authentication input.
+        reason: A successful service milestone answers the journey question while keeping code, length, email, challenge and account identity outside analytics.
+      - decision: Treat zero-character field blur as focus without input.
+        reason: Reporting zero typed characters as typing is a materially false journey narrative.
+    commands_run:
+      - command: npm test
+        result: pass
+        evidence: All 123 tests passed, including seven new purpose-led narrative cases.
+      - command: npx -y node@20 --test tests/*.test.mjs
+        result: pass
+        evidence: All 123 tests passed under the repository's declared Node 20 runtime baseline.
+      - command: npm run validate
+        result: pass
+        evidence: Repository governance file check passed for 19 files.
+      - command: npm run security:secrets
+        result: pass
+        evidence: Secret pattern sanity scan passed.
+      - command: npm run sbom
+        result: pass
+        evidence: CycloneDX SBOM generated successfully.
+    recent_learnings:
+      - Controlled semantic attributes provide useful service meaning without weakening the metadata-only privacy boundary.
+    security:
+      - Authentication outcome narratives consume allow-listed action and neutral element keys only.
+    privacy:
+      - No visible text, typed value, email, authentication code, challenge identifier or account identity is introduced.
+    accessibility:
+      - Narrative text remains plain-language prose and does not alter dashboard interaction or visual structure.
+    risks:
+      - Positional fallback events remain generic until the instrumented service supplies a controlled semantic key.
