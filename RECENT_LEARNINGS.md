@@ -4,6 +4,10 @@ Recent learnings created by the LLM agent in reverse-chronological order (most r
 
 ---
 
+## 2026-07-12 — Focus duration, pre-input dwell and active typing time are different signals
+
+A field's focus-to-blur duration cannot be described or scored as dwell after typing begins. Capture the pause before the first keyboard, input or paste interaction separately, calculate typing rate only across the first-to-latest typing interval, and describe legacy typed events as total focus time when genuine dwell is unavailable.
+
 ## 2026-07-12 — Generated identifiers are diagnostic data, not journey language
 
 An `auto.*` key can preserve event structure, but its DOM tag and ordinal cannot establish service purpose. Journey presentation should translate controlled semantic keys, replace generated fallbacks with an explicitly unlabelled control type, and rebuild prose from stored event metadata at read time so narrative improvements also apply to historical rows without rewriting evidence.

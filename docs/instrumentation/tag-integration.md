@@ -43,7 +43,8 @@ flux('event', 'input', 'field.blur', {
 Contract version 1.1.0 adds richer interaction metadata, all of it content-free:
 
 - `key_press_count`, `backspace_count` — typing volume and corrections; key identity is never recorded, only "printable", "backspace/delete" or "other"
-- `chars_per_minute` — typing speed derived from inter-key timing
+- `dwell_before_input_ms` — the inactive interval between focus and the first keyboard, input or paste interaction
+- `typing_duration_ms`, `chars_per_minute` — active typing time and typing speed derived from the first and latest typing keys, excluding the pre-input dwell
 - `paste_count` — clipboard use as a count, never clipboard content
 - `revisit_count` — how many times a field was refocused
 - `pointer_type` — whether focus arrived by mouse, touch, pen or keyboard

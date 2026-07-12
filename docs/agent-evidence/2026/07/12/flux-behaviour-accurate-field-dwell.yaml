@@ -1,0 +1,70 @@
+evidence_records:
+  - task_id: flux-behaviour-accurate-field-dwell
+    mode: repo-fix
+    repository: kevinrapley/flux-behaviour
+    risk_level: high
+    base_branch: main
+    working_branch: fix/accurate-field-dwell
+    files_read:
+      - README.md
+      - AGENTS.md
+      - RECENT_LEARNINGS.md
+      - CONTRIBUTING.md
+      - SECURITY.md
+      - repository-contract.yaml
+      - github-settings.yaml
+      - conformance-matrix.yaml
+      - gap-register.yaml
+      - harm-register.yaml
+      - docs/instrumentation/event-taxonomy.md
+      - docs/instrumentation/tag-integration.md
+      - docs/product/production-runtime.md
+      - docs/product/behaviour-signal-map.md
+    files_changed:
+      - contracts/events/flux-event.schema.json
+      - src/events/flux-event-schema.mjs
+      - src/sdk/flux-tag.mjs
+      - src/sdk/flux-auto-capture.mjs
+      - src/product/narrative.mjs
+      - src/product/router.mjs
+      - src/product/live-analytics.mjs
+      - src/product/session-dimensions.mjs
+      - tests/event-schema.test.mjs
+      - tests/sdk-tag.test.mjs
+      - tests/narrative.test.mjs
+      - tests/journey-presentation.test.mjs
+      - tests/live-analytics.test.mjs
+      - tests/session-dimensions.test.mjs
+    promotion_decisions:
+      - decision: Treat duration_ms as total focus time and add dwell_before_input_ms plus typing_duration_ms.
+        reason: Dwell means time without interaction; focus-to-blur time includes active entry and cannot support that claim.
+      - decision: Calculate typing rate from the first to latest typing key.
+        reason: A pause before input must not make a visitor appear to type slowly.
+      - decision: Re-present legacy typed events as total focused time.
+        reason: Genuine dwell cannot be reconstructed from historical focus duration.
+    commands_run:
+      - command: node --test tests/narrative.test.mjs tests/journey-presentation.test.mjs tests/sdk-tag.test.mjs tests/event-schema.test.mjs tests/flux-event-schema-module.test.mjs tests/live-analytics.test.mjs tests/session-dimensions.test.mjs
+        result: pass
+        evidence: 53 focused contract, SDK, narrative, presentation, aggregate and scoring tests passed.
+      - command: npm test
+        result: pass
+        evidence: All 163 repository tests passed.
+      - command: npm run validate
+        result: pass
+        evidence: Repository governance file check passed for 19 files.
+      - command: npm run security:secrets
+        result: pass
+        evidence: Secret pattern sanity scan passed.
+      - command: npm run sbom
+        result: pass
+        evidence: CycloneDX SBOM generation completed.
+    recent_learnings:
+      - Focus duration, pre-input dwell and active typing time are different signals.
+    security:
+      - New metadata is bounded integer timing data; no values, key identities or content are added.
+    privacy:
+      - Historical events are described conservatively when genuine pre-input dwell is unavailable.
+    accessibility:
+      - Journey prose avoids attributing a whole focus interval to inactivity or typing.
+    risks:
+      - Scoring changes remain subject to GAP-008 golden-corpus validation.

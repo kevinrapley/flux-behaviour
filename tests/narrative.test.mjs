@@ -90,7 +90,7 @@ test('does not treat an unchanged prefilled value as visitor input', () => {
       element_key: 'field.analysis.code-retrieval',
       metadata: { duration_ms: 1400, key_press_count: 0, value_length: 12, edit_count: 0, paste_count: 0 },
     }),
-    'Focused the Code retrieval field for 1.4s without changing it.',
+    'Dwelled on the Code retrieval field for 1.4s without changing it.',
   );
 });
 
@@ -200,20 +200,44 @@ test('describes an untouched field without claiming that the visitor typed', () 
         pointer_type: 'mouse',
       },
     }),
-    'Focused the Code retrieval field for 1.4s without changing it. Focus left using a mouse.',
+    'Dwelled on the Code retrieval field for 1.4s without changing it. Focus left using a mouse.',
   );
 });
 
-test('describes actual field input with purpose, dwell and character count', () => {
+test('describes actual field input with purpose and privacy-safe typing detail', () => {
   assert.equal(
     describeInteraction({
       event_class: 'input',
       action: 'field.blur',
       role: 'field',
       element_key: 'field.analysis.code-retrieval',
-      metadata: { duration_ms: 1400, key_press_count: 8, value_length: 7, pointer_type: 'mouse' },
+      metadata: {
+        duration_ms: 15_200,
+        dwell_before_input_ms: 2_200,
+        typing_duration_ms: 12_500,
+        key_press_count: 56,
+        backspace_count: 4,
+        chars_per_minute: 269,
+        paste_count: 1,
+        revisit_count: 2,
+        value_length: 52,
+        pointer_type: 'mouse',
+      },
     }),
-    'After dwelling for 1.4s, typed 8 characters in the Code retrieval field using a keyboard. Focus left using a mouse.',
+    'After dwelling for 2.2s without interacting, typed 56 characters in the Code retrieval field over 12.5s at 269 characters per minute. Used Backspace or Delete 4 times and pasted once. This was the second visit to the field. Focus left using a mouse.',
+  );
+});
+
+test('describes legacy typed events as total focus time rather than dwell', () => {
+  assert.equal(
+    describeInteraction({
+      event_class: 'input',
+      action: 'field.blur',
+      role: 'field',
+      element_key: 'field.project.objective-editor',
+      metadata: { duration_ms: 15_200, key_press_count: 56, pointer_type: 'mouse' },
+    }),
+    'Typed 56 characters in the Objective editor field while it was focused for 15.2s. Focus left using a mouse.',
   );
 });
 
@@ -234,9 +258,17 @@ test('describes automatic focus and the Add Objective text area without implemen
       action: 'field.blur',
       role: 'field',
       element_key: 'field.project.add-objective-textarea',
-      metadata: { duration_ms: 28800, key_press_count: 101, value_length: 101, pointer_type: 'mouse' },
+      metadata: {
+        duration_ms: 28800,
+        dwell_before_input_ms: 1400,
+        typing_duration_ms: 26000,
+        key_press_count: 101,
+        chars_per_minute: 233,
+        value_length: 101,
+        pointer_type: 'mouse',
+      },
     }),
-    'After dwelling for 28.8s, typed 101 characters in the Add objective text area using a keyboard. Focus left using a mouse.',
+    'After dwelling for 1.4s without interacting, typed 101 characters in the Add objective text area over 26s at 233 characters per minute. Focus left using a mouse.',
   );
 });
 
@@ -259,7 +291,7 @@ test('never exposes generated auto keys or repeated HTML control names', () => {
       element_key: 'auto.textarea.textarea.38',
       metadata: { duration_ms: 28800, key_press_count: 101, pointer_type: 'mouse' },
     }),
-    'After dwelling for 28.8s, typed 101 characters in an unlabelled text area using a keyboard. Focus left using a mouse.',
+    'Typed 101 characters in an unlabelled text area while it was focused for 28.8s. Focus left using a mouse.',
   );
 });
 

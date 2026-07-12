@@ -68,15 +68,25 @@ function trackKeyboard(event) {
   if (details && (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'z') window.flux('event', 'kbd', 'edit.undo', details);
   if (details && (event.metaKey || event.ctrlKey) && ['a', 'c', 'x', 'f'].includes(event.key.toLowerCase())) window.flux('event', 'kbd', 'act.shortcut', details);
   if (!state) return;
-  if (event.key.length === 1) state.keyPressCount += 1;
-  if (event.key === 'Backspace') state.backspaceCount += 1;
+  if (event.key !== 'Tab') recordFirstInteraction(state);
+  if (event.key.length === 1) {
+    state.keyPressCount += 1;
+    recordTyping(state);
+  }
+  if (event.key === 'Backspace' || event.key === 'Delete') {
+    state.backspaceCount += 1;
+    recordTyping(state);
+  }
 }
 
 function trackPaste(event) {
   const state = focusState.get(event.target);
   const details = state?.target ?? editableTarget(event.target);
   if (!details) return;
-  if (state) state.pasteCount += 1;
+  if (state) {
+    recordFirstInteraction(state);
+    state.pasteCount += 1;
+  }
   window.flux('event', 'input', 'edit.paste', details);
 }
 
@@ -88,10 +98,13 @@ function beginFocus(event) {
   const revisitCount = (fieldVisits.get(target.element_key) ?? 0) + 1;
   fieldVisits.set(target.element_key, revisitCount);
   if (revisitCount > 1) window.flux('event', 'input', 'field.revisit', { ...target, revisit_count: revisitCount });
-  const state = { startedAt: performance.now(), keyPressCount: 0, backspaceCount: 0, edits: 0, pasteCount: 0, revisitCount, target, onInput: null };
+  const state = { startedAt: performance.now(), firstInteractionAt: null, firstTypingAt: null, lastTypingAt: null, keyPressCount: 0, backspaceCount: 0, edits: 0, pasteCount: 0, revisitCount, target, onInput: null };
   state.onInput = () => {
     const current = focusState.get(event.target);
-    if (current === state) current.edits += 1;
+    if (current === state) {
+      recordFirstInteraction(current);
+      current.edits += 1;
+    }
   };
   focusState.set(event.target, state);
   event.target.addEventListener('input', state.onInput);
@@ -102,19 +115,34 @@ function endFocus(event) {
   if (!state) return;
   focusState.delete(event.target);
   event.target.removeEventListener('input', state.onInput);
+  const endedAt = performance.now();
+  const durationMs = Math.round(endedAt - state.startedAt);
+  const typingDurationMs = state.firstTypingAt === null ? 0 : Math.round(state.lastTypingAt - state.firstTypingAt);
   const changed = state.keyPressCount > 0 || state.edits > 0 || state.pasteCount > 0;
   window.flux('event', 'input', 'field.blur', {
     ...state.target,
-    duration_ms: Math.round(performance.now() - state.startedAt),
+    duration_ms: durationMs,
+    dwell_before_input_ms: Math.round((state.firstInteractionAt ?? endedAt) - state.startedAt),
+    typing_duration_ms: typingDurationMs,
     key_press_count: state.keyPressCount,
     backspace_count: state.backspaceCount,
     edit_count: state.edits,
     paste_count: state.pasteCount,
-    chars_per_minute: state.keyPressCount > 0 ? Math.min(2000, Math.round((state.keyPressCount * 60000) / Math.max(1, performance.now() - state.startedAt))) : 0,
+    chars_per_minute: typingDurationMs > 0 ? Math.min(2000, Math.round((state.keyPressCount * 60000) / typingDurationMs)) : 0,
     revisit_count: state.revisitCount,
     ...(changed ? { value_length: typeof event.target.value === 'string' ? event.target.value.length : 0 } : {}),
     pointer_type: lastPointerType
   });
+}
+
+function recordFirstInteraction(state) {
+  state.firstInteractionAt ??= performance.now();
+}
+
+function recordTyping(state) {
+  const now = performance.now();
+  state.firstTypingAt ??= now;
+  state.lastTypingAt = now;
 }
 
 function trackSubmit(event) {

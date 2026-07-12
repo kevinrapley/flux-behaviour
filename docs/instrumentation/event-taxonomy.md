@@ -57,7 +57,9 @@ Authentication inputs remain excluded from interaction capture even when they ha
 | --- | --- |
 | `value_length` | Text length only. Never the value. |
 | `edit_count` | Count of edits. |
-| `duration_ms` | Dwell or burst duration. |
+| `duration_ms` | Total focus or interaction duration. It is not treated as dwell when input occurred. |
+| `dwell_before_input_ms` | Time focused before the first keyboard, input or paste interaction. |
+| `typing_duration_ms` | Time from the first to the latest recorded typing key. |
 | `reason` | Controlled reason token for classifications such as rage click. |
 | `navigation_direction` | `forward`, `back`, `skip` or `unknown`. |
 | `pointer_type` | `mouse`, `pen`, `touch`, `keyboard` or `unknown`. |

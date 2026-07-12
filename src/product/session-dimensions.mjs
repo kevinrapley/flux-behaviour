@@ -69,17 +69,22 @@ export function scoreSessionDimensions(events = []) {
     const action = event.action;
 
     if (action === 'field.blur') {
-      const durationSeconds = count(details.duration_ms) / 1000;
       const keys = count(details.key_press_count);
       const corrections = count(details.backspace_count);
       const edits = count(details.edit_count);
-      const cpm = durationSeconds > 0 ? (keys * 60) / durationSeconds : 0;
+      const pastes = count(details.paste_count);
+      const changed = keys > 0 || edits > 0 || pastes > 0;
+      const dwellSeconds = Object.hasOwn(details, 'dwell_before_input_ms')
+        ? count(details.dwell_before_input_ms) / 1000
+        : changed ? 0 : count(details.duration_ms) / 1000;
+      const typingSeconds = count(details.typing_duration_ms) / 1000;
+      const cpm = typingSeconds > 0 ? (keys * 60) / typingSeconds : 0;
       previousFieldWasCompleted = keys > 0 || edits > 0;
       if (keys > 0) apply(scores, cpm > 150 ? { proficiency: 2, ict: 1, predictive: 0.5, engagement: 1 } : cpm > 60 ? { proficiency: 1, ict: 0.5, engagement: 0.75 } : { engagement: 0.5 });
       if (keys >= 5 && corrections / keys > 0.25) apply(scores, { proficiency: -1, frustration: 1.5, predictive: -0.5 });
-      if (keys > 0) apply(scores, durationSeconds >= 8 ? { engagement: 1, cogload: 0.5 } : { engagement: 0.5 });
-      else if (durationSeconds >= 8) apply(scores, { cogload: 2, efficiency: -1 });
-      else if (durationSeconds >= 4) apply(scores, { cogload: 1 });
+      if (keys > 0) apply(scores, typingSeconds >= 8 ? { engagement: 1, cogload: 0.5 } : { engagement: 0.5 });
+      if (dwellSeconds >= 8) apply(scores, { cogload: 2, efficiency: -1 });
+      else if (dwellSeconds >= 4) apply(scores, { cogload: 1 });
       continue;
     }
 

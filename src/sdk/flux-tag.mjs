@@ -8,6 +8,8 @@ const OPTIONAL_METADATA_KEYS = Object.freeze([
   'value_length',
   'edit_count',
   'duration_ms',
+  'dwell_before_input_ms',
+  'typing_duration_ms',
   'reason',
   'navigation_direction',
   'pointer_type',

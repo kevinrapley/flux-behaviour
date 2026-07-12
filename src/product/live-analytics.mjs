@@ -70,6 +70,16 @@ function metadata(value) {
   }
 }
 
+function fieldDwellMs(details) {
+  if (Number.isFinite(details.dwell_before_input_ms) && details.dwell_before_input_ms >= 0) {
+    return details.dwell_before_input_ms;
+  }
+  const changed = number(details.key_press_count) > 0
+    || number(details.edit_count) > 0
+    || number(details.paste_count) > 0;
+  return changed ? null : number(details.duration_ms);
+}
+
 export function buildLiveAnalytics(sessions = [], events = [], journeys = []) {
   const actions = new Map();
   const controls = new Map();
@@ -83,7 +93,8 @@ export function buildLiveAnalytics(sessions = [], events = [], journeys = []) {
     actions.set(event.action, (actions.get(event.action) ?? 0) + 1);
     controls.set(event.element_key, (controls.get(event.element_key) ?? 0) + 1);
     if (event.action === 'field.blur') {
-      fieldDwell.push(number(details.duration_ms));
+      const dwell = fieldDwellMs(details);
+      if (dwell !== null) fieldDwell.push(dwell);
       typedCharacters += number(details.key_press_count);
       corrections += number(details.backspace_count);
     }
