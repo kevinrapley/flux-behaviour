@@ -21,7 +21,7 @@ harms:
       - Users completing high-stakes forms
     likelihood: medium
     severity: critical
-    mitigation: Enforce consent first, create identifiers only after consent, clear them on revocation, exclude email, telephone, password and one-time-code inputs from auto-capture, support explicit sensitive-field markers, use controlled type-first semantic keys where supplied or neutral structural control keys otherwise, allow only content-free OTP requested/succeeded/failed milestones, preserve source-to-built tracker parity, collect metadata only, export no text values and run collector schema tests.
+    mitigation: Enforce consent first, create identifiers only after consent, clear them on revocation, exclude email, telephone, password and one-time-code inputs and sensitive/auth form submissions from auto-capture, support explicit sensitive markers, use controlled type-first semantic keys where supplied or neutral auto-prefixed structural keys otherwise, reject every optional metadata field on neutral OTP requested/succeeded/failed milestones, omit unchanged prefilled value lengths, preserve source-to-built tracker parity, collect metadata only, export no text values and run collector schema tests.
     residual_risk: high
     owner: security-lead
     escalation_route: Product owner and data protection lead

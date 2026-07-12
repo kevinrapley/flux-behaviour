@@ -1,5 +1,6 @@
 import { createValidationError, EVENT_VALIDATION_ERROR_CODES } from './event-validation-errors.mjs';
 import { fluxEventSchema } from './flux-event-schema.mjs';
+import { violatesAuthMilestonePrivacy } from './event-privacy-policy.mjs';
 
 export function validateEventRuntime(event, schema = fluxEventSchema) {
   const errors = [];
@@ -60,6 +61,14 @@ export function validateEventRuntime(event, schema = fluxEventSchema) {
     if (typeof value === 'number' && Object.hasOwn(rules, 'maximum') && value > rules.maximum) {
       errors.push(createValidationError(EVENT_VALIDATION_ERROR_CODES.ABOVE_MAXIMUM, field, 'Field is above the allowed maximum.'));
     }
+  }
+
+  if (violatesAuthMilestonePrivacy(event)) {
+    errors.push(createValidationError(
+      EVENT_VALIDATION_ERROR_CODES.PRIVACY_POLICY,
+      null,
+      'Authentication milestones must use the neutral event shape without optional metadata.'
+    ));
   }
 
   return {

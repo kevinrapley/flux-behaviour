@@ -108,3 +108,19 @@ test('event validation rejects non-object events', () => {
     message: 'Event must be a JSON object.'
   }]);
 });
+
+test('event validation rejects optional metadata on authentication milestones', () => {
+  const event = JSON.parse(readFileSync('fixtures/events/valid/focus-enter.json', 'utf8'));
+  Object.assign(event, {
+    event_class: 'trust',
+    action: 'auth.otp.succeeded',
+    role: 'service',
+    element_key: 'auth.otp',
+    value_length: 6,
+  });
+
+  const result = validateEvent(event, schema);
+
+  assert.equal(result.valid, false);
+  assert.ok(result.errors.some((error) => error.code === EVENT_VALIDATION_ERROR_CODES.PRIVACY_POLICY));
+});

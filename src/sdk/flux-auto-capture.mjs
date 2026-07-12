@@ -101,6 +101,7 @@ function endFocus(event) {
   if (!state) return;
   focusState.delete(event.target);
   event.target.removeEventListener('input', state.onInput);
+  const changed = state.keyPressCount > 0 || state.edits > 0 || state.pasteCount > 0;
   window.flux('event', 'input', 'field.blur', {
     ...state.target,
     duration_ms: Math.round(performance.now() - state.startedAt),
@@ -110,14 +111,14 @@ function endFocus(event) {
     paste_count: state.pasteCount,
     chars_per_minute: state.keyPressCount > 0 ? Math.min(2000, Math.round((state.keyPressCount * 60000) / Math.max(1, performance.now() - state.startedAt))) : 0,
     revisit_count: state.revisitCount,
-    value_length: typeof event.target.value === 'string' ? event.target.value.length : 0,
+    ...(changed ? { value_length: typeof event.target.value === 'string' ? event.target.value.length : 0 } : {}),
     pointer_type: lastPointerType
   });
 }
 
 function trackSubmit(event) {
   const target = event.target?.matches?.('form') ? event.target : null;
-  if (!target) return;
+  if (!target || isSensitiveForm(target)) return;
   window.flux('event', 'nav', 'flow.submit', { role: 'form', element_key: formKey(target) });
 }
 
@@ -160,6 +161,12 @@ function isExcludedSensitiveInput(element) {
   return ['password', 'email', 'tel'].includes(type) || ['one-time-code', 'current-password', 'new-password'].includes(autocomplete);
 }
 
+function isSensitiveForm(form) {
+  if (form?.dataset?.fluxSensitive === 'true') return true;
+  if (/^form\.auth(?:[.:-]|$)/.test(form?.dataset?.fluxKey ?? '')) return true;
+  return Boolean(form?.querySelector?.('[data-flux-sensitive="true"],input[type="password"],input[type="email"],input[type="tel"],input[autocomplete="one-time-code"],input[autocomplete="current-password"],input[autocomplete="new-password"]'));
+}
+
 function semanticRole(element, fallback) {
   const declared = element?.dataset?.fluxRole;
   return SAFE_ROLES.has(declared) ? declared : fallback;
@@ -193,5 +200,6 @@ function detailsKey(details) {
 function pageKey() {
   const declared = document.body?.dataset?.fluxPage;
   if (typeof declared === 'string' && /^[A-Za-z0-9._:-]{1,120}$/.test(declared)) return declared;
-  return location.pathname.replace(/[^A-Za-z0-9._:-]+/g, '-').replace(/^-|-$/g, '') || 'home';
+  const key = location.pathname.replace(/[^A-Za-z0-9._:-]+/g, '-').replace(/^-|-$/g, '');
+  return `auto.page.${key || 'home'}`;
 }

@@ -103,6 +103,22 @@ test('sdk tag drops contract-invalid events instead of sending', async () => {
   assert.equal(drops[0].reason, 'invalid_event');
 });
 
+test('sdk tag drops metadata-bearing authentication milestones', async () => {
+  const drops = [];
+  const { tag, sent } = createTag({ onDrop: (drop) => drops.push(drop) });
+  tag.grantConsent();
+
+  const result = await tag.track('trust', 'auth.otp.succeeded', {
+    role: 'service',
+    element_key: 'auth.otp',
+    value_length: 6,
+  });
+
+  assert.deepEqual(result, { sent: false, reason: 'invalid_event' });
+  assert.equal(sent.length, 0);
+  assert.equal(drops[0].reason, 'invalid_event');
+});
+
 test('sdk tag reports transport failure without throwing', async () => {
   const tag = createFluxTag({
     endpoint: 'https://collector.example.test/collect',

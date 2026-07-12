@@ -64,7 +64,46 @@ test('requires the neutral OTP service event shape before claiming an outcome', 
       element_key: 'field.auth.otp',
       metadata: { value_length: 6 },
     }),
-    'Type the One-time code field, then typing 6 characters.',
+    'Ignored an invalid authentication milestone.',
+  );
+});
+
+test('rejects metadata-bearing OTP milestones without narrating their metadata', () => {
+  assert.equal(
+    describeInteraction({
+      event_class: 'trust',
+      action: 'auth.otp.succeeded',
+      role: 'service',
+      element_key: 'auth.otp',
+      metadata: { value_length: 6 },
+    }),
+    'Ignored an invalid authentication milestone.',
+  );
+});
+
+test('does not treat an unchanged prefilled value as visitor input', () => {
+  assert.equal(
+    describeInteraction({
+      event_class: 'input',
+      action: 'field.blur',
+      role: 'field',
+      element_key: 'field.analysis.code-retrieval',
+      metadata: { duration_ms: 1400, key_press_count: 0, value_length: 12, edit_count: 0, paste_count: 0 },
+    }),
+    'Focused the Code retrieval field for 1.4s without changing it.',
+  );
+});
+
+test('keeps URL-derived page fallbacks generic', () => {
+  assert.equal(
+    describeInteraction({
+      event_class: 'nav',
+      action: 'page.loaded',
+      role: 'page',
+      element_key: 'auto.page.page.john-smith',
+      metadata: {},
+    }),
+    'Navigate on page “auto page page john smith”.',
   );
 });
 
@@ -96,7 +135,7 @@ test('describes an untouched field without claiming that the visitor typed', () 
         pointer_type: 'mouse',
       },
     }),
-    'Focused the Code retrieval field for 1.4s without entering text, using mouse.',
+    'Focused the Code retrieval field for 1.4s without changing it, using mouse.',
   );
 });
 

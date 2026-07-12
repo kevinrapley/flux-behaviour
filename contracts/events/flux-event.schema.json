@@ -18,6 +18,42 @@
     "element_key",
     "timestamp_ms"
   ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "action": {
+            "pattern": "^auth\\.otp\\.(requested|succeeded|failed)$"
+          }
+        },
+        "required": ["action"]
+      },
+      "then": {
+        "properties": {
+          "event_class": { "const": "trust" },
+          "role": { "const": "service" },
+          "element_key": { "const": "auth.otp" }
+        },
+        "not": {
+          "anyOf": [
+            { "required": ["value_length"] },
+            { "required": ["edit_count"] },
+            { "required": ["duration_ms"] },
+            { "required": ["reason"] },
+            { "required": ["navigation_direction"] },
+            { "required": ["pointer_type"] },
+            { "required": ["file_count"] },
+            { "required": ["file_size_bucket"] },
+            { "required": ["key_press_count"] },
+            { "required": ["backspace_count"] },
+            { "required": ["paste_count"] },
+            { "required": ["chars_per_minute"] },
+            { "required": ["revisit_count"] }
+          ]
+        }
+      }
+    }
+  ],
   "properties": {
     "schema_version": {
       "type": "string",

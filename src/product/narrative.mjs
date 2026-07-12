@@ -36,10 +36,6 @@ function semanticElement(elementKey) {
   return { label: sentenceCase(tokens.slice(labelStart).join(' ')), type };
 }
 
-function isNeutralAuthOutcome(event) {
-  return event.event_class === 'trust' && event.role === 'service' && event.element_key === 'auth.otp';
-}
-
 function actionMethod(event, metadata) {
   if (event.action === 'control.click') return metadata.pointer_type === 'touch' ? 'Touch' : 'Click';
   return ACTION_LABELS[event.event_class] ?? 'Interact';
@@ -48,8 +44,9 @@ function actionMethod(event, metadata) {
 export function describeInteraction(event) {
   const metadata = event.metadata ?? event;
   const semantic = semanticElement(event.element_key);
-  const outcome = isNeutralAuthOutcome(event) ? AUTH_OUTCOMES[event.action] : null;
+  const outcome = isNeutralAuthMilestone(event) ? AUTH_OUTCOMES[event.action] : null;
   if (outcome) return outcome;
+  if (isAuthOtpAction(event.action)) return 'Ignored an invalid authentication milestone.';
 
   if (event.action === 'page.loaded' && semantic?.type === 'page') {
     return `Opened the ${semantic.label} page.`;
@@ -61,10 +58,10 @@ export function describeInteraction(event) {
   const editCount = Number.isInteger(metadata.edit_count) ? metadata.edit_count : 0;
   const pasteCount = Number.isInteger(metadata.paste_count) ? metadata.paste_count : 0;
   const typed = keyPresses ?? valueLength;
-  const changed = (keyPresses ?? 0) > 0 || (valueLength ?? 0) > 0 || editCount > 0 || pasteCount > 0;
+  const changed = (keyPresses ?? 0) > 0 || editCount > 0 || pasteCount > 0;
   if (event.action === 'field.blur' && semantic?.type === 'field' && !changed) {
     const duration = dwell === null ? '' : ` for ${Math.round(dwell / 100) / 10}s`;
-    return `Focused the ${semantic.label} field${duration} without entering text${interactionDetails(metadata)}.`;
+    return `Focused the ${semantic.label} field${duration} without changing it${interactionDetails(metadata)}.`;
   }
   if (event.action === 'field.blur' && semantic?.type === 'field' && keyPresses !== null && keyPresses > 0) {
     const duration = dwell === null ? '' : ` after focusing it for ${Math.round(dwell / 100) / 10}s`;
@@ -103,3 +100,4 @@ export function describeInteraction(event) {
   if (metadata.pointer_type && metadata.pointer_type !== 'unknown') parts.push(`using ${metadata.pointer_type}`);
   return `${parts.join(', ')}.`;
 }
+import { isAuthOtpAction, isNeutralAuthMilestone } from '../events/event-privacy-policy.mjs';

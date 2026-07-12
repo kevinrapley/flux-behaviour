@@ -76,7 +76,7 @@ Authentication inputs remain excluded from interaction capture even when they ha
 | `drop` | Drag-drop metadata only. |
 | `file` | File chooser metadata only. |
 | `picker` | Date, time and picker interaction metadata. |
-| `trust` | Password reveal, confirmation, assurance and content-free authentication lifecycle interactions. |
+| `trust` | Password reveal, confirmation and assurance interactions; authentication lifecycle milestones require the neutral service shape and prohibit all optional metadata. |
 | `assist` | Help, error summary and guidance interactions. |
 | `a11y` | Skip link, keyboard-only and assistive interaction indicators. |
 | `env` | Network and device context metadata. |

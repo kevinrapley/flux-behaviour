@@ -9,7 +9,8 @@ export const EVENT_VALIDATION_ERROR_CODES = Object.freeze({
   TOO_SHORT: 'too_short',
   TOO_LONG: 'too_long',
   BELOW_MINIMUM: 'below_minimum',
-  ABOVE_MAXIMUM: 'above_maximum'
+  ABOVE_MAXIMUM: 'above_maximum',
+  PRIVACY_POLICY: 'privacy_policy'
 });
 
 export function createValidationError(code, field, message) {
