@@ -220,11 +220,40 @@ test('describes actual field input with purpose and privacy-safe typing detail',
         chars_per_minute: 269,
         paste_count: 1,
         revisit_count: 2,
+        writing_language: 'en-GB',
+        word_count: 20,
+        spelling_issue_count: 3,
+        grammar_issue_count: 2,
+        uppercase_letter_count: 30,
+        lowercase_letter_count: 70,
+        all_caps_word_count: 2,
         value_length: 52,
         pointer_type: 'mouse',
       },
     }),
-    'After dwelling for 2.2s without interacting, typed 56 characters in the Code retrieval field over 12.5s at 269 characters per minute. Used Backspace or Delete 4 times and pasted once. This was the second visit to the field. Focus left using a mouse.',
+    'After dwelling for 2.2s without interacting, typed 56 characters in the Code retrieval field over 12.5s at 269 characters per minute. Used Backspace or Delete 4 times and pasted once. This was the second visit to the field. An on-device UK English check found 3 possible spelling issues and 2 possible grammar issues across 20 words. 2 words were all capitals; 30% of letters were uppercase. Focus left using a mouse.',
+  );
+});
+
+test('reports a clear UK English result without claiming access to entered words', () => {
+  assert.equal(
+    describeInteraction({
+      event_class: 'input',
+      action: 'field.blur',
+      role: 'field',
+      element_key: 'field.project.objective-editor',
+      metadata: {
+        key_press_count: 48,
+        writing_language: 'en-GB',
+        word_count: 9,
+        spelling_issue_count: 0,
+        grammar_issue_count: 0,
+        uppercase_letter_count: 1,
+        lowercase_letter_count: 35,
+        all_caps_word_count: 0,
+      },
+    }),
+    'Typed 48 characters in the Objective editor field. An on-device UK English check found no spelling or grammar issues across 9 words. 3% of letters were uppercase.',
   );
 });
 

@@ -1,4 +1,14 @@
 gaps:
+  - id: GAP-012
+    title: UK English writing indicators need representative corpus, accessibility and fairness validation
+    severity: high
+    observed_state: Flux accepts bounded en-GB spelling, grammar and casing counts and applies only a small service-friction signal, but dictionary and grammar results can be false positives for names, specialist terms, dialect, disability, language background and valid writing styles.
+    expected_state: Representative consented corpus evidence quantifies false positives and confirms safe interpretation with privacy, accessibility and fairness reviewers.
+    risk: Analysts could mistake heuristic linguistic counts for a person's capability or disadvantage groups whose writing differs from the analyser assumptions.
+    action: Keep possible-issue wording and the no-person-level/no-automated-decision boundary; validate the signals before operational interpretation.
+    owner: governance-lead
+    status: open
+
   - id: GAP-001
     title: GitHub branch protection and security settings require API verification
     severity: high

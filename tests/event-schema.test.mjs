@@ -38,6 +38,21 @@ test('event schema declares metadata-only consented event contract', () => {
     minimum: 0,
     maximum: 3600000
   });
+  assert.deepEqual(schema.properties.writing_language, { type: 'string', const: 'en-GB' });
+  for (const field of [
+    'word_count',
+    'spelling_issue_count',
+    'grammar_issue_count',
+    'uppercase_letter_count',
+    'lowercase_letter_count',
+    'all_caps_word_count'
+  ]) {
+    assert.deepEqual(schema.properties[field], {
+      type: 'integer',
+      minimum: 0,
+      maximum: 10000
+    });
+  }
 });
 
 test('representative event satisfies required baseline fields', () => {

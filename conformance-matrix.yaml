@@ -1,4 +1,11 @@
 records:
+  - id: CONF-016
+    rule: UK English writing signals must be consented, on-device, atomic, bounded and non-reversible
+    expected_evidence: The event contract, SDK, collector presentation and tests accept only the complete en-GB count bundle and never entered text or words
+    actual_evidence: Contract v1.1.0 permits the optional seven-field en-GB bundle, runtime privacy validation rejects partial bundles, the SDK allow-lists only those counts, and narrative and scoring tests use possible-issue service-friction language.
+    status: present-with-release-blockers
+    owner: governance-lead
+
   - id: CONF-001
     rule: Security policy exists
     expected_evidence: SECURITY.md exists

@@ -41,6 +41,13 @@
             { "required": ["duration_ms"] },
             { "required": ["dwell_before_input_ms"] },
             { "required": ["typing_duration_ms"] },
+            { "required": ["writing_language"] },
+            { "required": ["word_count"] },
+            { "required": ["spelling_issue_count"] },
+            { "required": ["grammar_issue_count"] },
+            { "required": ["uppercase_letter_count"] },
+            { "required": ["lowercase_letter_count"] },
+            { "required": ["all_caps_word_count"] },
             { "required": ["reason"] },
             { "required": ["navigation_direction"] },
             { "required": ["pointer_type"] },
@@ -76,6 +83,13 @@
             { "required": ["duration_ms"] },
             { "required": ["dwell_before_input_ms"] },
             { "required": ["typing_duration_ms"] },
+            { "required": ["writing_language"] },
+            { "required": ["word_count"] },
+            { "required": ["spelling_issue_count"] },
+            { "required": ["grammar_issue_count"] },
+            { "required": ["uppercase_letter_count"] },
+            { "required": ["lowercase_letter_count"] },
+            { "required": ["all_caps_word_count"] },
             { "required": ["reason"] },
             { "required": ["navigation_direction"] },
             { "required": ["pointer_type"] },
@@ -111,6 +125,13 @@
             { "required": ["duration_ms"] },
             { "required": ["dwell_before_input_ms"] },
             { "required": ["typing_duration_ms"] },
+            { "required": ["writing_language"] },
+            { "required": ["word_count"] },
+            { "required": ["spelling_issue_count"] },
+            { "required": ["grammar_issue_count"] },
+            { "required": ["uppercase_letter_count"] },
+            { "required": ["lowercase_letter_count"] },
+            { "required": ["all_caps_word_count"] },
             { "required": ["reason"] },
             { "required": ["navigation_direction"] },
             { "required": ["pointer_type"] },
@@ -123,6 +144,21 @@
             { "required": ["revisit_count"] }
           ]
         }
+      }
+    },
+    {
+      "if": {
+        "required": ["writing_language"]
+      },
+      "then": {
+        "required": [
+          "word_count",
+          "spelling_issue_count",
+          "grammar_issue_count",
+          "uppercase_letter_count",
+          "lowercase_letter_count",
+          "all_caps_word_count"
+        ]
       }
     },
     {
@@ -242,6 +278,40 @@
       "type": "integer",
       "minimum": 0,
       "maximum": 3600000
+    },
+    "writing_language": {
+      "type": "string",
+      "const": "en-GB"
+    },
+    "word_count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 10000
+    },
+    "spelling_issue_count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 10000
+    },
+    "grammar_issue_count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 10000
+    },
+    "uppercase_letter_count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 10000
+    },
+    "lowercase_letter_count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 10000
+    },
+    "all_caps_word_count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 10000
     },
     "reason": {
       "type": "string",

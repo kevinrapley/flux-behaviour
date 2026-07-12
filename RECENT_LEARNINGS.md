@@ -4,6 +4,10 @@ Recent learnings created by the LLM agent in reverse-chronological order (most r
 
 ---
 
+## 2026-07-12 — Linguistic metadata still needs an explicit locale, consent and fairness boundary
+
+Possible spelling, grammar and casing counts can enrich a journey without transmitting words, but they remain content-derived signals. Publishers must analyse locally after consent, declare the `en-GB` baseline, send an atomic bounded count bundle and discard text before transport. Flux must use “possible issue” wording and prohibit literacy, intelligence, professionalism, personality, protected-characteristic and automated-decision interpretations; representative corpus, accessibility and fairness validation remains a release blocker.
+
 ## 2026-07-12 — Focus duration, pre-input dwell and active typing time are different signals
 
 A field's focus-to-blur duration cannot be described or scored as dwell after typing begins. Capture the pause before the first keyboard, input or paste interaction separately, calculate typing rate only across the first-to-latest typing interval, and describe legacy typed events as total focus time when genuine dwell is unavailable.

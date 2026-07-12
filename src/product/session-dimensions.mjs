@@ -85,6 +85,11 @@ export function scoreSessionDimensions(events = []) {
       if (keys > 0) apply(scores, typingSeconds >= 8 ? { engagement: 1, cogload: 0.5 } : { engagement: 0.5 });
       if (dwellSeconds >= 8) apply(scores, { cogload: 2, efficiency: -1 });
       else if (dwellSeconds >= 4) apply(scores, { cogload: 1 });
+      const wordCount = count(details.word_count);
+      const writingIssues = count(details.spelling_issue_count) + count(details.grammar_issue_count);
+      if (details.writing_language === 'en-GB' && wordCount >= 5 && writingIssues / wordCount >= 0.2) {
+        apply(scores, { cogload: 1.5, frustration: 0.75 });
+      }
       continue;
     }
 

@@ -11,8 +11,8 @@ Its purpose is to improve services, not to judge people. Behavioural signals mus
 ## Principles
 
 1. Consent first. No telemetry may be captured before explicit opt-in.
-2. Minimal data. The product must process interaction metadata only.
-3. No content capture. Typed values, free text, passwords and direct identifiers are out of scope.
+2. Minimal data. Flux collection, storage and scoring must process interaction metadata only.
+3. No content capture. A publisher may inspect ordinary text locally after consent to derive bounded linguistic counts, but typed values, words, suggestions, passwords and direct identifiers must never enter Flux transport or storage.
 4. Explainability. Each alert, dimension or interpretation must be traceable to a rule, threshold, model version or reviewer note.
 5. Inclusivity. Signals must support both barrier and strength interpretations.
 6. Human oversight. High-impact interpretations require human review before product or governance decisions.

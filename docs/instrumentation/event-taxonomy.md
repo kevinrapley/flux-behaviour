@@ -60,6 +60,13 @@ Authentication inputs remain excluded from interaction capture even when they ha
 | `duration_ms` | Total focus or interaction duration. It is not treated as dwell when input occurred. |
 | `dwell_before_input_ms` | Time focused before the first keyboard, input or paste interaction. |
 | `typing_duration_ms` | Time from the first to the latest recorded typing key. |
+| `writing_language` | Declared linguistic-analysis baseline. Currently fixed to UK English (`en-GB`). |
+| `word_count` | Bounded word count produced locally. Never the words. |
+| `spelling_issue_count` | Count of possible UK English spelling issues from on-device analysis. |
+| `grammar_issue_count` | Count of possible UK English grammar issues from on-device analysis. |
+| `uppercase_letter_count` | Bounded count of uppercase letters. |
+| `lowercase_letter_count` | Bounded count of lowercase letters. |
+| `all_caps_word_count` | Bounded count of words written in all capitals. |
 | `reason` | Controlled reason token for classifications such as rage click. |
 | `navigation_direction` | `forward`, `back`, `skip` or `unknown`. |
 | `pointer_type` | `mouse`, `pen`, `touch`, `keyboard` or `unknown`. |
@@ -86,6 +93,8 @@ Authentication inputs remain excluded from interaction capture even when they ha
 ## Derived signals
 
 Derived signals must be created from metadata only.
+
+The writing fields form one atomic bundle: if `writing_language` or any writing count is present, all seven fields must be present. Publishers must analyse the entered value locally after consent and discard it before transport. Events must not contain the value, individual words, possible misspellings, grammar fragments or suggestions. Sensitive and authentication fields remain out of scope. Counts describe possible service friction and must not be used to infer literacy, intelligence, professionalism, personality or protected characteristics.
 
 Examples include:
 

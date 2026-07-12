@@ -32,7 +32,9 @@ export const fluxEventSchema = Object.freeze({
       not: {
         anyOf: [
           'value_length', 'edit_count', 'duration_ms', 'dwell_before_input_ms',
-          'typing_duration_ms', 'reason', 'navigation_direction',
+          'typing_duration_ms', 'writing_language', 'word_count', 'spelling_issue_count',
+          'grammar_issue_count', 'uppercase_letter_count', 'lowercase_letter_count',
+          'all_caps_word_count', 'reason', 'navigation_direction',
           'pointer_type', 'file_count', 'file_size_bucket', 'key_press_count',
           'backspace_count', 'paste_count', 'chars_per_minute', 'revisit_count'
         ].map((field) => ({ required: [field] }))
@@ -53,7 +55,9 @@ export const fluxEventSchema = Object.freeze({
       not: {
         anyOf: [
           'value_length', 'edit_count', 'duration_ms', 'dwell_before_input_ms',
-          'typing_duration_ms', 'reason', 'navigation_direction',
+          'typing_duration_ms', 'writing_language', 'word_count', 'spelling_issue_count',
+          'grammar_issue_count', 'uppercase_letter_count', 'lowercase_letter_count',
+          'all_caps_word_count', 'reason', 'navigation_direction',
           'pointer_type', 'file_count', 'file_size_bucket', 'key_press_count',
           'backspace_count', 'paste_count', 'chars_per_minute', 'revisit_count'
         ].map((field) => ({ required: [field] }))
@@ -74,11 +78,21 @@ export const fluxEventSchema = Object.freeze({
       not: {
         anyOf: [
           'value_length', 'edit_count', 'duration_ms', 'dwell_before_input_ms',
-          'typing_duration_ms', 'reason', 'navigation_direction',
+          'typing_duration_ms', 'writing_language', 'word_count', 'spelling_issue_count',
+          'grammar_issue_count', 'uppercase_letter_count', 'lowercase_letter_count',
+          'all_caps_word_count', 'reason', 'navigation_direction',
           'pointer_type', 'file_count', 'file_size_bucket', 'key_press_count',
           'backspace_count', 'paste_count', 'chars_per_minute', 'revisit_count'
         ].map((field) => ({ required: [field] }))
       }
+    }
+  }, {
+    if: { required: ['writing_language'] },
+    then: {
+      required: [
+        'word_count', 'spelling_issue_count', 'grammar_issue_count',
+        'uppercase_letter_count', 'lowercase_letter_count', 'all_caps_word_count'
+      ]
     }
   }, {
     if: {
@@ -172,6 +186,40 @@ export const fluxEventSchema = Object.freeze({
       type: 'integer',
       minimum: 0,
       maximum: 3600000
+    },
+    writing_language: {
+      type: 'string',
+      const: 'en-GB'
+    },
+    word_count: {
+      type: 'integer',
+      minimum: 0,
+      maximum: 10000
+    },
+    spelling_issue_count: {
+      type: 'integer',
+      minimum: 0,
+      maximum: 10000
+    },
+    grammar_issue_count: {
+      type: 'integer',
+      minimum: 0,
+      maximum: 10000
+    },
+    uppercase_letter_count: {
+      type: 'integer',
+      minimum: 0,
+      maximum: 10000
+    },
+    lowercase_letter_count: {
+      type: 'integer',
+      minimum: 0,
+      maximum: 10000
+    },
+    all_caps_word_count: {
+      type: 'integer',
+      minimum: 0,
+      maximum: 10000
     },
     reason: {
       type: 'string',
