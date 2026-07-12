@@ -25,7 +25,7 @@ test('describes semantic controls using their purpose and control type', () => {
       element_key: 'tab.journal.codes',
       metadata: { pointer_type: 'mouse' },
     }),
-    'Click the Codes tab, using mouse.',
+    'Clicked the Codes tab using a mouse.',
   );
 });
 
@@ -51,7 +51,7 @@ test('keeps positional fallback form keys generic', () => {
       element_key: 'form.page.projects.1',
       metadata: {},
     }),
-    'Navigate on form “form page projects 1”.',
+    'Submitted an unlabelled form.',
   );
 });
 
@@ -103,7 +103,7 @@ test('keeps URL-derived page fallbacks generic', () => {
       element_key: 'auto.page.page.john-smith',
       metadata: {},
     }),
-    'Navigate on page “auto page page john smith”.',
+    'Opened an unlabelled page.',
   );
 });
 
@@ -116,7 +116,7 @@ test('keeps legacy hyphenated page keys generic', () => {
       element_key: 'page-john-smith',
       metadata: {},
     }),
-    'Navigate on page “page john smith”.',
+    'Interacted with page “page john smith”.',
   );
 });
 
@@ -181,7 +181,7 @@ test('describes keyboard tab movement from the control where it began', () => {
       element_key: 'link.navigation.projects',
       metadata: { interaction_type: 'tab', pointer_type: 'keyboard' },
     }),
-    'Tabbed from the Projects link, using keyboard.',
+    'Tabbed from the Projects link using a keyboard.',
   );
 });
 
@@ -200,7 +200,7 @@ test('describes an untouched field without claiming that the visitor typed', () 
         pointer_type: 'mouse',
       },
     }),
-    'Focused the Code retrieval field for 1.4s without changing it, using mouse.',
+    'Focused the Code retrieval field for 1.4s without changing it. Focus left using a mouse.',
   );
 });
 
@@ -213,7 +213,66 @@ test('describes actual field input with purpose, dwell and character count', () 
       element_key: 'field.analysis.code-retrieval',
       metadata: { duration_ms: 1400, key_press_count: 8, value_length: 7, pointer_type: 'mouse' },
     }),
-    'Typed 8 characters in the Code retrieval field after focusing it for 1.4s, using mouse.',
+    'After dwelling for 1.4s, typed 8 characters in the Code retrieval field using a keyboard. Focus left using a mouse.',
+  );
+});
+
+test('describes automatic focus and the Add Objective text area without implementation identifiers', () => {
+  assert.equal(
+    describeInteraction({
+      event_class: 'focus',
+      action: 'field.focus.auto',
+      role: 'field',
+      element_key: 'field.project.add-objective-textarea',
+      metadata: {},
+    }),
+    'Automatically focused the Add objective text area.',
+  );
+  assert.equal(
+    describeInteraction({
+      event_class: 'input',
+      action: 'field.blur',
+      role: 'field',
+      element_key: 'field.project.add-objective-textarea',
+      metadata: { duration_ms: 28800, key_press_count: 101, value_length: 101, pointer_type: 'mouse' },
+    }),
+    'After dwelling for 28.8s, typed 101 characters in the Add objective text area using a keyboard. Focus left using a mouse.',
+  );
+});
+
+test('never exposes generated auto keys or repeated HTML control names', () => {
+  assert.equal(
+    describeInteraction({
+      event_class: 'nav',
+      action: 'control.click',
+      role: 'control',
+      element_key: 'auto.button.button.37',
+      metadata: { pointer_type: 'mouse' },
+    }),
+    'Clicked an unlabelled button using a mouse.',
+  );
+  assert.equal(
+    describeInteraction({
+      event_class: 'input',
+      action: 'field.blur',
+      role: 'field',
+      element_key: 'auto.textarea.textarea.38',
+      metadata: { duration_ms: 28800, key_press_count: 101, pointer_type: 'mouse' },
+    }),
+    'After dwelling for 28.8s, typed 101 characters in an unlabelled text area using a keyboard. Focus left using a mouse.',
+  );
+});
+
+test('preserves help-seeking meaning for generated disclosure keys', () => {
+  assert.equal(
+    describeInteraction({
+      event_class: 'assist',
+      action: 'assist.help',
+      role: 'control',
+      element_key: 'auto.details.12',
+      metadata: {},
+    }),
+    'Opened help from an unlabelled disclosure.',
   );
 });
 

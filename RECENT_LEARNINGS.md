@@ -4,6 +4,10 @@ Recent learnings created by the LLM agent in reverse-chronological order (most r
 
 ---
 
+## 2026-07-12 — Generated identifiers are diagnostic data, not journey language
+
+An `auto.*` key can preserve event structure, but its DOM tag and ordinal cannot establish service purpose. Journey presentation should translate controlled semantic keys, replace generated fallbacks with an explicitly unlabelled control type, and rebuild prose from stored event metadata at read time so narrative improvements also apply to historical rows without rewriting evidence.
+
 ## 2026-07-12 — Semantic telemetry needs controlled service meaning
 
 A useful journey narrative needs controlled service meaning, not DOM position, URL segments or copied interface text. Type-first `data-flux-*` keys can name a page, tab, button, field or form without reading content, and page meaning must require the literal `page.` namespace so legacy hyphenated keys remain generic. An allow-listed lifecycle event can report that OTP verification succeeded without observing the code, its length, the email or account identity, but it must match the neutral trust/service/auth shape and carry no optional metadata. Narrative generation must distinguish untouched prefilled fields, keyboard entry, paste and autofill using edit evidence; an existing value length alone is neither visitor input nor safe journey evidence. These rules belong at manual SDK and collector boundaries too: auth scopes require case-insensitive normalisation, the reserved `auth.otp` key cannot be reused, sensitive form state must propagate to descendants, and an auth-scoped descendant must make its form sensitive.
