@@ -263,6 +263,19 @@ test('never exposes generated auto keys or repeated HTML control names', () => {
   );
 });
 
+test('preserves help-seeking meaning for generated disclosure keys', () => {
+  assert.equal(
+    describeInteraction({
+      event_class: 'assist',
+      action: 'assist.help',
+      role: 'control',
+      element_key: 'auto.details.12',
+      metadata: {},
+    }),
+    'Opened help from an unlabelled disclosure.',
+  );
+});
+
 test('describes form submissions and validation errors as journey events', () => {
   assert.equal(
     describeInteraction({ action: 'flow.submit', role: 'form', element_key: 'form.analysis.code-retrieval', metadata: {} }),

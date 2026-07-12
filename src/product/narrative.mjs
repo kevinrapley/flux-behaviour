@@ -48,6 +48,7 @@ function fallbackElement(event) {
   if (/^auto\.button\./.test(key)) return { phrase: 'an unlabelled button', noun: 'button', type: 'button' };
   if (/^auto\.textarea\./.test(key)) return { phrase: 'an unlabelled text area', noun: 'text area', type: 'field' };
   if (/^auto\.(?:input|select)\./.test(key)) return { phrase: 'an unlabelled field', noun: 'field', type: 'field' };
+  if (/^auto\.details\./.test(key)) return { phrase: 'an unlabelled disclosure', noun: 'disclosure', type: 'control' };
   if (/^form\..*\.\d+$/.test(key)) return { phrase: 'an unlabelled form', noun: 'form', type: 'form' };
   if (key.startsWith('auto.')) return { phrase: `an unlabelled ${event.role || 'element'}`, noun: event.role || 'element', type: event.role || 'element' };
   return null;
@@ -84,6 +85,10 @@ export function describeInteraction(event) {
 
   if (event.action === 'page.loaded' && element?.type === 'page') {
     return element.semantic ? `Opened ${element.phrase}.` : 'Opened an unlabelled page.';
+  }
+
+  if (event.action === 'assist.help') {
+    return `Opened help from ${element?.phrase ?? 'an unlabelled disclosure'}.`;
   }
 
   if (event.action === 'field.focus.auto' && element?.type === 'field') {

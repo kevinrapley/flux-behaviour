@@ -35,13 +35,15 @@ evidence_records:
         reason: DOM tags and ordinals cannot establish service purpose.
       - decision: Describe key presses as keyboard input and pointer metadata on blur as the focus-exit method.
         reason: A mouse can end focus but cannot type characters.
+      - decision: Filter stored metadata to narrative-safe optional fields before reconstructing an event shape.
+        reason: Database and base-event fields must not invalidate a legitimate neutral authentication milestone during presentation.
     commands_run:
       - command: node --test tests/narrative.test.mjs tests/journey-presentation.test.mjs tests/product-router-safety.test.mjs
         result: pass
         evidence: 24 focused tests passed.
       - command: npm test
         result: pass
-        evidence: All 160 tests passed with the clean worktree linked to the repository dependency installation.
+        evidence: All 162 tests passed, including Codex review regressions for stored OTP outcomes and generated help disclosures.
       - command: npm run validate
         result: pass
         evidence: Repository governance file check passed for 19 files.

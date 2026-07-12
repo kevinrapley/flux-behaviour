@@ -34,3 +34,27 @@ test('handles malformed stored metadata without exposing a generated key', () =>
 
   assert.equal(event.narrative, 'Clicked an unlabelled link.');
 });
+
+test('preserves a stored neutral authentication milestone outcome', () => {
+  const event = presentEvent({
+    session_id: 'session-1234',
+    event_class: 'trust',
+    action: 'auth.otp.succeeded',
+    role: 'service',
+    element_key: 'auth.otp',
+    metadata_json: JSON.stringify({
+      schema_version: '1.1.0',
+      consent: 'yes',
+      origin: 'sdk',
+      event_class: 'trust',
+      action: 'auth.otp.succeeded',
+      role: 'service',
+      element_key: 'auth.otp',
+      timestamp_ms: 1234,
+    }),
+    narrative: 'Successfully verified the one-time code and signed in.',
+    occurred_at_ms: 1234,
+  });
+
+  assert.equal(event.narrative, 'Successfully verified the one-time code and signed in.');
+});

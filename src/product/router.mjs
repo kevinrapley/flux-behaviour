@@ -191,11 +191,30 @@ export function presentEvent(event) {
   let parsedMetadata = {};
   try {
     const parsed = JSON.parse(event.metadata_json ?? '{}');
-    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) parsedMetadata = parsed;
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      const narrativeMetadataKeys = new Set([
+        'duration_ms',
+        'key_press_count',
+        'value_length',
+        'edit_count',
+        'paste_count',
+        'pointer_type',
+      ]);
+      parsedMetadata = Object.fromEntries(
+        Object.entries(parsed).filter(([key]) => narrativeMetadataKeys.has(key)),
+      );
+    }
   } catch {
     parsedMetadata = {};
   }
-  return { ...event, narrative: describeInteraction({ ...event, metadata: parsedMetadata }) };
+  const narrative = describeInteraction({
+    event_class: event.event_class,
+    action: event.action,
+    role: event.role,
+    element_key: event.element_key,
+    metadata: parsedMetadata,
+  });
+  return { ...event, narrative };
 }
 
 export function groupJourneys(sessions = [], events = []) {
