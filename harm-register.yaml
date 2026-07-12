@@ -76,7 +76,7 @@ harms:
       - Keyboard and assistive-technology users
     likelihood: low
     severity: medium
-    mitigation: Separate focus origin, pre-input dwell, active typing time, keyboard entry and focus-exit method; calculate standard gross WPM from current printable keystrokes rather than whole-field word counts; collapse Tab runs to their final destination; describe Enter activation as keyboard navigation; never relabel total focus as dwell after input; translate only controlled semantic keys; and regression-test historical presentation.
+    mitigation: Separate focus origin, pre-input dwell, active typing time, keyboard entry and focus-exit method; calculate standard gross WPM from current printable non-shortcut keystrokes rather than whole-field word counts; collapse Tab runs to their final destination; describe Enter activation as keyboard navigation; never relabel total focus as dwell after input; translate only controlled semantic keys; and regression-test historical presentation.
     residual_risk: low
     owner: product-lead
     escalation_route: Product owner and accessibility lead

@@ -27,6 +27,7 @@ evidence_records:
       - harm-register.yaml
     promotion_decisions:
       - Calculate standard gross WPM from printable keystrokes divided by five over active typing time.
+      - Exclude Ctrl, Cmd and Alt shortcut combinations from the printable-key counter while retaining their separate shortcut events.
       - Retain the whole-field word count only for separately labelled on-device writing analysis.
     commands_run:
       - command: node --test --test-name-pattern="prefilled words" tests/auto-capture-runtime.test.mjs
@@ -54,6 +55,20 @@ evidence_records:
         evidence: Secret pattern sanity scan passed.
       - command: git diff --check
         status: passed
+      - command: node --test --test-name-pattern="modifier shortcuts" tests/auto-capture-runtime.test.mjs
+        status: failed-as-expected-before-review-fix
+        evidence: Ctrl+A and Ctrl+C incorrectly produced key_press_count 2.
+      - command: node --test --test-name-pattern="modifier shortcuts" tests/auto-capture-runtime.test.mjs
+        status: passed-after-review-fix
+      - command: npm test
+        status: passed-after-review-fix
+        evidence: 197 tests passed.
+      - command: npm run validate
+        status: passed-after-review-fix
+      - command: npm run security:secrets
+        status: passed-after-review-fix
+      - command: git diff --check
+        status: passed-after-review-fix
     recent_learnings:
       - Whole-field word count cannot be combined with a current edit interval to infer typing speed.
     security:

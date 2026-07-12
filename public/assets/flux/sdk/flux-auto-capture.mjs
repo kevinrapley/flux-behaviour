@@ -98,7 +98,7 @@ function trackKeyboard(event) {
   if (details && (event.metaKey || event.ctrlKey) && ['a', 'c', 'x', 'f'].includes(event.key.toLowerCase())) window.flux('event', 'kbd', 'act.shortcut', details);
   if (!state) return;
   if (event.key !== 'Tab') recordFirstInteraction(state);
-  if (event.key.length === 1) {
+  if (event.key.length === 1 && !event.metaKey && !event.ctrlKey && !event.altKey) {
     state.keyPressCount += 1;
     recordTyping(state);
   }

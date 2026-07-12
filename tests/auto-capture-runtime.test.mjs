@@ -181,6 +181,30 @@ test('calculates typing speed from current keystrokes rather than prefilled word
   assert.equal(analysis.words_per_minute, 60);
 });
 
+test('does not count modifier shortcuts as printable typing', async () => {
+  let analysisCalls = 0;
+  const { clock, context, events } = harness(async () => {
+    analysisCalls += 1;
+    return {};
+  });
+  const textarea = field('prefilled content remains local');
+  context.textarea = textarea;
+
+  vm.runInContext('beginFocus({ target: textarea });', context);
+  clock.now = 1_000;
+  vm.runInContext("trackKeyboard({ target: textarea, key: 'a', metaKey: false, ctrlKey: true, altKey: false });", context);
+  clock.now = 1_300;
+  vm.runInContext("trackKeyboard({ target: textarea, key: 'c', metaKey: false, ctrlKey: true, altKey: false });", context);
+  vm.runInContext('endFocus({ target: textarea });', context);
+  await new Promise((resolve) => setImmediate(resolve));
+
+  const blur = events.find((args) => args[2] === 'field.blur')?.[3];
+  assert.equal(blur.key_press_count, 0);
+  assert.equal(events.filter((args) => args[2] === 'act.shortcut').length, 2);
+  assert.equal(events.some((args) => args[2] === 'field.writing-analysis'), false);
+  assert.equal(analysisCalls, 0);
+});
+
 test('emits blur immediately before asynchronous writing analysis completes', async () => {
   let finishAnalysis;
   const { context, events } = harness(() => new Promise((resolve) => { finishAnalysis = resolve; }));
