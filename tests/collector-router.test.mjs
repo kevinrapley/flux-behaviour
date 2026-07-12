@@ -108,6 +108,13 @@ test('collector rejects case-variant authentication controls', async () => {
   assert.equal(response.status, 400);
 });
 
+test('collector rejects nested authentication scopes', async () => {
+  const event = JSON.parse(readFileSync('fixtures/events/valid/focus-enter.json', 'utf8'));
+  Object.assign(event, { event_class: 'nav', action: 'control.click', role: 'control', element_key: 'control.navigation.Auth.verify' });
+  const response = await handleCollectorRequest(request('/collect', { method: 'POST', body: JSON.stringify(event) }));
+  assert.equal(response.status, 400);
+});
+
 test('collector reserves auth.otp for neutral milestones', async () => {
   const event = JSON.parse(readFileSync('fixtures/events/valid/focus-enter.json', 'utf8'));
   Object.assign(event, { event_class: 'nav', action: 'control.click', role: 'control', element_key: 'auth.otp' });

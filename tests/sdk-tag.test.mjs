@@ -159,6 +159,19 @@ test('sdk tag drops case-variant authentication control interactions', async () 
   assert.equal(sent.length, 0);
 });
 
+test('sdk tag drops nested authentication scopes', async () => {
+  const { tag, sent } = createTag();
+  tag.grantConsent();
+
+  const result = await tag.track('nav', 'control.click', {
+    role: 'control',
+    element_key: 'control.navigation.Auth.verify',
+  });
+
+  assert.deepEqual(result, { sent: false, reason: 'invalid_event' });
+  assert.equal(sent.length, 0);
+});
+
 test('sdk tag reserves auth.otp for neutral milestones', async () => {
   const { tag, sent } = createTag();
   tag.grantConsent();

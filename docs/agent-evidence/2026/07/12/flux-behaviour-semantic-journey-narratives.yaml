@@ -71,13 +71,15 @@ evidence_records:
         reason: Button, link and tab capture can reveal authentication interaction just as fields and forms can.
       - decision: Normalise auth scopes case-insensitively, propagate form sensitivity to descendants and reserve auth.otp exclusively.
         reason: Marker inheritance, key casing and reserved-key misuse must not create alternate paths around authentication privacy controls.
+      - decision: Detect auth tokens at any semantic-key segment and propagate every sensitive ancestor marker.
+        reason: Nested namespaces and non-form sensitive containers must not weaken the same privacy boundary.
     commands_run:
       - command: npm test
         result: pass
-        evidence: All 152 tests passed, including manual SDK and collector privacy-policy enforcement plus narrative regressions for prefilled values, legacy page keys, sensitive form ancestry, auth descendants, case variants, reserved-key misuse and metadata-free authentication outcomes.
+        evidence: All 156 tests passed, including manual SDK and collector privacy-policy enforcement plus narrative regressions for prefilled values, legacy page keys, sensitive ancestry, nested auth scopes, case variants, reserved-key misuse and metadata-free authentication outcomes.
       - command: npx --yes node@20 --test tests/*.test.mjs
         result: pass
-        evidence: All 152 tests passed under Node 20.20.2, the repository's declared runtime baseline.
+        evidence: All 156 tests passed under Node 20.20.2, the repository's declared runtime baseline.
       - command: npm run validate
         result: pass
         evidence: Repository governance file check passed for 19 files.

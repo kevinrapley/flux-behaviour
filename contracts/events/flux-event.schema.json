@@ -56,11 +56,35 @@
     {
       "if": {
         "properties": {
-          "element_key": { "pattern": "^(button|field|form|link|tab)\\.[Aa][Uu][Tt][Hh](?:[.:-]|$)" }
+          "element_key": { "pattern": "(^|[.:-])[Aa][Uu][Tt][Hh]([.:-]|$)" }
         },
         "required": ["element_key"]
       },
-      "then": false
+      "then": {
+        "properties": {
+          "event_class": { "const": "trust" },
+          "action": { "pattern": "^auth\\.otp\\.(requested|succeeded|failed)$" },
+          "role": { "const": "service" },
+          "element_key": { "const": "auth.otp" }
+        },
+        "not": {
+          "anyOf": [
+            { "required": ["value_length"] },
+            { "required": ["edit_count"] },
+            { "required": ["duration_ms"] },
+            { "required": ["reason"] },
+            { "required": ["navigation_direction"] },
+            { "required": ["pointer_type"] },
+            { "required": ["file_count"] },
+            { "required": ["file_size_bucket"] },
+            { "required": ["key_press_count"] },
+            { "required": ["backspace_count"] },
+            { "required": ["paste_count"] },
+            { "required": ["chars_per_minute"] },
+            { "required": ["revisit_count"] }
+          ]
+        }
+      }
     },
     {
       "if": {

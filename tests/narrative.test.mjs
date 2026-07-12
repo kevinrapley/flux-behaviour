@@ -159,6 +159,19 @@ test('defensively ignores misuse of the reserved authentication key', () => {
   );
 });
 
+test('defensively ignores nested authentication scopes', () => {
+  assert.equal(
+    describeInteraction({
+      event_class: 'nav',
+      action: 'control.click',
+      role: 'control',
+      element_key: 'control.navigation.Auth.verify',
+      metadata: {},
+    }),
+    'Ignored a sensitive authentication interaction.',
+  );
+});
+
 test('describes keyboard tab movement from the control where it began', () => {
   assert.equal(
     describeInteraction({

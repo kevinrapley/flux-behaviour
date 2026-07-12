@@ -6,7 +6,7 @@ const focusState = new WeakMap();
 const fieldVisits = new Map();
 const recentClicks = [];
 const SAFE_ROLES = new Set(['field', 'form', 'control', 'page', 'service', 'environment']);
-const AUTH_SCOPED_KEY = /^(button|field|form|link|tab)\.auth(?:[.:-]|$)/i;
+const AUTH_SCOPED_KEY = /(^|[.:-])auth(?=[.:-]|$)/i;
 let lastPointerType = 'unknown';
 
 if (localStorage.getItem(CONSENT_KEY) === 'yes') {
@@ -155,6 +155,7 @@ function editableTarget(element) {
 }
 
 function isExcludedSensitiveInput(element) {
+  if (element?.closest?.('[data-flux-sensitive="true"]')) return true;
   if (element?.dataset?.fluxSensitive === 'true') return true;
   if (isSensitiveKey(element?.dataset?.fluxKey)) return true;
   const ownerForm = element?.closest?.('form');

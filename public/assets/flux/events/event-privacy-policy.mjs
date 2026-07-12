@@ -23,7 +23,8 @@ export function isAuthFormSubmit(event) {
 }
 
 export function isAuthScopedInteraction(event) {
-  return /^(button|field|form|link|tab)\.auth(?:[.:-]|$)/i.test(event?.element_key ?? '');
+  const key = String(event?.element_key ?? '').toLowerCase();
+  return key !== 'auth.otp' && /(^|[.:-])auth(?=[.:-]|$)/.test(key);
 }
 
 export function isReservedAuthKeyMisuse(event) {
