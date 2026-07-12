@@ -25,6 +25,10 @@ agent_evidence_registry:
     root_file: Keep this file as the registry and canonical format reference only.
     naming: Use the task_id as the filename, with .yaml extension.
   entries:
+    - task_id: flux-behaviour-accurate-prefilled-wpm
+      date: 2026-07-12
+      path: docs/agent-evidence/2026/07/12/flux-behaviour-accurate-prefilled-wpm.yaml
+      status: externalised
     - task_id: flux-behaviour-hosted-capture-ownership
       date: 2026-07-12
       path: docs/agent-evidence/2026/07/12/flux-behaviour-hosted-capture-ownership.yaml

@@ -45,7 +45,7 @@ Contract version 1.2.0 adds richer interaction metadata and autocomplete milesto
 
 - `key_press_count`, `backspace_count` — typing volume and corrections; key identity is never recorded, only "printable", "backspace/delete" or "other"
 - `dwell_before_input_ms` — the inactive interval between focus and the first keyboard, input or paste interaction
-- `typing_duration_ms`, `words_per_minute` — active typing time and words per minute derived from the on-device word count and the first-to-latest typing interval, excluding pre-input dwell
+- `typing_duration_ms`, `words_per_minute` — active typing time and standard gross words per minute, calculated from printable non-shortcut keystrokes divided by five over the first-to-latest typing interval; this excludes pre-input dwell, modifier shortcuts and words already present in an edited field
 - `paste_count` — clipboard use as a count, never clipboard content
 - `revisit_count` — how many times a field was refocused
 - `pointer_type` — whether focus arrived by mouse, touch, pen or keyboard

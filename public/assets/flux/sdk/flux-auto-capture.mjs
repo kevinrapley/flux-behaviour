@@ -98,7 +98,7 @@ function trackKeyboard(event) {
   if (details && (event.metaKey || event.ctrlKey) && ['a', 'c', 'x', 'f'].includes(event.key.toLowerCase())) window.flux('event', 'kbd', 'act.shortcut', details);
   if (!state) return;
   if (event.key !== 'Tab') recordFirstInteraction(state);
-  if (event.key.length === 1) {
+  if (event.key.length === 1 && !event.metaKey && !event.ctrlKey && !event.altKey) {
     state.keyPressCount += 1;
     recordTyping(state);
   }
@@ -247,8 +247,8 @@ function endFocus(event) {
   void Promise.resolve(analyser(localValue))
     .then((signals) => {
       const writingSignals = safeWritingSignals(signals);
-      const wordsPerMinute = typingDurationMs > 0 && Number.isInteger(writingSignals.word_count)
-        ? Math.min(1000, Math.round((writingSignals.word_count * 60000) / typingDurationMs))
+      const wordsPerMinute = typingDurationMs > 0 && state.keyPressCount > 0
+        ? Math.min(1000, Math.round(((state.keyPressCount / 5) * 60000) / typingDurationMs))
         : 0;
       window.flux('event', 'input', 'field.writing-analysis', {
         ...state.target,
