@@ -46,6 +46,13 @@ test('sdk tag sends a contract-valid event after consent', async () => {
     duration_ms: 1200,
     dwell_before_input_ms: 300,
     typing_duration_ms: 800,
+    writing_language: 'en-GB',
+    word_count: 20,
+    spelling_issue_count: 3,
+    grammar_issue_count: 2,
+    uppercase_letter_count: 30,
+    lowercase_letter_count: 70,
+    all_caps_word_count: 2,
   });
 
   assert.deepEqual(result, { sent: true });
@@ -59,6 +66,8 @@ test('sdk tag sends a contract-valid event after consent', async () => {
   assert.equal(sent[0].body.timestamp_ms, 1750000000000);
   assert.equal(sent[0].body.dwell_before_input_ms, 300);
   assert.equal(sent[0].body.typing_duration_ms, 800);
+  assert.equal(sent[0].body.writing_language, 'en-GB');
+  assert.equal(sent[0].body.spelling_issue_count, 3);
 });
 
 test('sdk tag revoking consent stops sending', async () => {

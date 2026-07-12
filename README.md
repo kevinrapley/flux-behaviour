@@ -6,7 +6,7 @@ This repository is a governed reset from `kevinrapley/flux-behavioural-analytics
 
 ## Product boundary
 
-Flux Behaviour may process consented interaction metadata such as timings, navigation events, error patterns, help usage and aggregate behavioural signals. It must not collect typed values, free-text content, passwords, direct identifiers, unconsented events or raw telemetry exports.
+Flux Behaviour may process consented interaction metadata such as timings, navigation events, error patterns, help usage and aggregate behavioural signals. A publisher may analyse ordinary text fields locally after consent and send only bounded, non-reversible linguistic counts under the published contract. Flux must not collect typed values, words, suggestions, passwords, direct identifiers, unconsented events or raw telemetry exports.
 
 Flux is service-improvement evidence. It is not surveillance tooling. It must not make eligibility, enforcement, fraud or benefit decisions.
 

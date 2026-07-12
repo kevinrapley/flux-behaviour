@@ -1,4 +1,19 @@
 harms:
+  - id: HARM-006
+    harm: UK English spelling, grammar or casing indicators could be treated as a judgement about a visitor or disadvantage people whose names, dialect, disability, education, language background or writing style differ from the analyser assumptions.
+    affected_groups:
+      - Disabled and neurodivergent users
+      - Users of dialects
+      - Users who use English as an additional language
+      - Users entering names or specialist terminology
+    likelihood: medium
+    severity: high
+    mitigation: Require on-device consented analysis and an atomic en-GB count bundle; export no words or suggestions; label results as possible issues; keep scoring small and service-friction-only; prohibit literacy, intelligence, professionalism, personality, protected-characteristic and automated-decision interpretations; require representative accessibility and fairness validation.
+    residual_risk: medium
+    owner: governance-lead
+    escalation_route: Product owner, data protection lead, accessibility lead and ethics reviewer
+    release_decision: blocked
+
   - id: HARM-001
     harm: Behavioural analytics could be interpreted as judgement about a user rather than evidence about service friction.
     affected_groups:

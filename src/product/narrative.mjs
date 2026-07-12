@@ -81,6 +81,27 @@ function editingDetailText(metadata) {
   return '';
 }
 
+function writingQualityText(metadata) {
+  if (metadata.writing_language !== 'en-GB') return '';
+  const wordCount = Number.isInteger(metadata.word_count) ? metadata.word_count : null;
+  const spellingIssues = Number.isInteger(metadata.spelling_issue_count) ? metadata.spelling_issue_count : null;
+  const grammarIssues = Number.isInteger(metadata.grammar_issue_count) ? metadata.grammar_issue_count : null;
+  const uppercase = Number.isInteger(metadata.uppercase_letter_count) ? metadata.uppercase_letter_count : null;
+  const lowercase = Number.isInteger(metadata.lowercase_letter_count) ? metadata.lowercase_letter_count : null;
+  const allCapsWords = Number.isInteger(metadata.all_caps_word_count) ? metadata.all_caps_word_count : 0;
+  if (wordCount === null || spellingIssues === null || grammarIssues === null) return '';
+  const issueSummary = spellingIssues === 0 && grammarIssues === 0
+    ? `found no spelling or grammar issues across ${wordCount} word${wordCount === 1 ? '' : 's'}`
+    : `found ${spellingIssues} possible spelling issue${spellingIssues === 1 ? '' : 's'} and ${grammarIssues} possible grammar issue${grammarIssues === 1 ? '' : 's'} across ${wordCount} word${wordCount === 1 ? '' : 's'}`;
+  let casing = '';
+  if (uppercase !== null && lowercase !== null && uppercase + lowercase > 0) {
+    const uppercasePercent = Math.round((uppercase / (uppercase + lowercase)) * 100);
+    const caps = allCapsWords > 0 ? ` ${allCapsWords} word${allCapsWords === 1 ? ' was' : 's were'} all capitals;` : '';
+    casing = `${caps} ${uppercasePercent}% of letters were uppercase.`;
+  }
+  return ` An on-device UK English check ${issueSummary}.${casing}`;
+}
+
 function exitText(metadata) {
   return metadata.pointer_type && metadata.pointer_type !== 'unknown'
     ? ` Focus left using a ${metadata.pointer_type}.`
@@ -142,7 +163,7 @@ export function describeInteraction(event) {
       : dwell === null ? '' : ` while it was focused for ${durationText(dwell)}`;
     const speed = typingRate !== null && typingRate > 0 ? ` at ${typingRate} characters per minute` : '';
     const revisitCount = Number.isInteger(metadata.revisit_count) ? metadata.revisit_count : 0;
-    return `${prefix} ${keyPresses} character${keyPresses === 1 ? '' : 's'} in ${element.phrase}${timing}${speed}.${editingDetailText(metadata)}${visitText(revisitCount)}${exitText(metadata)}`;
+    return `${prefix} ${keyPresses} character${keyPresses === 1 ? '' : 's'} in ${element.phrase}${timing}${speed}.${editingDetailText(metadata)}${visitText(revisitCount)}${writingQualityText(metadata)}${exitText(metadata)}`;
   }
   if (event.action === 'field.blur' && element?.type === 'field' && changed) {
     const duration = dwell === null ? '' : ` after focusing it for ${durationText(dwell)}`;

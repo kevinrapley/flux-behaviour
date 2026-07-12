@@ -218,3 +218,39 @@ test('event validation rejects unchanged field lengths', () => {
   assert.equal(result.valid, false);
   assert.ok(result.errors.some((error) => error.code === EVENT_VALIDATION_ERROR_CODES.PRIVACY_POLICY));
 });
+
+test('event validation accepts a complete UK English writing signal bundle', () => {
+  const event = JSON.parse(readFileSync('fixtures/events/valid/focus-enter.json', 'utf8'));
+  Object.assign(event, {
+    event_class: 'input',
+    action: 'field.blur',
+    role: 'field',
+    element_key: 'field.project.objective-editor',
+    writing_language: 'en-GB',
+    word_count: 12,
+    spelling_issue_count: 1,
+    grammar_issue_count: 2,
+    uppercase_letter_count: 3,
+    lowercase_letter_count: 54,
+    all_caps_word_count: 0,
+  });
+
+  assert.equal(validateEvent(event, schema).valid, true);
+});
+
+test('event validation rejects an incomplete writing signal bundle', () => {
+  const event = JSON.parse(readFileSync('fixtures/events/valid/focus-enter.json', 'utf8'));
+  Object.assign(event, {
+    event_class: 'input',
+    action: 'field.blur',
+    role: 'field',
+    element_key: 'field.project.objective-editor',
+    writing_language: 'en-GB',
+    word_count: 12,
+  });
+
+  const result = validateEvent(event, schema);
+
+  assert.equal(result.valid, false);
+  assert.ok(result.errors.some((error) => error.code === EVENT_VALIDATION_ERROR_CODES.PRIVACY_POLICY));
+});

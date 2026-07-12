@@ -24,3 +24,22 @@ test('unsupported dimensions remain neutral instead of being inferred', () => {
   assert.equal(result.dimensions.every(({ score }) => score === 50), true);
   assert.equal(result.composites.every(({ score }) => score === 50), true);
 });
+
+test('UK English issue indicators contribute only bounded service-friction evidence', () => {
+  const result = scoreSessionDimensions([{
+    action: 'field.blur',
+    element_key: 'field.project.objective-editor',
+    metadata_json: JSON.stringify({
+      key_press_count: 60,
+      typing_duration_ms: 20_000,
+      word_count: 20,
+      spelling_issue_count: 3,
+      grammar_issue_count: 2,
+      writing_language: 'en-GB',
+    }),
+  }]);
+
+  assert.equal(result.dimensions.find(({ key }) => key === 'cogload').score > 50, true);
+  assert.equal(result.dimensions.find(({ key }) => key === 'frustration').score > 50, true);
+  assert.equal(result.dimensions.find(({ key }) => key === 'proficiency').score <= 52, true);
+});

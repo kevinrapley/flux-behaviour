@@ -1,0 +1,70 @@
+evidence_records:
+  - task_id: flux-behaviour-uk-english-writing-signals
+    mode: repo-feature
+    repository: kevinrapley/flux-behaviour
+    risk_level: high
+    base_branch: fix/accurate-field-dwell
+    working_branch: feature/uk-english-writing-signals
+    files_read:
+      - README.md
+      - AGENTS.md
+      - RECENT_LEARNINGS.md
+      - CONTRIBUTING.md
+      - SECURITY.md
+      - repository-contract.yaml
+      - github-settings.yaml
+      - conformance-matrix.yaml
+      - gap-register.yaml
+      - harm-register.yaml
+      - docs/instrumentation/event-taxonomy.md
+      - docs/product/production-runtime.md
+      - docs/governance/ethics-impact.md
+    files_changed:
+      - contracts/events/flux-event.schema.json
+      - src/events/flux-event-schema.mjs
+      - src/events/event-privacy-policy.mjs
+      - src/sdk/flux-tag.mjs
+      - src/product/narrative.mjs
+      - src/product/router.mjs
+      - src/product/session-dimensions.mjs
+      - tests/event-schema.test.mjs
+      - tests/event-validation.test.mjs
+      - tests/sdk-tag.test.mjs
+      - tests/narrative.test.mjs
+      - tests/session-dimensions.test.mjs
+      - README.md
+      - docs/instrumentation/event-taxonomy.md
+      - docs/product/production-runtime.md
+      - docs/governance/ethics-impact.md
+      - RECENT_LEARNINGS.md
+      - conformance-matrix.yaml
+      - gap-register.yaml
+      - harm-register.yaml
+    promotion_decisions:
+      - decision: Accept only a complete seven-field writing bundle with writing_language fixed to en-GB.
+        reason: The locale and denominators must be explicit so counts cannot be misrepresented or silently use a US baseline.
+      - decision: Describe spelling and grammar results as possible issues from an on-device check.
+        reason: No dictionary or grammar heuristic proves an error, and Flux must not imply that it received the entered words.
+      - decision: Apply only a small bounded service-friction signal and prohibit person-level interpretation.
+        reason: The user requested behavioural scoring, but linguistic heuristics can be biased by names, dialect, disability and language background.
+    commands_run:
+      - command: node --test tests/event-validation.test.mjs tests/flux-event-schema-module.test.mjs tests/event-schema.test.mjs tests/sdk-tag.test.mjs tests/narrative.test.mjs tests/session-dimensions.test.mjs
+        result: pass
+        evidence: All 64 focused contract, validator, SDK, narrative and scoring tests passed.
+      - command: npm test
+        result: pass
+        evidence: All 167 repository tests passed.
+      - command: npm run validate && npm run security:secrets && npm run sbom
+        result: pass
+        evidence: Governance validation, secret scanning and CycloneDX SBOM generation passed.
+    recent_learnings:
+      - Linguistic metadata still needs an explicit locale, consent and fairness boundary.
+    security:
+      - The collector contract accepts only bounded counts; typed values, words, fragments and suggestions remain prohibited additional properties.
+    privacy:
+      - Publishers analyse locally after consent and Flux receives no entered text; incomplete linguistic bundles are rejected.
+    accessibility:
+      - Narratives use possible-issue wording and operational use remains blocked on representative accessibility and fairness validation.
+    risks:
+      - Dictionary and grammar false positives can disadvantage people whose writing differs from the analyser assumptions.
+      - Scoring remains a human-reviewed service-friction prompt and must never become a person-level or automated decision.
