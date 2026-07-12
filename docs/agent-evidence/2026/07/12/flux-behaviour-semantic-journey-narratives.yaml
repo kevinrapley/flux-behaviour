@@ -69,13 +69,15 @@ evidence_records:
         reason: Legacy hyphenated and URL-derived keys can begin with the word page without being controlled semantic declarations.
       - decision: Reject every auth-scoped semantic control outside the neutral lifecycle API.
         reason: Button, link and tab capture can reveal authentication interaction just as fields and forms can.
+      - decision: Normalise auth scopes case-insensitively, propagate form sensitivity to descendants and reserve auth.otp exclusively.
+        reason: Marker inheritance, key casing and reserved-key misuse must not create alternate paths around authentication privacy controls.
     commands_run:
       - command: npm test
         result: pass
-        evidence: All 145 tests passed, including manual SDK and collector privacy-policy enforcement plus narrative regressions for prefilled values, legacy page keys, every auth-scoped control type and metadata-free authentication outcomes.
+        evidence: All 152 tests passed, including manual SDK and collector privacy-policy enforcement plus narrative regressions for prefilled values, legacy page keys, sensitive form ancestry, auth descendants, case variants, reserved-key misuse and metadata-free authentication outcomes.
       - command: npx --yes node@20 --test tests/*.test.mjs
         result: pass
-        evidence: All 145 tests passed under Node 20.20.2, the repository's declared runtime baseline.
+        evidence: All 152 tests passed under Node 20.20.2, the repository's declared runtime baseline.
       - command: npm run validate
         result: pass
         evidence: Repository governance file check passed for 19 files.

@@ -1,4 +1,4 @@
-import { isAuthOtpAction, isAuthScopedInteraction, isNeutralAuthMilestone } from '../events/event-privacy-policy.mjs';
+import { isAuthOtpAction, isNeutralAuthMilestone, isSensitiveAuthInteraction } from '../events/event-privacy-policy.mjs';
 
 const ACTION_LABELS = Object.freeze({ click: 'Click', touch: 'Touch', tab: 'Tab', focus: 'Focus', input: 'Type', nav: 'Navigate', kbd: 'Key interaction', assist: 'Open help' });
 const SEMANTIC_CONTROL_TYPES = new Set(['button', 'field', 'form', 'link', 'tab']);
@@ -53,7 +53,7 @@ export function describeInteraction(event) {
   const outcome = isNeutralAuthMilestone(event) ? AUTH_OUTCOMES[event.action] : null;
   if (outcome) return outcome;
   if (isAuthOtpAction(event.action)) return 'Ignored an invalid authentication milestone.';
-  if (isAuthScopedInteraction(event)) return 'Ignored a sensitive authentication interaction.';
+  if (isSensitiveAuthInteraction(event)) return 'Ignored a sensitive authentication interaction.';
 
   if (event.action === 'page.loaded' && semantic?.type === 'page') {
     return `Opened the ${semantic.label} page.`;

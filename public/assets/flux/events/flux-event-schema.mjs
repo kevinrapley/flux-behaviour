@@ -39,10 +39,30 @@ export const fluxEventSchema = Object.freeze({
     }
   }, {
     if: {
-      properties: { element_key: { pattern: '^(button|field|form|link|tab)\\.auth(?:[.:-]|$)' } },
+      properties: { element_key: { pattern: '^(button|field|form|link|tab)\\.[Aa][Uu][Tt][Hh](?:[.:-]|$)' } },
       required: ['element_key']
     },
     then: false
+  }, {
+    if: {
+      properties: { element_key: { pattern: '^[Aa][Uu][Tt][Hh]\\.[Oo][Tt][Pp]$' } },
+      required: ['element_key']
+    },
+    then: {
+      properties: {
+        event_class: { const: 'trust' },
+        action: { pattern: '^auth\\.otp\\.(requested|succeeded|failed)$' },
+        role: { const: 'service' },
+        element_key: { const: 'auth.otp' }
+      },
+      not: {
+        anyOf: [
+          'value_length', 'edit_count', 'duration_ms', 'reason', 'navigation_direction',
+          'pointer_type', 'file_count', 'file_size_bucket', 'key_press_count',
+          'backspace_count', 'paste_count', 'chars_per_minute', 'revisit_count'
+        ].map((field) => ({ required: [field] }))
+      }
+    }
   }, {
     if: {
       properties: { action: { const: 'field.blur' } },

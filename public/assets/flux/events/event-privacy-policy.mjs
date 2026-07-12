@@ -23,7 +23,15 @@ export function isAuthFormSubmit(event) {
 }
 
 export function isAuthScopedInteraction(event) {
-  return /^(button|field|form|link|tab)\.auth(?:[.:-]|$)/.test(event?.element_key ?? '');
+  return /^(button|field|form|link|tab)\.auth(?:[.:-]|$)/i.test(event?.element_key ?? '');
+}
+
+export function isReservedAuthKeyMisuse(event) {
+  return String(event?.element_key ?? '').toLowerCase() === 'auth.otp' && !isNeutralAuthMilestone(event);
+}
+
+export function isSensitiveAuthInteraction(event) {
+  return isAuthScopedInteraction(event) || isReservedAuthKeyMisuse(event);
 }
 
 export function hasUnchangedFieldLength(event) {
@@ -43,6 +51,6 @@ export function isNeutralAuthMilestone(event) {
 
 export function violatesEventPrivacy(event) {
   return (isAuthOtpAction(event?.action) && !isNeutralAuthMilestone(event))
-    || isAuthScopedInteraction(event)
+    || isSensitiveAuthInteraction(event)
     || hasUnchangedFieldLength(event);
 }

@@ -146,6 +146,32 @@ test('sdk tag drops manually instrumented authentication control interactions', 
   assert.equal(sent.length, 0);
 });
 
+test('sdk tag drops case-variant authentication control interactions', async () => {
+  const { tag, sent } = createTag();
+  tag.grantConsent();
+
+  const result = await tag.track('nav', 'control.click', {
+    role: 'control',
+    element_key: 'button.Auth.verify-code',
+  });
+
+  assert.deepEqual(result, { sent: false, reason: 'invalid_event' });
+  assert.equal(sent.length, 0);
+});
+
+test('sdk tag reserves auth.otp for neutral milestones', async () => {
+  const { tag, sent } = createTag();
+  tag.grantConsent();
+
+  const result = await tag.track('nav', 'control.click', {
+    role: 'control',
+    element_key: 'auth.otp',
+  });
+
+  assert.deepEqual(result, { sent: false, reason: 'invalid_event' });
+  assert.equal(sent.length, 0);
+});
+
 test('sdk tag drops unchanged field value lengths', async () => {
   const { tag, sent } = createTag();
   tag.grantConsent();

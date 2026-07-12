@@ -6,6 +6,7 @@ const focusState = new WeakMap();
 const fieldVisits = new Map();
 const recentClicks = [];
 const SAFE_ROLES = new Set(['field', 'form', 'control', 'page', 'service', 'environment']);
+const AUTH_SCOPED_KEY = /^(button|field|form|link|tab)\.auth(?:[.:-]|$)/i;
 let lastPointerType = 'unknown';
 
 if (localStorage.getItem(CONSENT_KEY) === 'yes') {
@@ -155,7 +156,9 @@ function editableTarget(element) {
 
 function isExcludedSensitiveInput(element) {
   if (element?.dataset?.fluxSensitive === 'true') return true;
-  if (/^(button|field|form|link|tab)\.auth(?:[.:-]|$)/.test(element?.dataset?.fluxKey ?? '')) return true;
+  if (isSensitiveKey(element?.dataset?.fluxKey)) return true;
+  const ownerForm = element?.closest?.('form');
+  if (ownerForm && isSensitiveForm(ownerForm)) return true;
   if (!element?.matches?.('input')) return false;
   const type = (element.type || 'text').toLowerCase();
   const autocomplete = (element.autocomplete || '').toLowerCase();
@@ -164,8 +167,13 @@ function isExcludedSensitiveInput(element) {
 
 function isSensitiveForm(form) {
   if (form?.dataset?.fluxSensitive === 'true') return true;
-  if (/^form\.auth(?:[.:-]|$)/.test(form?.dataset?.fluxKey ?? '')) return true;
-  return Boolean(form?.querySelector?.('[data-flux-sensitive="true"],input[type="password"],input[type="email"],input[type="tel"],input[autocomplete="one-time-code"],input[autocomplete="current-password"],input[autocomplete="new-password"]'));
+  if (isSensitiveKey(form?.dataset?.fluxKey)) return true;
+  if (form?.querySelector?.('[data-flux-sensitive="true"],input[type="password"],input[type="email"],input[type="tel"],input[autocomplete="one-time-code"],input[autocomplete="current-password"],input[autocomplete="new-password"]')) return true;
+  return [...(form?.querySelectorAll?.('[data-flux-key]') ?? [])].some((element) => isSensitiveKey(element.dataset.fluxKey));
+}
+
+function isSensitiveKey(key) {
+  return AUTH_SCOPED_KEY.test(key ?? '') || String(key ?? '').toLowerCase() === 'auth.otp';
 }
 
 function semanticRole(element, fallback) {

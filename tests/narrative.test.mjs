@@ -146,6 +146,19 @@ test('defensively ignores authentication control interactions', () => {
   );
 });
 
+test('defensively ignores misuse of the reserved authentication key', () => {
+  assert.equal(
+    describeInteraction({
+      event_class: 'nav',
+      action: 'control.click',
+      role: 'control',
+      element_key: 'auth.otp',
+      metadata: { pointer_type: 'mouse' },
+    }),
+    'Ignored a sensitive authentication interaction.',
+  );
+});
+
 test('describes keyboard tab movement from the control where it began', () => {
   assert.equal(
     describeInteraction({

@@ -101,6 +101,20 @@ test('collector rejects authentication control interactions', async () => {
   assert.ok(body.error.details.some((detail) => detail.code === 'privacy_policy'));
 });
 
+test('collector rejects case-variant authentication controls', async () => {
+  const event = JSON.parse(readFileSync('fixtures/events/valid/focus-enter.json', 'utf8'));
+  Object.assign(event, { event_class: 'nav', action: 'control.click', role: 'control', element_key: 'button.Auth.verify-code' });
+  const response = await handleCollectorRequest(request('/collect', { method: 'POST', body: JSON.stringify(event) }));
+  assert.equal(response.status, 400);
+});
+
+test('collector reserves auth.otp for neutral milestones', async () => {
+  const event = JSON.parse(readFileSync('fixtures/events/valid/focus-enter.json', 'utf8'));
+  Object.assign(event, { event_class: 'nav', action: 'control.click', role: 'control', element_key: 'auth.otp' });
+  const response = await handleCollectorRequest(request('/collect', { method: 'POST', body: JSON.stringify(event) }));
+  assert.equal(response.status, 400);
+});
+
 test('collector rejects unchanged field value lengths', async () => {
   const event = JSON.parse(readFileSync('fixtures/events/valid/focus-enter.json', 'utf8'));
   Object.assign(event, {

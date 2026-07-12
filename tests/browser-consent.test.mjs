@@ -23,6 +23,8 @@ test('auto-capture consumes controlled page, role and sensitive attributes', () 
     assert.match(source, /element\?\.dataset\?\.fluxRole/);
     assert.match(source, /element\?\.dataset\?\.fluxSensitive === 'true'/);
     assert.match(source, /button\|field\|form\|link\|tab/);
+    assert.match(source, /element\?\.closest\?\.\('form'\)/);
+    assert.match(source, /querySelectorAll\?\.\('\[data-flux-key\]'\)/);
     assert.match(source, /isSensitiveForm\(target\)/);
     assert.match(source, /`auto\.page\.\$\{key \|\| 'home'\}`/);
     assert.match(source, /changed \? \{ value_length:/);
