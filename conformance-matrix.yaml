@@ -86,6 +86,6 @@ records:
   - id: CONF-015
     rule: Journey narratives must not expose generated DOM identifiers or misattribute focus-exit input to typing
     expected_evidence: Narrative and journey-presentation tests cover semantic focus, keyboard entry, focus exit and historical auto-key fallbacks
-    actual_evidence: Controlled text-area keys produce purpose-led focus and typing prose; generated keys are shown only as unlabelled control types; stored events are re-presented on read.
+    actual_evidence: Controlled text-area keys produce purpose-led focus and typing prose; generated keys are shown only as unlabelled control types; stored events are re-presented on read; and pre-input dwell, total focus and active typing duration remain distinct throughout capture, presentation, aggregates and session scoring.
     status: present
     owner: product-lead

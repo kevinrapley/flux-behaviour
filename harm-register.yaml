@@ -61,7 +61,7 @@ harms:
       - Keyboard and assistive-technology users
     likelihood: low
     severity: medium
-    mitigation: Separate focus origin, keyboard entry and focus-exit method; translate only controlled semantic keys; render generated keys as unlabelled control types; and regression-test historical presentation.
+    mitigation: Separate focus origin, pre-input dwell, active typing time, keyboard entry and focus-exit method; never relabel total focus as dwell after input; translate only controlled semantic keys; render generated keys as unlabelled control types; and regression-test historical presentation.
     residual_risk: low
     owner: product-lead
     escalation_route: Product owner and accessibility lead

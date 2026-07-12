@@ -170,7 +170,7 @@ export async function dashboardCohorts(env, startAtMs, endAtMs, selectedSessionC
 
 async function dashboardOverview(env, startAtMs, endAtMs) {
   const sessions = await env.FLUX_DB.prepare("SELECT COUNT(DISTINCT visitor_id) AS visitor_count, COUNT(DISTINCT CASE WHEN is_returning_visitor = 0 THEN visitor_id END) AS new_visitor_count, COUNT(DISTINCT CASE WHEN is_returning_visitor = 1 THEN visitor_id END) AS returning_visitor_count, COUNT(*) AS session_count, COALESCE(AVG(CASE WHEN last_seen_at_ms >= started_at_ms THEN last_seen_at_ms - started_at_ms ELSE 0 END), 0) AS average_session_duration_ms FROM sessions WHERE tenant_id = 'researchops' AND started_at_ms >= ? AND started_at_ms < ?").bind(startAtMs, endAtMs).first();
-  const events = await env.FLUX_DB.prepare("SELECT COUNT(*) AS event_count, COALESCE(AVG(CASE WHEN e.action = 'field.blur' THEN CAST(json_extract(e.metadata_json, '$.duration_ms') AS REAL) END), 0) AS average_field_dwell_ms, COALESCE(SUM(CASE WHEN e.action = 'field.blur' THEN CAST(json_extract(e.metadata_json, '$.key_press_count') AS REAL) ELSE 0 END), 0) AS typed_character_count, COALESCE(SUM(CASE WHEN e.action = 'field.blur' THEN CAST(json_extract(e.metadata_json, '$.backspace_count') AS REAL) ELSE 0 END), 0) AS correction_count, COALESCE(SUM(CASE WHEN json_extract(e.metadata_json, '$.pointer_type') = 'touch' THEN 1 ELSE 0 END), 0) AS touch_interaction_count, COUNT(DISTINCT CASE WHEN e.action = 'flow.submit' THEN e.session_id END) AS completed_session_count, COUNT(DISTINCT CASE WHEN e.action IN ('error.invalid', 'act.rage', 'field.revisit', 'assist.help') THEN e.session_id END) AS friction_session_count FROM events e INNER JOIN sessions s ON s.id = e.session_id WHERE s.tenant_id = 'researchops' AND s.started_at_ms >= ? AND s.started_at_ms < ?").bind(startAtMs, endAtMs).first();
+  const events = await env.FLUX_DB.prepare("SELECT COUNT(*) AS event_count, COALESCE(AVG(CASE WHEN e.action = 'field.blur' THEN CASE WHEN json_type(e.metadata_json, '$.dwell_before_input_ms') = 'integer' THEN CAST(json_extract(e.metadata_json, '$.dwell_before_input_ms') AS REAL) WHEN COALESCE(CAST(json_extract(e.metadata_json, '$.key_press_count') AS INTEGER), 0) = 0 AND COALESCE(CAST(json_extract(e.metadata_json, '$.edit_count') AS INTEGER), 0) = 0 AND COALESCE(CAST(json_extract(e.metadata_json, '$.paste_count') AS INTEGER), 0) = 0 THEN CAST(json_extract(e.metadata_json, '$.duration_ms') AS REAL) END END), 0) AS average_field_dwell_ms, COALESCE(SUM(CASE WHEN e.action = 'field.blur' THEN CAST(json_extract(e.metadata_json, '$.key_press_count') AS REAL) ELSE 0 END), 0) AS typed_character_count, COALESCE(SUM(CASE WHEN e.action = 'field.blur' THEN CAST(json_extract(e.metadata_json, '$.backspace_count') AS REAL) ELSE 0 END), 0) AS correction_count, COALESCE(SUM(CASE WHEN json_extract(e.metadata_json, '$.pointer_type') = 'touch' THEN 1 ELSE 0 END), 0) AS touch_interaction_count, COUNT(DISTINCT CASE WHEN e.action = 'flow.submit' THEN e.session_id END) AS completed_session_count, COUNT(DISTINCT CASE WHEN e.action IN ('error.invalid', 'act.rage', 'field.revisit', 'assist.help') THEN e.session_id END) AS friction_session_count FROM events e INNER JOIN sessions s ON s.id = e.session_id WHERE s.tenant_id = 'researchops' AND s.started_at_ms >= ? AND s.started_at_ms < ?").bind(startAtMs, endAtMs).first();
   return buildOverviewMetrics(sessions, events);
 }
 
@@ -194,10 +194,15 @@ export function presentEvent(event) {
     if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
       const narrativeMetadataKeys = new Set([
         'duration_ms',
+        'dwell_before_input_ms',
+        'typing_duration_ms',
         'key_press_count',
+        'backspace_count',
+        'chars_per_minute',
         'value_length',
         'edit_count',
         'paste_count',
+        'revisit_count',
         'pointer_type',
       ]);
       parsedMetadata = Object.fromEntries(

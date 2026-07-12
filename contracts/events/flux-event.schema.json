@@ -39,6 +39,8 @@
             { "required": ["value_length"] },
             { "required": ["edit_count"] },
             { "required": ["duration_ms"] },
+            { "required": ["dwell_before_input_ms"] },
+            { "required": ["typing_duration_ms"] },
             { "required": ["reason"] },
             { "required": ["navigation_direction"] },
             { "required": ["pointer_type"] },
@@ -72,6 +74,8 @@
             { "required": ["value_length"] },
             { "required": ["edit_count"] },
             { "required": ["duration_ms"] },
+            { "required": ["dwell_before_input_ms"] },
+            { "required": ["typing_duration_ms"] },
             { "required": ["reason"] },
             { "required": ["navigation_direction"] },
             { "required": ["pointer_type"] },
@@ -105,6 +109,8 @@
             { "required": ["value_length"] },
             { "required": ["edit_count"] },
             { "required": ["duration_ms"] },
+            { "required": ["dwell_before_input_ms"] },
+            { "required": ["typing_duration_ms"] },
             { "required": ["reason"] },
             { "required": ["navigation_direction"] },
             { "required": ["pointer_type"] },
@@ -223,6 +229,16 @@
       "maximum": 10000
     },
     "duration_ms": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 3600000
+    },
+    "dwell_before_input_ms": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 3600000
+    },
+    "typing_duration_ms": {
       "type": "integer",
       "minimum": 0,
       "maximum": 3600000

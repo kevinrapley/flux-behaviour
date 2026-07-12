@@ -10,16 +10,25 @@ test('rebuilds stored journey narratives when they are read', () => {
     action: 'field.blur',
     role: 'field',
     element_key: 'auto.textarea.textarea.38',
-    metadata_json: JSON.stringify({ duration_ms: 28800, key_press_count: 101, pointer_type: 'mouse' }),
+    metadata_json: JSON.stringify({
+      duration_ms: 28800,
+      dwell_before_input_ms: 1400,
+      typing_duration_ms: 26000,
+      key_press_count: 101,
+      backspace_count: 3,
+      chars_per_minute: 233,
+      revisit_count: 2,
+      pointer_type: 'mouse',
+    }),
     narrative: 'Type on field “auto textarea textarea 38”, using mouse.',
     occurred_at_ms: 1234,
   });
 
   assert.equal(
     event.narrative,
-    'After dwelling for 28.8s, typed 101 characters in an unlabelled text area using a keyboard. Focus left using a mouse.',
+    'After dwelling for 1.4s without interacting, typed 101 characters in an unlabelled text area over 26s at 233 characters per minute. Used Backspace or Delete 3 times. This was the second visit to the field. Focus left using a mouse.',
   );
-  assert.equal(event.metadata_json, JSON.stringify({ duration_ms: 28800, key_press_count: 101, pointer_type: 'mouse' }));
+  assert.match(event.metadata_json, /"dwell_before_input_ms":1400/);
 });
 
 test('handles malformed stored metadata without exposing a generated key', () => {

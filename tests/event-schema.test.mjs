@@ -28,6 +28,16 @@ test('event schema declares metadata-only consented event contract', () => {
     'a11y',
     'env'
   ]);
+  assert.deepEqual(schema.properties.dwell_before_input_ms, {
+    type: 'integer',
+    minimum: 0,
+    maximum: 3600000
+  });
+  assert.deepEqual(schema.properties.typing_duration_ms, {
+    type: 'integer',
+    minimum: 0,
+    maximum: 3600000
+  });
 });
 
 test('representative event satisfies required baseline fields', () => {

@@ -113,3 +113,7 @@ agent_evidence_registry:
       date: 2026-07-12
       path: docs/agent-evidence/2026/07/12/flux-behaviour-richer-journey-presentation.yaml
       status: externalised
+    - task_id: flux-behaviour-accurate-field-dwell
+      date: 2026-07-12
+      path: docs/agent-evidence/2026/07/12/flux-behaviour-accurate-field-dwell.yaml
+      status: externalised

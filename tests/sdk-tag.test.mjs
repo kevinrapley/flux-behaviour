@@ -43,7 +43,9 @@ test('sdk tag sends a contract-valid event after consent', async () => {
   const result = await tag.track('focus', 'field.focus', {
     role: 'field',
     element_key: 'full-name',
-    duration_ms: 1200
+    duration_ms: 1200,
+    dwell_before_input_ms: 300,
+    typing_duration_ms: 800,
   });
 
   assert.deepEqual(result, { sent: true });
@@ -55,6 +57,8 @@ test('sdk tag sends a contract-valid event after consent', async () => {
   assert.equal(sent[0].body.origin, 'sdk');
   assert.equal(sent[0].body.consent, 'yes');
   assert.equal(sent[0].body.timestamp_ms, 1750000000000);
+  assert.equal(sent[0].body.dwell_before_input_ms, 300);
+  assert.equal(sent[0].body.typing_duration_ms, 800);
 });
 
 test('sdk tag revoking consent stops sending', async () => {

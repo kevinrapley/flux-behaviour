@@ -64,6 +64,23 @@ function durationText(durationMs) {
   return `${Math.round(durationMs / 100) / 10}s`;
 }
 
+function visitText(revisitCount) {
+  if (revisitCount === 2) return ' This was the second visit to the field.';
+  if (revisitCount === 3) return ' This was the third visit to the field.';
+  return revisitCount > 3 ? ` This was visit number ${revisitCount} to the field.` : '';
+}
+
+function editingDetailText(metadata) {
+  const corrections = Number.isInteger(metadata.backspace_count) ? metadata.backspace_count : 0;
+  const pastes = Number.isInteger(metadata.paste_count) ? metadata.paste_count : 0;
+  if (corrections > 0 && pastes > 0) {
+    return ` Used Backspace or Delete ${corrections} time${corrections === 1 ? '' : 's'} and pasted ${pastes === 1 ? 'once' : `${pastes} times`}.`;
+  }
+  if (corrections > 0) return ` Used Backspace or Delete ${corrections} time${corrections === 1 ? '' : 's'}.`;
+  if (pastes > 0) return ` Pasted ${pastes === 1 ? 'once' : `${pastes} times`}.`;
+  return '';
+}
+
 function exitText(metadata) {
   return metadata.pointer_type && metadata.pointer_type !== 'unknown'
     ? ` Focus left using a ${metadata.pointer_type}.`
@@ -103,6 +120,9 @@ export function describeInteraction(event) {
   }
 
   const dwell = Number.isInteger(metadata.duration_ms) ? metadata.duration_ms : null;
+  const dwellBeforeInput = Number.isInteger(metadata.dwell_before_input_ms) ? metadata.dwell_before_input_ms : null;
+  const typingDuration = Number.isInteger(metadata.typing_duration_ms) ? metadata.typing_duration_ms : null;
+  const typingRate = Number.isInteger(metadata.chars_per_minute) ? metadata.chars_per_minute : null;
   const keyPresses = Number.isInteger(metadata.key_press_count) ? metadata.key_press_count : null;
   const valueLength = Number.isInteger(metadata.value_length) ? metadata.value_length : null;
   const editCount = Number.isInteger(metadata.edit_count) ? metadata.edit_count : 0;
@@ -111,11 +131,18 @@ export function describeInteraction(event) {
 
   if (event.action === 'field.blur' && element?.type === 'field' && !changed) {
     const duration = dwell === null ? '' : ` for ${durationText(dwell)}`;
-    return `Focused ${element.phrase}${duration} without changing it.${exitText(metadata)}`;
+    return `Dwelled on ${element.phrase}${duration} without changing it.${exitText(metadata)}`;
   }
   if (event.action === 'field.blur' && element?.type === 'field' && keyPresses !== null && keyPresses > 0) {
-    const duration = dwell === null ? '' : `After dwelling for ${durationText(dwell)}, `;
-    return `${duration}typed ${keyPresses} character${keyPresses === 1 ? '' : 's'} in ${element.phrase} using a keyboard.${exitText(metadata)}`;
+    const prefix = dwellBeforeInput === null
+      ? 'Typed'
+      : `After dwelling for ${durationText(dwellBeforeInput)} without interacting, typed`;
+    const timing = typingDuration !== null
+      ? ` over ${durationText(typingDuration)}`
+      : dwell === null ? '' : ` while it was focused for ${durationText(dwell)}`;
+    const speed = typingRate !== null && typingRate > 0 ? ` at ${typingRate} characters per minute` : '';
+    const revisitCount = Number.isInteger(metadata.revisit_count) ? metadata.revisit_count : 0;
+    return `${prefix} ${keyPresses} character${keyPresses === 1 ? '' : 's'} in ${element.phrase}${timing}${speed}.${editingDetailText(metadata)}${visitText(revisitCount)}${exitText(metadata)}`;
   }
   if (event.action === 'field.blur' && element?.type === 'field' && changed) {
     const duration = dwell === null ? '' : ` after focusing it for ${durationText(dwell)}`;

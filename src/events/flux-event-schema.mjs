@@ -31,7 +31,8 @@ export const fluxEventSchema = Object.freeze({
       },
       not: {
         anyOf: [
-          'value_length', 'edit_count', 'duration_ms', 'reason', 'navigation_direction',
+          'value_length', 'edit_count', 'duration_ms', 'dwell_before_input_ms',
+          'typing_duration_ms', 'reason', 'navigation_direction',
           'pointer_type', 'file_count', 'file_size_bucket', 'key_press_count',
           'backspace_count', 'paste_count', 'chars_per_minute', 'revisit_count'
         ].map((field) => ({ required: [field] }))
@@ -51,7 +52,8 @@ export const fluxEventSchema = Object.freeze({
       },
       not: {
         anyOf: [
-          'value_length', 'edit_count', 'duration_ms', 'reason', 'navigation_direction',
+          'value_length', 'edit_count', 'duration_ms', 'dwell_before_input_ms',
+          'typing_duration_ms', 'reason', 'navigation_direction',
           'pointer_type', 'file_count', 'file_size_bucket', 'key_press_count',
           'backspace_count', 'paste_count', 'chars_per_minute', 'revisit_count'
         ].map((field) => ({ required: [field] }))
@@ -71,7 +73,8 @@ export const fluxEventSchema = Object.freeze({
       },
       not: {
         anyOf: [
-          'value_length', 'edit_count', 'duration_ms', 'reason', 'navigation_direction',
+          'value_length', 'edit_count', 'duration_ms', 'dwell_before_input_ms',
+          'typing_duration_ms', 'reason', 'navigation_direction',
           'pointer_type', 'file_count', 'file_size_bucket', 'key_press_count',
           'backspace_count', 'paste_count', 'chars_per_minute', 'revisit_count'
         ].map((field) => ({ required: [field] }))
@@ -156,6 +159,16 @@ export const fluxEventSchema = Object.freeze({
       maximum: 10000
     },
     duration_ms: {
+      type: 'integer',
+      minimum: 0,
+      maximum: 3600000
+    },
+    dwell_before_input_ms: {
+      type: 'integer',
+      minimum: 0,
+      maximum: 3600000
+    },
+    typing_duration_ms: {
       type: 'integer',
       minimum: 0,
       maximum: 3600000

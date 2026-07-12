@@ -6,8 +6,8 @@ test('live analytics aggregates consented metadata without exposing event conten
   const result = buildLiveAnalytics(
     [{ id: 'session-new', is_returning_visitor: 0 }, { id: 'session-returning', is_returning_visitor: 1 }],
     [
-      { action: 'field.blur', element_key: 'auto.input.text.1', metadata_json: JSON.stringify({ duration_ms: 1200, key_press_count: 9, backspace_count: 2 }) },
-      { action: 'field.blur', element_key: 'auto.input.text.1', metadata_json: JSON.stringify({ duration_ms: 800, key_press_count: 4, backspace_count: 1 }) },
+      { action: 'field.blur', element_key: 'auto.input.text.1', metadata_json: JSON.stringify({ duration_ms: 1200, dwell_before_input_ms: 200, typing_duration_ms: 900, key_press_count: 9, backspace_count: 2 }) },
+      { action: 'field.blur', element_key: 'auto.input.text.1', metadata_json: JSON.stringify({ duration_ms: 800, key_press_count: 0, backspace_count: 1 }) },
       { action: 'control.click', element_key: 'auto.button.button.2', metadata_json: JSON.stringify({ pointer_type: 'touch' }) }
     ]
   );
@@ -16,8 +16,8 @@ test('live analytics aggregates consented metadata without exposing event conten
     session_count: 2,
     returning_session_count: 1,
     event_count: 3,
-    median_field_dwell_ms: 1000,
-    typed_character_count: 13,
+    median_field_dwell_ms: 500,
+    typed_character_count: 9,
     correction_count: 3,
     touch_interaction_count: 1,
     dimension_scores: [
