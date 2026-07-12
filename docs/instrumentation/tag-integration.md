@@ -11,8 +11,9 @@ The Flux tag adds behavioural analytics to a website or service the same way oth
   };
 </script>
 <script type="module"
-  src="https://your-flux-host/assets/flux/sdk/flux-browser.install.mjs"
-  data-flux-endpoint="https://your-collector.example/collect"></script>
+  src="https://your-flux-host/assets/flux/sdk/flux-auto-capture.mjs"
+  data-flux-endpoint="https://your-collector.example/collect"
+  data-flux-tenant="your-tenant"></script>
 ```
 
 Commands queued before the module loads are replayed in order once it installs. The module is `src/sdk/flux-browser.mjs`, wired by `installFluxBrowserTag(window)`; a host page or bundler provides the install entry point.
@@ -40,14 +41,16 @@ flux('event', 'input', 'field.blur', {
 });
 ```
 
-Contract version 1.1.0 adds richer interaction metadata, all of it content-free:
+Contract version 1.2.0 adds richer interaction metadata and autocomplete milestones, all of it content-free:
 
 - `key_press_count`, `backspace_count` — typing volume and corrections; key identity is never recorded, only "printable", "backspace/delete" or "other"
 - `dwell_before_input_ms` — the inactive interval between focus and the first keyboard, input or paste interaction
-- `typing_duration_ms`, `chars_per_minute` — active typing time and typing speed derived from the first and latest typing keys, excluding the pre-input dwell
+- `typing_duration_ms`, `words_per_minute` — active typing time and words per minute derived from the on-device word count and the first-to-latest typing interval, excluding pre-input dwell
 - `paste_count` — clipboard use as a count, never clipboard content
 - `revisit_count` — how many times a field was refocused
 - `pointer_type` — whether focus arrived by mouse, touch, pen or keyboard
+
+The hosted auto-capture module also owns the 30-minute inactivity boundary, final-destination Tab context, Enter/Return activation, browser-autocomplete signals, purpose-led structural fallbacks and the on-device UK-English analyser. Ordinary autofill emits only the semantic field key. Excluded sensitive autofill emits only an allow-listed category (`email`, `password`, `one-time-code`, `telephone`, `payment` or `other`) with no value, length or identity. Publishers provide the hosted include and controlled `data-flux-*` attributes; they do not copy the analytics engine, dictionary or narrative logic into their service repositories.
 
 Every event is built against the published event contract (`contracts/events/flux-event.schema.json`) and validated locally before transport:
 

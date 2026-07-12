@@ -172,7 +172,7 @@ test('defensively ignores nested authentication scopes', () => {
   );
 });
 
-test('describes keyboard tab movement from the control where it began', () => {
+test('describes keyboard tab movement to its final destination', () => {
   assert.equal(
     describeInteraction({
       event_class: 'nav',
@@ -181,7 +181,46 @@ test('describes keyboard tab movement from the control where it began', () => {
       element_key: 'link.navigation.projects',
       metadata: { interaction_type: 'tab', pointer_type: 'keyboard' },
     }),
-    'Tabbed from the Projects link using a keyboard.',
+    'Tabbed to the Projects link using a keyboard.',
+  );
+});
+
+test('describes Enter activation of a link as keyboard navigation', () => {
+  assert.equal(
+    describeInteraction({
+      event_class: 'nav',
+      action: 'control.activate',
+      role: 'control',
+      element_key: 'link.navigation.sourcebook-environment',
+      metadata: { pointer_type: 'keyboard' },
+    }),
+    'Opened the Sourcebook environment link using a keyboard.',
+  );
+});
+
+test('describes a content-free sensitive email autocomplete milestone', () => {
+  assert.equal(
+    describeInteraction({
+      event_class: 'trust',
+      action: 'field.autocomplete.email.used',
+      role: 'service',
+      element_key: 'autocomplete.email',
+      metadata: {},
+    }),
+    'Used browser autocomplete for the sign-in email field.',
+  );
+});
+
+test('describes autocomplete on an ordinary semantic field', () => {
+  assert.equal(
+    describeInteraction({
+      event_class: 'input',
+      action: 'field.autocomplete.used',
+      role: 'field',
+      element_key: 'field.project.objective-editor',
+      metadata: {},
+    }),
+    'Used browser autocomplete for the Objective editor field.',
   );
 });
 
@@ -217,7 +256,7 @@ test('describes actual field input with purpose and privacy-safe typing detail',
         typing_duration_ms: 12_500,
         key_press_count: 56,
         backspace_count: 4,
-        chars_per_minute: 269,
+        words_per_minute: 96,
         paste_count: 1,
         revisit_count: 2,
         writing_language: 'en-GB',
@@ -231,7 +270,7 @@ test('describes actual field input with purpose and privacy-safe typing detail',
         pointer_type: 'mouse',
       },
     }),
-    'After dwelling for 2.2s without interacting, typed 56 characters in the Code retrieval field over 12.5s at 269 characters per minute. Used Backspace or Delete 4 times and pasted once. This was the second visit to the field. An on-device UK English check found 3 possible spelling issues and 2 possible grammar issues across 20 words. 2 words were all capitals; 30% of letters were uppercase. Focus left using a mouse.',
+    'After dwelling for 2.2s without interacting, typed 56 characters in the Code retrieval field over 12.5s at 96 words per minute. Used Backspace or Delete 4 times and pasted once. This was the second visit to the field. An on-device UK English check found 3 possible spelling issues and 2 possible grammar issues across 20 words. 2 words were all capitals; 30% of letters were uppercase. Focus left using a mouse.',
   );
 });
 
@@ -292,12 +331,12 @@ test('describes automatic focus and the Add Objective text area without implemen
         dwell_before_input_ms: 1400,
         typing_duration_ms: 26000,
         key_press_count: 101,
-        chars_per_minute: 233,
+        words_per_minute: 90,
         value_length: 101,
         pointer_type: 'mouse',
       },
     }),
-    'After dwelling for 1.4s without interacting, typed 101 characters in the Add objective text area over 26s at 233 characters per minute. Focus left using a mouse.',
+    'After dwelling for 1.4s without interacting, typed 101 characters in the Add objective text area over 26s at 90 words per minute. Focus left using a mouse.',
   );
 });
 

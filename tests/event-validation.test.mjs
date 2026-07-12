@@ -36,7 +36,7 @@ test('event validation rejects invalid fixture events', () => {
 
 test('event validation reports structured errors without submitted values', () => {
   const event = {
-    schema_version: '1.1.0',
+    schema_version: '1.2.0',
     session_id: 'session-invalid-unsafe',
     visitor_id: 'visitor-invalid-unsafe',
     tenant_id: 'researchops',
@@ -64,7 +64,7 @@ test('event validation reports structured errors without submitted values', () =
 
 test('event validation does not echo untrusted additional-property names', () => {
   const event = {
-    schema_version: '1.1.0',
+    schema_version: '1.2.0',
     session_id: 'session-invalid-key',
     visitor_id: 'visitor-invalid-key',
     tenant_id: 'researchops',
@@ -121,6 +121,34 @@ test('event validation rejects optional metadata on authentication milestones', 
 
   const result = validateEvent(event, schema);
 
+  assert.equal(result.valid, false);
+  assert.ok(result.errors.some((error) => error.code === EVENT_VALIDATION_ERROR_CODES.PRIVACY_POLICY));
+});
+
+test('event validation accepts a content-free sensitive autocomplete milestone', () => {
+  const event = JSON.parse(readFileSync('fixtures/events/valid/focus-enter.json', 'utf8'));
+  Object.assign(event, {
+    event_class: 'trust',
+    action: 'field.autocomplete.email.used',
+    role: 'service',
+    element_key: 'autocomplete.email',
+  });
+  delete event.duration_ms;
+
+  assert.deepEqual(validateEvent(event, schema), { valid: true, errors: [] });
+});
+
+test('event validation rejects metadata on sensitive autocomplete milestones', () => {
+  const event = JSON.parse(readFileSync('fixtures/events/valid/focus-enter.json', 'utf8'));
+  Object.assign(event, {
+    event_class: 'trust',
+    action: 'field.autocomplete.email.used',
+    role: 'service',
+    element_key: 'autocomplete.email',
+    value_length: 24,
+  });
+
+  const result = validateEvent(event, schema);
   assert.equal(result.valid, false);
   assert.ok(result.errors.some((error) => error.code === EVENT_VALIDATION_ERROR_CODES.PRIVACY_POLICY));
 });

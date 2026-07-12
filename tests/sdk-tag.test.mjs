@@ -312,6 +312,54 @@ test('browser tag reads the endpoint from the script dataset', async () => {
   assert.equal(sent[0].endpoint, 'https://collector.example.test/collect');
 });
 
+test('browser tag starts a new session after 30 minutes of inactivity', async () => {
+  const { sent, transport } = createCapturingTransport();
+  let now = 1_000;
+  let sequence = 0;
+  const values = new Map();
+  const storage = {
+    getItem: (key) => values.get(key) ?? null,
+    setItem: (key, value) => values.set(key, String(value)),
+    removeItem: (key) => values.delete(key),
+  };
+  const windowLike = {
+    localStorage: storage,
+    sessionStorage: storage,
+    crypto: { randomUUID: () => `00000000-0000-4000-8000-${String(++sequence).padStart(12, '0')}` },
+  };
+  installFluxBrowserTag(windowLike, {
+    endpoint: 'https://collector.example.test/collect',
+    tenantId: 'researchops',
+    transport,
+    now: () => now,
+  });
+  windowLike.flux('consent', 'granted');
+  windowLike.flux('event', 'nav', 'page.loaded', { role: 'page', element_key: 'page.home' });
+  await Promise.resolve();
+  now += 30 * 60 * 1000 + 1;
+  windowLike.flux('event', 'nav', 'page.loaded', { role: 'page', element_key: 'page.projects' });
+  await Promise.resolve();
+
+  assert.notEqual(sent[0].body.session_id, sent[1].body.session_id);
+  assert.equal(sent[0].body.visitor_id, sent[1].body.visitor_id);
+});
+
+test('browser tag keeps one in-memory session when sessionStorage is unavailable', async () => {
+  const { sent, transport } = createCapturingTransport();
+  let sequence = 0;
+  const windowLike = {
+    localStorage: undefined,
+    sessionStorage: undefined,
+    crypto: { randomUUID: () => `00000000-0000-4000-8000-${String(++sequence).padStart(12, '0')}` },
+  };
+  installFluxBrowserTag(windowLike, { endpoint: 'https://collector.example.test/collect', transport });
+  windowLike.flux('consent', 'granted');
+  windowLike.flux('event', 'nav', 'page.loaded', { role: 'page', element_key: 'page.home' });
+  windowLike.flux('event', 'nav', 'page.loaded', { role: 'page', element_key: 'page.projects' });
+  await Promise.resolve();
+  assert.equal(sent[0].body.session_id, sent[1].body.session_id);
+});
+
 test('browser transport prefers fetch and falls back to sendBeacon', async () => {
   const beaconCalls = [];
   const fetchCalls = [];

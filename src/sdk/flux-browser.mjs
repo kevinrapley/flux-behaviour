@@ -23,14 +23,24 @@ export function installFluxBrowserTag(windowLike, config = {}) {
   const endpoint = config.endpoint ?? readEndpointFromScript(windowLike);
   const transport = config.transport ?? createBrowserTransport(windowLike);
 
+  let memorySessionId = null;
   const tag = createFluxTag({
     endpoint,
     transport,
     sessionId: config.sessionId,
     visitorId: config.visitorId,
-    sessionIdFactory: () => persistentSessionId(windowLike),
+    sessionIdFactory: () => {
+      if (!windowLike.sessionStorage) {
+        memorySessionId ??= `session-${randomSuffix(windowLike)}`;
+        return memorySessionId;
+      }
+      return persistentSessionId(windowLike, config.now);
+    },
     visitorIdFactory: () => persistentVisitorId(windowLike),
-    resetIdentifiers: () => clearPersistentIdentifiers(windowLike),
+    resetIdentifiers: () => {
+      memorySessionId = null;
+      clearPersistentIdentifiers(windowLike);
+    },
     tenantId: config.tenantId ?? readTenantFromScript(windowLike),
     consent: config.consent,
     now: config.now,
@@ -85,8 +95,19 @@ function persistentVisitorId(windowLike) {
   return persistentIdentifier(windowLike.localStorage, 'flux.behaviour.visitor_id', 'visitor', windowLike);
 }
 
-function persistentSessionId(windowLike) {
-  return persistentIdentifier(windowLike.sessionStorage, 'flux.behaviour.session_id', 'session', windowLike);
+function persistentSessionId(windowLike, now = Date.now) {
+  const storage = windowLike.sessionStorage;
+  const currentTime = typeof now === 'function' ? now() : Date.now();
+  const existing = storage?.getItem('flux.behaviour.session_id');
+  const lastActivity = Number(storage?.getItem('flux.behaviour.session_activity_ms'));
+  if (existing && Number.isFinite(lastActivity) && lastActivity > 0 && currentTime - lastActivity < 30 * 60 * 1000) {
+    storage?.setItem('flux.behaviour.session_activity_ms', currentTime);
+    return existing;
+  }
+  const id = `session-${randomSuffix(windowLike)}`;
+  storage?.setItem('flux.behaviour.session_id', id);
+  storage?.setItem('flux.behaviour.session_activity_ms', currentTime);
+  return id;
 }
 
 function persistentIdentifier(storage, key, prefix, windowLike) {
@@ -100,6 +121,7 @@ function persistentIdentifier(storage, key, prefix, windowLike) {
 function clearPersistentIdentifiers(windowLike) {
   windowLike.localStorage?.removeItem('flux.behaviour.visitor_id');
   windowLike.sessionStorage?.removeItem('flux.behaviour.session_id');
+  windowLike.sessionStorage?.removeItem('flux.behaviour.session_activity_ms');
 }
 
 function randomSuffix(windowLike) {

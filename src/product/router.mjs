@@ -125,7 +125,7 @@ async function dashboard(request, env) {
   const actions = await env.FLUX_DB.prepare("SELECT e.action, COUNT(*) AS count FROM events e INNER JOIN sessions s ON s.id = e.session_id WHERE s.tenant_id = 'researchops' AND s.started_at_ms >= ? AND s.started_at_ms < ? GROUP BY e.action ORDER BY count DESC, e.action ASC LIMIT 8").bind(period.start_at_ms, period.end_at_ms).all();
   const sessions = await env.FLUX_DB.prepare("SELECT s.id, s.started_at_ms, s.last_seen_at_ms, s.is_returning_visitor, COUNT(e.id) AS event_count, COUNT(DISTINCT CASE WHEN e.action = 'flow.submit' THEN e.id END) AS submit_count, COUNT(DISTINCT CASE WHEN e.action IN ('error.invalid', 'act.rage', 'field.revisit', 'assist.help') THEN e.id END) AS friction_event_count FROM sessions s LEFT JOIN events e ON e.session_id = s.id WHERE s.tenant_id = 'researchops' AND s.started_at_ms >= ? AND s.started_at_ms < ? GROUP BY s.id, s.started_at_ms, s.last_seen_at_ms, s.is_returning_visitor ORDER BY s.started_at_ms DESC LIMIT 12").bind(period.start_at_ms, period.end_at_ms).all();
   const events = await env.FLUX_DB.prepare("SELECT session_id, event_class, action, role, element_key, metadata_json, narrative, occurred_at_ms FROM (SELECT e.session_id, e.event_class, e.action, e.role, e.element_key, e.metadata_json, e.narrative, e.occurred_at_ms FROM events e WHERE e.tenant_id = 'researchops' AND e.session_id IN (SELECT id FROM sessions WHERE tenant_id = 'researchops' AND started_at_ms >= ? AND started_at_ms < ? ORDER BY started_at_ms DESC LIMIT 12) ORDER BY e.occurred_at_ms DESC LIMIT 500) ORDER BY occurred_at_ms ASC").bind(period.start_at_ms, period.end_at_ms).all();
-  const presentedEvents = (events.results ?? []).map(presentEvent);
+  const presentedEvents = presentJourneyEvents(events.results ?? []);
   const journeys = groupJourneys(sessions.results, presentedEvents).map((journey) => ({ ...journey, dimension_scores: scoreSessionDimensions(journey.events) }));
   const cohorts = await dashboardCohorts(env, period.start_at_ms, period.end_at_ms, overview.session_count);
   return json({
@@ -206,6 +206,7 @@ export function presentEvent(event) {
         'key_press_count',
         'backspace_count',
         'chars_per_minute',
+        'words_per_minute',
         'value_length',
         'edit_count',
         'paste_count',
@@ -227,6 +228,25 @@ export function presentEvent(event) {
     metadata: parsedMetadata,
   });
   return { ...event, narrative };
+}
+
+export function presentJourneyEvents(events = []) {
+  const presented = [];
+  const pendingTabs = new Map();
+  for (const event of events) {
+    const sessionKey = event.session_id ?? '__unscoped__';
+    if (event.action === 'control.tab') {
+      pendingTabs.set(sessionKey, event);
+      continue;
+    }
+    const pendingTab = pendingTabs.get(sessionKey);
+    if (pendingTab) presented.push(presentEvent(pendingTab));
+    pendingTabs.delete(sessionKey);
+    presented.push(presentEvent(event));
+  }
+  for (const pendingTab of pendingTabs.values()) presented.push(presentEvent(pendingTab));
+  presented.sort((left, right) => (left.occurred_at_ms ?? 0) - (right.occurred_at_ms ?? 0));
+  return presented;
 }
 
 export function groupJourneys(sessions = [], events = []) {

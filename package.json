@@ -12,7 +12,8 @@
     "demo:css": "sass --load-path=node_modules --no-source-map --style=compressed demo/styles/demo.scss public/assets/styles/demo.css",
     "demo:pages": "node scripts/demo/render-demo-pages.mjs",
     "demo:assets": "node scripts/demo/copy-demo-assets.mjs",
-    "demo:build": "npm run demo:css && npm run demo:pages && npm run demo:assets",
+    "build:writing": "node scripts/build-writing-runtime.mjs",
+    "demo:build": "npm run demo:css && npm run demo:pages && npm run demo:assets && npm run build:writing",
     "demo:serve": "npm run demo:build && node scripts/demo/serve-demo.mjs",
     "validate": "node scripts/check-required-files.mjs",
     "security:secrets": "node scripts/secret-pattern-scan.mjs",
@@ -20,7 +21,10 @@
   },
   "devDependencies": {
     "d3": "^7.9.0",
+    "dictionary-en-gb": "^3.0.0",
+    "esbuild": "^0.28.1",
     "govuk-frontend": "^6.3.0",
+    "nspell": "^2.1.5",
     "nunjucks": "^3.2.4",
     "sass": "^1.101.0"
   }

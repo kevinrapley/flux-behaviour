@@ -1,7 +1,7 @@
 import { fluxEventSchema } from '../events/flux-event-schema.mjs';
 import { validateEventRuntime } from '../events/validate-event-runtime.mjs';
 
-const SCHEMA_VERSION = '1.1.0';
+const SCHEMA_VERSION = '1.2.0';
 const SDK_ORIGIN = 'sdk';
 
 const OPTIONAL_METADATA_KEYS = Object.freeze([
@@ -26,6 +26,7 @@ const OPTIONAL_METADATA_KEYS = Object.freeze([
   'backspace_count',
   'paste_count',
   'chars_per_minute',
+  'words_per_minute',
   'revisit_count'
 ]);
 
@@ -48,6 +49,7 @@ export function createFluxTag(options = {}) {
   const tenantId = typeof options.tenantId === 'string' && options.tenantId !== '' ? options.tenantId : 'default';
   let visitorId = typeof options.visitorId === 'string' && options.visitorId !== '' ? options.visitorId : null;
   const sessionIdFactory = typeof options.sessionIdFactory === 'function' ? options.sessionIdFactory : () => generateSessionId(options.randomSource);
+  const fixedSessionId = sessionId !== null;
   const visitorIdFactory = typeof options.visitorIdFactory === 'function' ? options.visitorIdFactory : () => generateVisitorId(options.randomSource);
   const resetIdentifiers = typeof options.resetIdentifiers === 'function' ? options.resetIdentifiers : () => {};
 
@@ -84,7 +86,7 @@ export function createFluxTag(options = {}) {
         return { sent: false, reason: 'not_configured' };
       }
 
-      sessionId ??= sessionIdFactory();
+      sessionId = fixedSessionId ? sessionId : sessionIdFactory();
       visitorId ??= visitorIdFactory();
       const event = buildEvent({ sessionId, visitorId, tenantId, eventClass, action, details, now });
       const validation = validateEventRuntime(event, fluxEventSchema);

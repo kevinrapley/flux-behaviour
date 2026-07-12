@@ -1,0 +1,60 @@
+evidence_records:
+  - task_id: flux-behaviour-hosted-capture-ownership
+    mode: repo-fix
+    repository: kevinrapley/flux-behaviour
+    risk_level: high
+    base_branch: main
+    working_branch: fix/wpm-keyboard-autocomplete
+    files_read:
+      - README.md
+      - AGENTS.md
+      - RECENT_LEARNINGS.md
+      - CONTRIBUTING.md
+      - SECURITY.md
+      - repository-contract.yaml
+      - github-settings.yaml
+      - conformance-matrix.yaml
+      - gap-register.yaml
+      - docs/instrumentation/tag-integration.md
+    files_changed:
+      - src/sdk/flux-auto-capture.mjs
+      - src/sdk/flux-browser.mjs
+      - src/sdk/flux-tag.mjs
+      - src/writing/uk-english-writing-analyser.mjs
+      - src/writing/uk-english-writing-runtime.mjs
+      - src/events/event-privacy-policy.mjs
+      - src/events/flux-event-schema.mjs
+      - src/product/narrative.mjs
+      - src/product/router.mjs
+      - src/product/session-dimensions.mjs
+      - contracts/events/flux-event.schema.json
+      - tests/auto-capture-runtime.test.mjs
+      - tests/uk-english-writing-analyser.test.mjs
+    promotion_decisions:
+      - decision: Flux Behaviour owns the complete hosted capture and on-device writing-analysis runtime; publisher services retain only the include, configuration and semantic attributes.
+      - decision: Words per minute is derived from the on-device word count and active typing interval; character rate remains accepted only as legacy contract data.
+      - decision: All browser autocomplete use is captured; ordinary fields use their semantic key and excluded sensitive fields use a fixed allow-listed category with no value, length, identity or optional metadata.
+      - decision: Contract v1.2.0 separates immediate blur evidence from asynchronous writing analysis and ships the writing runtime and UK dictionary as tracked hosted assets.
+    commands_run:
+      - command: npm test
+        status: passed
+        evidence: All 194 tests passed, including review regressions for session-scoped Tab state, safe keyboard activation, in-memory sessions, autocomplete privacy and immediate blur delivery.
+      - command: npm run demo:assets && npm run build:writing
+        status: passed
+        evidence: Hosted source assets, bundled analyser and split UK dictionary were generated from Flux-owned sources.
+    recent_learnings:
+      read: true
+      updated: true
+      entry: The analytics product must own its capture engine.
+    security:
+      secrets_changed: false
+      assessment: No credentials or publisher account identifiers were introduced.
+    privacy:
+      data_collection_scope_changed: true
+      assessment: Ordinary autocomplete exports only the semantic field key; sensitive autocomplete exports only an allow-listed category. Values, lengths and identities remain excluded. UK text stays on-device and only bounded counts are exported.
+    accessibility:
+      required: true
+      assessment: Keyboard focus, Tab destination and Enter activation have explicit regression coverage; browser verification remains required before release.
+    risks:
+      - Hosted cross-origin module and dictionary delivery require production browser verification after deployment.
+      - UK-English issue heuristics retain the existing representative-corpus and fairness release blocker.

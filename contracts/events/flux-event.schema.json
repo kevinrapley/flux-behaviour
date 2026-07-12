@@ -57,6 +57,38 @@
             { "required": ["backspace_count"] },
             { "required": ["paste_count"] },
             { "required": ["chars_per_minute"] },
+            { "required": ["words_per_minute"] },
+            { "required": ["revisit_count"] }
+          ]
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "action": { "pattern": "^field\\.autocomplete\\.(email|password|one-time-code|telephone|payment|other)\\.used$" }
+        },
+        "required": ["action"]
+      },
+      "then": {
+        "properties": {
+          "event_class": { "const": "trust" },
+          "role": { "const": "service" },
+          "element_key": { "pattern": "^autocomplete\\.(email|password|one-time-code|telephone|payment|other)$" }
+        },
+        "not": {
+          "anyOf": [
+            { "required": ["value_length"] }, { "required": ["edit_count"] },
+            { "required": ["duration_ms"] }, { "required": ["dwell_before_input_ms"] },
+            { "required": ["typing_duration_ms"] }, { "required": ["writing_language"] },
+            { "required": ["word_count"] }, { "required": ["spelling_issue_count"] },
+            { "required": ["grammar_issue_count"] }, { "required": ["uppercase_letter_count"] },
+            { "required": ["lowercase_letter_count"] }, { "required": ["all_caps_word_count"] },
+            { "required": ["reason"] }, { "required": ["navigation_direction"] },
+            { "required": ["pointer_type"] }, { "required": ["file_count"] },
+            { "required": ["file_size_bucket"] }, { "required": ["key_press_count"] },
+            { "required": ["backspace_count"] }, { "required": ["paste_count"] },
+            { "required": ["chars_per_minute"] }, { "required": ["words_per_minute"] },
             { "required": ["revisit_count"] }
           ]
         }
@@ -99,6 +131,7 @@
             { "required": ["backspace_count"] },
             { "required": ["paste_count"] },
             { "required": ["chars_per_minute"] },
+            { "required": ["words_per_minute"] },
             { "required": ["revisit_count"] }
           ]
         }
@@ -141,6 +174,7 @@
             { "required": ["backspace_count"] },
             { "required": ["paste_count"] },
             { "required": ["chars_per_minute"] },
+            { "required": ["words_per_minute"] },
             { "required": ["revisit_count"] }
           ]
         }
@@ -178,7 +212,7 @@
   "properties": {
     "schema_version": {
       "type": "string",
-      "const": "1.1.0"
+      "const": "1.2.0"
     },
     "session_id": {
       "type": "string",
@@ -376,6 +410,11 @@
       "type": "integer",
       "minimum": 0,
       "maximum": 2000
+    },
+    "words_per_minute": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1000
     },
     "revisit_count": {
       "type": "integer",

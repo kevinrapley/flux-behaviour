@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { presentEvent } from '../src/product/router.mjs';
+import { presentEvent, presentJourneyEvents } from '../src/product/router.mjs';
 
 test('rebuilds stored journey narratives when they are read', () => {
   const event = presentEvent({
@@ -16,7 +16,7 @@ test('rebuilds stored journey narratives when they are read', () => {
       typing_duration_ms: 26000,
       key_press_count: 101,
       backspace_count: 3,
-      chars_per_minute: 233,
+      words_per_minute: 47,
       revisit_count: 2,
       pointer_type: 'mouse',
     }),
@@ -26,7 +26,7 @@ test('rebuilds stored journey narratives when they are read', () => {
 
   assert.equal(
     event.narrative,
-    'After dwelling for 1.4s without interacting, typed 101 characters in an unlabelled text area over 26s at 233 characters per minute. Used Backspace or Delete 3 times. This was the second visit to the field. Focus left using a mouse.',
+    'After dwelling for 1.4s without interacting, typed 101 characters in an unlabelled text area over 26s at 47 words per minute. Used Backspace or Delete 3 times. This was the second visit to the field. Focus left using a mouse.',
   );
   assert.match(event.metadata_json, /"dwell_before_input_ms":1400/);
 });
@@ -52,7 +52,7 @@ test('preserves a stored neutral authentication milestone outcome', () => {
     role: 'service',
     element_key: 'auth.otp',
     metadata_json: JSON.stringify({
-      schema_version: '1.1.0',
+      schema_version: '1.2.0',
       consent: 'yes',
       origin: 'sdk',
       event_class: 'trust',
@@ -66,4 +66,34 @@ test('preserves a stored neutral authentication milestone outcome', () => {
   });
 
   assert.equal(event.narrative, 'Successfully verified the one-time code and signed in.');
+});
+
+test('collapses historical Tab runs to the final destination before an interaction', () => {
+  const events = presentJourneyEvents([
+    { action: 'control.tab', role: 'control', element_key: 'link.navigation.home', metadata_json: '{}', occurred_at_ms: 1 },
+    { action: 'control.tab', role: 'control', element_key: 'link.navigation.sourcebook', metadata_json: '{}', occurred_at_ms: 2 },
+    { action: 'control.click', role: 'control', element_key: 'link.navigation.sourcebook', metadata_json: '{"pointer_type":"keyboard"}', occurred_at_ms: 3 },
+  ]);
+
+  assert.deepEqual(events.map(({ action, element_key }) => [action, element_key]), [
+    ['control.tab', 'link.navigation.sourcebook'],
+    ['control.click', 'link.navigation.sourcebook'],
+  ]);
+  assert.equal(events[1].narrative, 'Opened the Sourcebook link using a keyboard.');
+});
+
+test('collapses Tab runs independently for interleaved sessions', () => {
+  const events = presentJourneyEvents([
+    { session_id: 'session-a', action: 'control.tab', role: 'control', element_key: 'link.navigation.home', metadata_json: '{}', occurred_at_ms: 1 },
+    { session_id: 'session-b', action: 'control.tab', role: 'control', element_key: 'link.navigation.projects', metadata_json: '{}', occurred_at_ms: 2 },
+    { session_id: 'session-a', action: 'control.click', role: 'control', element_key: 'link.navigation.home', metadata_json: '{}', occurred_at_ms: 3 },
+    { session_id: 'session-b', action: 'control.click', role: 'control', element_key: 'link.navigation.projects', metadata_json: '{}', occurred_at_ms: 4 },
+  ]);
+
+  assert.deepEqual(events.map(({ session_id, action }) => [session_id, action]), [
+    ['session-a', 'control.tab'],
+    ['session-b', 'control.tab'],
+    ['session-a', 'control.click'],
+    ['session-b', 'control.click'],
+  ]);
 });
