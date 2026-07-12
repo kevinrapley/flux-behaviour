@@ -23,9 +23,48 @@ test('describes semantic controls using their purpose and control type', () => {
       action: 'control.click',
       role: 'control',
       element_key: 'tab.journal.codes',
-      metadata: { interaction_type: 'click', pointer_type: 'mouse' },
+      metadata: { pointer_type: 'mouse' },
     }),
     'Click the Codes tab, using mouse.',
+  );
+});
+
+test('does not treat pasted or autofilled content as an untouched field', () => {
+  assert.equal(
+    describeInteraction({
+      event_class: 'input',
+      action: 'field.blur',
+      role: 'field',
+      element_key: 'field.analysis.code-retrieval',
+      metadata: { duration_ms: 1400, key_press_count: 0, value_length: 7, edit_count: 1, paste_count: 1 },
+    }),
+    'Entered 7 characters in the Code retrieval field after focusing it for 1.4s without recorded key presses.',
+  );
+});
+
+test('keeps positional fallback form keys generic', () => {
+  assert.equal(
+    describeInteraction({
+      event_class: 'nav',
+      action: 'flow.submit',
+      role: 'form',
+      element_key: 'form.page.projects.1',
+      metadata: {},
+    }),
+    'Navigate on form “form page projects 1”.',
+  );
+});
+
+test('requires the neutral OTP service event shape before claiming an outcome', () => {
+  assert.equal(
+    describeInteraction({
+      event_class: 'input',
+      action: 'auth.otp.succeeded',
+      role: 'field',
+      element_key: 'field.auth.otp',
+      metadata: { value_length: 6 },
+    }),
+    'Type the One-time code field, then typing 6 characters.',
   );
 });
 

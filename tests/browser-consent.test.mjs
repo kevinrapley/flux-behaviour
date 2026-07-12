@@ -15,3 +15,12 @@ test('auto-capture does not derive element keys from accessible labels', () => {
   assert.doesNotMatch(source, /getAttribute\('aria-label'\)/);
   assert.match(source, /element\.dataset\.fluxKey/);
 });
+
+test('auto-capture consumes controlled page, role and sensitive attributes', () => {
+  for (const path of ['src/sdk/flux-auto-capture.mjs', 'public/assets/flux/sdk/flux-auto-capture.mjs']) {
+    const source = readFileSync(path, 'utf8');
+    assert.match(source, /document\.body\?\.dataset\?\.fluxPage/);
+    assert.match(source, /element\?\.dataset\?\.fluxRole/);
+    assert.match(source, /element\?\.dataset\?\.fluxSensitive === 'true'/);
+  }
+});

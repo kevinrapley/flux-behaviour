@@ -5,6 +5,7 @@ const tag = installFluxBrowserTag(window);
 const focusState = new WeakMap();
 const fieldVisits = new Map();
 const recentClicks = [];
+const SAFE_ROLES = new Set(['field', 'form', 'control', 'page', 'service', 'environment']);
 let lastPointerType = 'unknown';
 
 if (localStorage.getItem(CONSENT_KEY) === 'yes') {
@@ -51,8 +52,7 @@ function trackClick(event) {
   if (!target) return;
   window.flux('event', 'nav', 'control.click', {
     ...target,
-    pointer_type: lastPointerType,
-    interaction_type: lastPointerType === 'touch' ? 'touch' : 'click'
+    pointer_type: lastPointerType
   });
   recordRage(target);
 }
@@ -60,7 +60,7 @@ function trackClick(event) {
 function trackKeyboard(event) {
   if (event.key === 'Tab') {
     const target = targetDetails(event.target);
-    if (target) window.flux('event', 'nav', 'control.tab', { ...target, pointer_type: 'keyboard', interaction_type: 'tab' });
+    if (target) window.flux('event', 'nav', 'control.tab', { ...target, pointer_type: 'keyboard' });
   }
   const state = focusState.get(event.target);
   const details = targetDetails(event.target);
@@ -111,8 +111,7 @@ function endFocus(event) {
     chars_per_minute: state.keyPressCount > 0 ? Math.min(2000, Math.round((state.keyPressCount * 60000) / Math.max(1, performance.now() - state.startedAt))) : 0,
     revisit_count: state.revisitCount,
     value_length: typeof event.target.value === 'string' ? event.target.value.length : 0,
-    pointer_type: lastPointerType,
-    interaction_type: 'input'
+    pointer_type: lastPointerType
   });
 }
 
@@ -144,20 +143,26 @@ function targetDetails(element) {
   if (isExcludedSensitiveInput(target)) return null;
   const key = stableKey(target);
   if (!target || !key) return null;
-  return { role: target.matches('input,select,textarea') ? 'field' : 'control', element_key: key };
+  return { role: semanticRole(target, target.matches('input,select,textarea') ? 'field' : 'control'), element_key: key };
 }
 
 function editableTarget(element) {
   if (isExcludedSensitiveInput(element)) return null;
   const key = stableKey(element);
-  return element?.matches?.('input:not([type="hidden"]),textarea,select') && key ? { role: 'field', element_key: key } : null;
+  return element?.matches?.('input:not([type="hidden"]),textarea,select') && key ? { role: semanticRole(element, 'field'), element_key: key } : null;
 }
 
 function isExcludedSensitiveInput(element) {
+  if (element?.dataset?.fluxSensitive === 'true') return true;
   if (!element?.matches?.('input')) return false;
   const type = (element.type || 'text').toLowerCase();
   const autocomplete = (element.autocomplete || '').toLowerCase();
   return ['password', 'email', 'tel'].includes(type) || ['one-time-code', 'current-password', 'new-password'].includes(autocomplete);
+}
+
+function semanticRole(element, fallback) {
+  const declared = element?.dataset?.fluxRole;
+  return SAFE_ROLES.has(declared) ? declared : fallback;
 }
 
 function stableKey(element) {
@@ -174,6 +179,8 @@ function stableKey(element) {
 }
 
 function formKey(form) {
+  const declared = stableKey(form);
+  if (declared) return declared;
   const position = [...document.forms].indexOf(form);
   return `form.${pageKey()}.${Math.max(0, position) + 1}`;
 }
@@ -184,5 +191,7 @@ function detailsKey(details) {
 }
 
 function pageKey() {
+  const declared = document.body?.dataset?.fluxPage;
+  if (typeof declared === 'string' && /^[A-Za-z0-9._:-]{1,120}$/.test(declared)) return declared;
   return location.pathname.replace(/[^A-Za-z0-9._:-]+/g, '-').replace(/^-|-$/g, '') || 'home';
 }

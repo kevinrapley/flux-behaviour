@@ -20,7 +20,10 @@ evidence_records:
       - docs/product/production-runtime.md
     files_changed:
       - src/product/narrative.mjs
+      - src/sdk/flux-auto-capture.mjs
+      - public/assets/flux/sdk/flux-auto-capture.mjs
       - tests/narrative.test.mjs
+      - tests/browser-consent.test.mjs
       - docs/instrumentation/event-taxonomy.md
       - docs/product/production-runtime.md
       - RECENT_LEARNINGS.md
@@ -36,13 +39,17 @@ evidence_records:
         reason: A successful service milestone answers the journey question while keeping code, length, email, challenge and account identity outside analytics.
       - decision: Treat zero-character field blur as focus without input.
         reason: Reporting zero typed characters as typing is a materially false journey narrative.
+      - decision: Distinguish keyboard entry from paste and autofill using metadata-only edit, paste and final-length counts.
+        reason: A zero key-press count does not mean the field was untouched when another privacy-safe input signal shows a change.
+      - decision: Require trust class, service role and the neutral auth.otp key before translating an authentication action into an outcome.
+        reason: An action name alone cannot safely establish that OTP verification happened.
     commands_run:
       - command: npm test
         result: pass
-        evidence: All 123 tests passed, including seven new purpose-led narrative cases.
-      - command: npx -y node@20 --test tests/*.test.mjs
+        evidence: All 127 tests passed, including semantic SDK attribute contracts and narrative regressions for paste, positional forms, schema-derived clicks and strict authentication outcomes.
+      - command: npx --yes node@20 --test tests/*.test.mjs
         result: pass
-        evidence: All 123 tests passed under the repository's declared Node 20 runtime baseline.
+        evidence: All 127 tests passed under Node 20.20.2, the repository's declared runtime baseline.
       - command: npm run validate
         result: pass
         evidence: Repository governance file check passed for 19 files.

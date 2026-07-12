@@ -6,7 +6,7 @@ Recent learnings created by the LLM agent in reverse-chronological order (most r
 
 ## 2026-07-12 — Semantic telemetry needs controlled service meaning
 
-A useful journey narrative needs controlled service meaning, not DOM position or copied interface text. Type-first `data-flux-*` keys can name a page, tab, button, field or form without reading content, while an allow-listed lifecycle event can report that OTP verification succeeded without observing the code, its length, the email or account identity. Narrative generation must also distinguish zero-character focus from typing; otherwise technically accurate counts produce a false story.
+A useful journey narrative needs controlled service meaning, not DOM position or copied interface text. Type-first `data-flux-*` keys can name a page, tab, button, field or form without reading content, while an allow-listed lifecycle event can report that OTP verification succeeded without observing the code, its length, the email or account identity. That outcome must match the neutral trust/service/auth event shape rather than trusting its action name alone. Narrative generation must also distinguish untouched fields, keyboard entry, paste and autofill using metadata-only counts; otherwise a zero key-press count can produce a false story.
 
 ## 2026-07-11 — Neutral evidence is not a behavioural cohort
 
