@@ -4,9 +4,10 @@ import { readFileSync } from 'node:fs';
 
 test('browser tracker creates and clears persistent identifiers only through consent lifecycle hooks', () => {
   const source = readFileSync('public/assets/flux/sdk/flux-browser.mjs', 'utf8');
-  assert.match(source, /sessionIdFactory: \(\) => persistentSessionId\(windowLike\)/);
+  assert.match(source, /sessionIdFactory: \(\) => persistentSessionId\(windowLike, config\.now\)/);
   assert.match(source, /visitorIdFactory: \(\) => persistentVisitorId\(windowLike\)/);
   assert.match(source, /clearPersistentIdentifiers\(windowLike\)/);
+  assert.match(source, /flux\.behaviour\.session_activity_ms/);
   assert.doesNotMatch(source, /sessionId: config\.sessionId \?\? persistentSessionId/);
 });
 

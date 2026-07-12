@@ -6,6 +6,12 @@ const AUTH_OUTCOMES = Object.freeze({
   'auth.otp.requested': 'Requested a one-time sign-in code.',
   'auth.otp.succeeded': 'Successfully verified the one-time code and signed in.',
   'auth.otp.failed': 'Could not verify the one-time code.',
+  'field.autocomplete.email.used': 'Used browser autocomplete for the sign-in email field.',
+  'field.autocomplete.password.used': 'Used browser autocomplete for a password field.',
+  'field.autocomplete.one-time-code.used': 'Used browser autocomplete for the one-time code field.',
+  'field.autocomplete.telephone.used': 'Used browser autocomplete for a telephone field.',
+  'field.autocomplete.payment.used': 'Used browser autocomplete for a payment field.',
+  'field.autocomplete.other.used': 'Used browser autocomplete for a sensitive field.',
 });
 
 function words(value) {
@@ -132,6 +138,9 @@ export function describeInteraction(event) {
   if (event.action === 'field.focus.auto' && element?.type === 'field') {
     return `Automatically focused ${element.phrase}.`;
   }
+  if (event.action === 'field.autocomplete.used' && element?.type === 'field') {
+    return `Used browser autocomplete for ${element.phrase}.`;
+  }
   if (event.action?.startsWith('field.focus.') && element?.type === 'field') {
     const origin = event.action.slice('field.focus.'.length);
     const suffix = origin === 'pointer' && metadata.pointer_type && metadata.pointer_type !== 'unknown'
@@ -143,7 +152,7 @@ export function describeInteraction(event) {
   const dwell = Number.isInteger(metadata.duration_ms) ? metadata.duration_ms : null;
   const dwellBeforeInput = Number.isInteger(metadata.dwell_before_input_ms) ? metadata.dwell_before_input_ms : null;
   const typingDuration = Number.isInteger(metadata.typing_duration_ms) ? metadata.typing_duration_ms : null;
-  const typingRate = Number.isInteger(metadata.chars_per_minute) ? metadata.chars_per_minute : null;
+  const typingRate = Number.isInteger(metadata.words_per_minute) ? metadata.words_per_minute : null;
   const keyPresses = Number.isInteger(metadata.key_press_count) ? metadata.key_press_count : null;
   const valueLength = Number.isInteger(metadata.value_length) ? metadata.value_length : null;
   const editCount = Number.isInteger(metadata.edit_count) ? metadata.edit_count : 0;
@@ -161,7 +170,7 @@ export function describeInteraction(event) {
     const timing = typingDuration !== null
       ? ` over ${durationText(typingDuration)}`
       : dwell === null ? '' : ` while it was focused for ${durationText(dwell)}`;
-    const speed = typingRate !== null && typingRate > 0 ? ` at ${typingRate} characters per minute` : '';
+    const speed = typingRate !== null && typingRate > 0 ? ` at ${typingRate} words per minute` : '';
     const revisitCount = Number.isInteger(metadata.revisit_count) ? metadata.revisit_count : 0;
     return `${prefix} ${keyPresses} character${keyPresses === 1 ? '' : 's'} in ${element.phrase}${timing}${speed}.${editingDetailText(metadata)}${visitText(revisitCount)}${writingQualityText(metadata)}${exitText(metadata)}`;
   }
@@ -174,7 +183,9 @@ export function describeInteraction(event) {
   }
   if (event.action === 'flow.submit' && element?.type === 'form') return `Submitted ${element.phrase}.`;
   if (event.action === 'error.invalid' && element?.type === 'field') return `Encountered a validation error on ${element.phrase}.`;
-  if (event.action === 'control.tab' && element) return `Tabbed from ${element.phrase} using a keyboard.`;
+  if (event.action === 'control.tab' && element) return `Tabbed to ${element.phrase} using a keyboard.`;
+  if (event.action === 'control.activate' && element?.type === 'link') return `Opened ${element.phrase} using a keyboard.`;
+  if (event.action === 'control.click' && metadata.pointer_type === 'keyboard' && element?.type === 'link') return `Opened ${element.phrase} using a keyboard.`;
 
   if (element) {
     const method = methodText(event, metadata);

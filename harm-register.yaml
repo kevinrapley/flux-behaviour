@@ -36,7 +36,7 @@ harms:
       - Users completing high-stakes forms
     likelihood: medium
     severity: critical
-    mitigation: Enforce consent first, create identifiers only after consent, clear them on revocation, exclude email, telephone, password and one-time-code inputs and sensitive/auth form submissions from auto-capture, support explicit sensitive markers, use controlled type-first semantic keys where supplied or neutral auto-prefixed structural keys otherwise, reject every optional metadata field on neutral OTP requested/succeeded/failed milestones, omit unchanged prefilled value lengths, preserve source-to-built tracker parity, collect metadata only, export no text values and run collector schema tests.
+    mitigation: Enforce consent first, create identifiers only after consent, clear them on revocation, exclude email, telephone, password, payment and one-time-code values and sensitive/auth form interactions from ordinary capture, represent sensitive autocomplete only by an allow-listed category with no value or length, use controlled type-first semantic keys where supplied or safe structural fallbacks otherwise, reject every optional metadata field on neutral authentication milestones, keep the capture engine and UK-English resources in Flux rather than publisher repositories, omit unchanged prefilled value lengths, collect metadata only, export no text values and run collector schema tests.
     residual_risk: high
     owner: security-lead
     escalation_route: Product owner and data protection lead
@@ -76,7 +76,7 @@ harms:
       - Keyboard and assistive-technology users
     likelihood: low
     severity: medium
-    mitigation: Separate focus origin, pre-input dwell, active typing time, keyboard entry and focus-exit method; never relabel total focus as dwell after input; translate only controlled semantic keys; render generated keys as unlabelled control types; and regression-test historical presentation.
+    mitigation: Separate focus origin, pre-input dwell, active typing time, keyboard entry and focus-exit method; calculate typing rate in words per minute; collapse Tab runs to their final destination; describe Enter activation as keyboard navigation; never relabel total focus as dwell after input; translate only controlled semantic keys; and regression-test historical presentation.
     residual_risk: low
     owner: product-lead
     escalation_route: Product owner and accessibility lead

@@ -13,6 +13,8 @@ const BASE_EVENT_KEYS = new Set([
 ]);
 
 const AUTH_OTP_ACTION = /^auth\.otp\.(requested|succeeded|failed)$/;
+const SENSITIVE_AUTOCOMPLETE_ACTION = /^field\.autocomplete\.(email|password|one-time-code|telephone|payment|other)\.used$/;
+const SENSITIVE_AUTOCOMPLETE_KEY = /^autocomplete\.(email|password|one-time-code|telephone|payment|other)$/;
 const WRITING_SIGNAL_KEYS = [
   'writing_language',
   'word_count',
@@ -27,6 +29,10 @@ export function isAuthOtpAction(action) {
   return typeof action === 'string' && AUTH_OTP_ACTION.test(action);
 }
 
+export function isSensitiveAutocompleteAction(action) {
+  return typeof action === 'string' && SENSITIVE_AUTOCOMPLETE_ACTION.test(action);
+}
+
 export function isAuthFormSubmit(event) {
   return event?.action === 'flow.submit' && /^form\.auth(?:[.:-]|$)/.test(event?.element_key ?? '');
 }
@@ -37,7 +43,8 @@ export function isAuthScopedInteraction(event) {
 }
 
 export function isReservedAuthKeyMisuse(event) {
-  return String(event?.element_key ?? '').toLowerCase() === 'auth.otp' && !isNeutralAuthMilestone(event);
+  const key = String(event?.element_key ?? '').toLowerCase();
+  return (key === 'auth.otp' || SENSITIVE_AUTOCOMPLETE_KEY.test(key)) && !isNeutralAuthMilestone(event);
 }
 
 export function isSensitiveAuthInteraction(event) {
@@ -55,8 +62,11 @@ export function hasIncompleteWritingSignals(event) {
 }
 
 export function isNeutralAuthMilestone(event) {
-  if (!isAuthOtpAction(event?.action)) return false;
-  if (event.event_class !== 'trust' || event.role !== 'service' || event.element_key !== 'auth.otp') return false;
+  const otpMilestone = isAuthOtpAction(event?.action) && event.element_key === 'auth.otp';
+  const autocompleteMatch = SENSITIVE_AUTOCOMPLETE_ACTION.exec(event?.action ?? '');
+  const autocompleteMilestone = autocompleteMatch && event.element_key === `autocomplete.${autocompleteMatch[1]}`;
+  if (!otpMilestone && !autocompleteMilestone) return false;
+  if (event.event_class !== 'trust' || event.role !== 'service') return false;
 
   const nestedMetadata = event.metadata;
   if (nestedMetadata && typeof nestedMetadata === 'object' && Object.keys(nestedMetadata).length > 0) return false;
@@ -65,7 +75,7 @@ export function isNeutralAuthMilestone(event) {
 }
 
 export function violatesEventPrivacy(event) {
-  return (isAuthOtpAction(event?.action) && !isNeutralAuthMilestone(event))
+  return ((isAuthOtpAction(event?.action) || isSensitiveAutocompleteAction(event?.action)) && !isNeutralAuthMilestone(event))
     || isSensitiveAuthInteraction(event)
     || hasUnchangedFieldLength(event)
     || hasIncompleteWritingSignals(event);

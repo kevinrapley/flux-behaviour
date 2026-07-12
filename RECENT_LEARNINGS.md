@@ -4,6 +4,10 @@ Recent learnings created by the LLM agent in reverse-chronological order (most r
 
 ---
 
+## 2026-07-12 — The analytics product must own its capture engine
+
+A publisher repository should provide only the hosted Flux include, tenant configuration and controlled `data-flux-*` context. Session boundaries, input-method interpretation, autocomplete detection, UK-English analysis, dictionaries, privacy validation and narrative logic belong in Flux Behaviour. Copying them into each publisher creates drift, hides contract changes and makes a service repository responsible for product analytics behaviour it cannot govern consistently.
+
 ## 2026-07-12 — Linguistic metadata still needs an explicit locale, consent and fairness boundary
 
 Possible spelling, grammar and casing counts can enrich a journey without transmitting words, but they remain content-derived signals. Publishers must analyse locally after consent, declare the `en-GB` baseline, send an atomic bounded count bundle and discard text before transport. Flux must use “possible issue” wording and prohibit literacy, intelligence, professionalism, personality, protected-characteristic and automated-decision interpretations; representative corpus, accessibility and fairness validation remains a release blocker.

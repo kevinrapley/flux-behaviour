@@ -1,4 +1,5 @@
 import { installFluxBrowserTag } from './flux-browser.mjs';
+import '../writing/uk-english-writing-runtime.mjs';
 
 const CONSENT_KEY = 'flux.behaviour.consent';
 const tag = installFluxBrowserTag(window);
@@ -7,7 +8,13 @@ const fieldVisits = new Map();
 const recentClicks = [];
 const SAFE_ROLES = new Set(['field', 'form', 'control', 'page', 'service', 'environment']);
 const AUTH_SCOPED_KEY = /(^|[.:-])auth(?=[.:-]|$)/i;
+const AUTH_PENDING_KEY = 'flux.behaviour.auth_otp_verification_pending';
+const recordedAutocomplete = new WeakMap();
 let lastPointerType = 'unknown';
+let lastPointer = { target: null, type: 'unknown', at: Number.NEGATIVE_INFINITY };
+let awaitingTabDestination = false;
+let pendingTabDestination = null;
+let lastKeyboardActivation = { target: null, at: Number.NEGATIVE_INFINITY };
 
 if (localStorage.getItem(CONSENT_KEY) === 'yes') {
   window.flux('consent', 'granted');
@@ -21,7 +28,7 @@ function showConsentBanner() {
   banner.className = 'govuk-cookie-banner';
   banner.setAttribute('role', 'region');
   banner.setAttribute('aria-label', 'Behavioural analytics consent');
-  banner.innerHTML = '<div class="govuk-width-container"><div class="govuk-grid-row"><div class="govuk-grid-column-two-thirds"><h2 class="govuk-heading-m">Help improve this service</h2><p class="govuk-body">With your consent, Flux Behaviour records interaction metadata such as navigation, timing and character counts. It never records what you type or identifies you directly.</p><button type="button" class="govuk-button" data-flux-consent="yes">Accept behavioural analytics</button> <button type="button" class="govuk-button govuk-button--secondary" data-flux-consent="no">Reject</button></div></div></div>';
+  banner.innerHTML = '<div class="govuk-width-container"><div class="govuk-grid-row"><div class="govuk-grid-column-two-thirds"><h2 class="govuk-heading-m">Help improve this service</h2><p class="govuk-body">With your consent, Flux Behaviour records interaction metadata such as navigation, timing, typing rate, corrections, browser autocomplete use and possible UK English writing issues. Text and autocomplete values stay in this browser and never leave the page.</p><button type="button" class="govuk-button" data-flux-consent="yes" data-flux-key="button.consent.accept-behavioural-analytics" data-flux-role="control">Accept behavioural analytics</button> <button type="button" class="govuk-button govuk-button--secondary" data-flux-consent="no" data-flux-key="button.consent.reject-behavioural-analytics" data-flux-role="control">Reject</button></div></div></div>';
   document.body.prepend(banner);
   banner.addEventListener('click', (event) => {
     const decision = event.target?.dataset?.fluxConsent;
@@ -36,19 +43,29 @@ function showConsentBanner() {
 }
 
 function instrument() {
+  resolvePendingOtpSuccess();
   window.flux('event', 'nav', 'page.loaded', { role: 'page', element_key: pageKey() });
-  document.addEventListener('pointerdown', (event) => { lastPointerType = event.pointerType || 'mouse'; }, true);
+  document.addEventListener('pointerdown', recordPointer, true);
   document.addEventListener('click', trackClick, true);
   document.addEventListener('keydown', trackKeyboard, true);
   document.addEventListener('paste', trackPaste, true);
   document.addEventListener('focusin', beginFocus, true);
   document.addEventListener('focusout', endFocus, true);
+  document.addEventListener('input', trackAutocomplete, true);
+  document.addEventListener('change', trackAutocomplete, true);
   document.addEventListener('submit', trackSubmit, true);
   document.addEventListener('invalid', trackInvalid, true);
   document.addEventListener('toggle', trackHelp, true);
 }
 
+function recordPointer(event) {
+  lastPointerType = event.pointerType || 'mouse';
+  lastPointer = { target: event.target, type: lastPointerType, at: performance.now() };
+}
+
 function trackClick(event) {
+  if (lastKeyboardActivation.target === event.target && performance.now() - lastKeyboardActivation.at <= 1000) return;
+  flushPendingTabDestination();
   const target = targetDetails(event.target);
   if (!target) return;
   window.flux('event', 'nav', 'control.click', {
@@ -60,9 +77,18 @@ function trackClick(event) {
 
 function trackKeyboard(event) {
   if (event.key === 'Tab') {
-    const target = targetDetails(event.target);
-    if (target) window.flux('event', 'nav', 'control.tab', { ...target, pointer_type: 'keyboard' });
+    awaitingTabDestination = true;
+    return;
   }
+  if ((event.key === 'Enter' || event.key === ' ') && !editableTarget(event.target)) {
+    const target = targetDetails(event.target);
+    flushPendingTabDestination();
+    if (target) {
+      lastKeyboardActivation = { target: event.target, at: performance.now() };
+      window.flux('event', 'nav', 'control.activate', { ...target, pointer_type: 'keyboard' });
+    }
+  }
+  flushPendingTabDestination();
   const state = focusState.get(event.target);
   const details = targetDetails(event.target);
   if (details && (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'z') window.flux('event', 'kbd', 'edit.undo', details);
@@ -90,7 +116,50 @@ function trackPaste(event) {
   window.flux('event', 'input', 'edit.paste', details);
 }
 
+function trackAutocomplete(event) {
+  const target = event.target;
+  if (!target?.matches?.('input, select, textarea')) return;
+  const now = performance.now();
+  if (now - (recordedAutocomplete.get(target) ?? Number.NEGATIVE_INFINITY) < 5000) return;
+  let browserAutofill = event.inputType === 'insertReplacementText';
+  try {
+    browserAutofill ||= target.matches(':-webkit-autofill') || target.matches(':-moz-autofill');
+  } catch {
+    // Unsupported pseudo-class; InputEvent remains the conservative signal.
+  }
+  if (!browserAutofill) return;
+  recordedAutocomplete.set(target, now);
+  const details = editableTarget(target);
+  if (details) {
+    window.flux('event', 'input', 'field.autocomplete.used', details);
+    return;
+  }
+  if (!isExcludedSensitiveInput(target)) return;
+  const category = autocompleteCategory(target);
+  window.flux('event', 'trust', `field.autocomplete.${category}.used`, {
+    role: 'service',
+    element_key: `autocomplete.${category}`,
+  });
+}
+
+function autocompleteCategory(target) {
+  const type = String(target?.type || '').toLowerCase();
+  const autocomplete = String(target?.autocomplete || '').toLowerCase().split(/\s+/);
+  if (type === 'email' || autocomplete.some((token) => ['email', 'username'].includes(token))) return 'email';
+  if (type === 'password' || autocomplete.some((token) => ['current-password', 'new-password'].includes(token))) return 'password';
+  if (autocomplete.includes('one-time-code')) return 'one-time-code';
+  if (type === 'tel' || autocomplete.some((token) => token === 'tel' || token.startsWith('tel-'))) return 'telephone';
+  if (autocomplete.some((token) => token.startsWith('cc-'))) return 'payment';
+  return 'other';
+}
+
 function beginFocus(event) {
+  resolveFailedOtpAttempt(event.target);
+  const arrivedByTab = awaitingTabDestination;
+  if (arrivedByTab) {
+    pendingTabDestination = targetDetails(event.target);
+    awaitingTabDestination = false;
+  }
   const target = editableTarget(event.target);
   if (!target) return;
   const previous = focusState.get(event.target);
@@ -98,6 +167,23 @@ function beginFocus(event) {
   const revisitCount = (fieldVisits.get(target.element_key) ?? 0) + 1;
   fieldVisits.set(target.element_key, revisitCount);
   if (revisitCount > 1) window.flux('event', 'input', 'field.revisit', { ...target, revisit_count: revisitCount });
+  const now = performance.now();
+  const recentPointer = now - lastPointer.at <= 1000;
+  let focusOrigin = 'programmatic';
+  let pointerType;
+  if (arrivedByTab) {
+    focusOrigin = 'keyboard';
+    pointerType = 'keyboard';
+  } else if (recentPointer && (lastPointer.target === event.target || lastPointer.target?.control === event.target)) {
+    focusOrigin = 'pointer';
+    pointerType = lastPointer.type;
+  } else if (event.target?.dataset?.fluxAutofocus === 'true' && recentPointer) {
+    focusOrigin = 'auto';
+  }
+  window.flux('event', 'focus', `field.focus.${focusOrigin}`, {
+    ...target,
+    ...(pointerType ? { pointer_type: pointerType } : {}),
+  });
   const state = { startedAt: performance.now(), firstInteractionAt: null, firstTypingAt: null, lastTypingAt: null, keyPressCount: 0, backspaceCount: 0, edits: 0, pasteCount: 0, revisitCount, target, onInput: null };
   state.onInput = () => {
     const current = focusState.get(event.target);
@@ -110,6 +196,12 @@ function beginFocus(event) {
   event.target.addEventListener('input', state.onInput);
 }
 
+function flushPendingTabDestination() {
+  if (!pendingTabDestination) return;
+  window.flux('event', 'nav', 'control.tab', { ...pendingTabDestination, pointer_type: 'keyboard' });
+  pendingTabDestination = null;
+}
+
 function endFocus(event) {
   const state = focusState.get(event.target);
   if (!state) return;
@@ -119,7 +211,7 @@ function endFocus(event) {
   const durationMs = Math.round(endedAt - state.startedAt);
   const typingDurationMs = state.firstTypingAt === null ? 0 : Math.round(state.lastTypingAt - state.firstTypingAt);
   const changed = state.keyPressCount > 0 || state.edits > 0 || state.pasteCount > 0;
-  window.flux('event', 'input', 'field.blur', {
+  const details = {
     ...state.target,
     duration_ms: durationMs,
     dwell_before_input_ms: Math.round((state.firstInteractionAt ?? endedAt) - state.startedAt),
@@ -128,11 +220,42 @@ function endFocus(event) {
     backspace_count: state.backspaceCount,
     edit_count: state.edits,
     paste_count: state.pasteCount,
-    chars_per_minute: typingDurationMs > 0 ? Math.min(2000, Math.round((state.keyPressCount * 60000) / typingDurationMs)) : 0,
     revisit_count: state.revisitCount,
     ...(changed ? { value_length: typeof event.target.value === 'string' ? event.target.value.length : 0 } : {}),
     pointer_type: lastPointerType
-  });
+  };
+  const analyser = supportsWritingAnalysis(event.target) ? window.fluxWriting?.analyse : null;
+  if (typeof analyser !== 'function') {
+    window.flux('event', 'input', 'field.blur', details);
+    return;
+  }
+  const localValue = typeof event.target.value === 'string' ? event.target.value : '';
+  void Promise.resolve(analyser(localValue))
+    .then((signals) => {
+      const writingSignals = safeWritingSignals(signals);
+      const wordsPerMinute = typingDurationMs > 0 && Number.isInteger(writingSignals.word_count)
+        ? Math.min(1000, Math.round((writingSignals.word_count * 60000) / typingDurationMs))
+        : 0;
+      window.flux('event', 'input', 'field.blur', {
+        ...details,
+        ...writingSignals,
+        words_per_minute: wordsPerMinute,
+      });
+    })
+    .catch(() => window.flux('event', 'input', 'field.blur', details));
+}
+
+function supportsWritingAnalysis(element) {
+  if (element?.dataset?.fluxWritingAnalysis === 'false') return false;
+  if (element?.tagName === 'TEXTAREA') return true;
+  return element?.tagName === 'INPUT' && ['', 'text', 'search'].includes((element.type || 'text').toLowerCase());
+}
+
+function safeWritingSignals(value) {
+  if (!value || value.writing_language !== 'en-GB') return {};
+  const fields = ['word_count', 'spelling_issue_count', 'grammar_issue_count', 'uppercase_letter_count', 'lowercase_letter_count', 'all_caps_word_count'];
+  if (!fields.every((field) => Number.isInteger(value[field]) && value[field] >= 0 && value[field] <= 10_000)) return {};
+  return Object.fromEntries([['writing_language', 'en-GB'], ...fields.map((field) => [field, value[field]])]);
 }
 
 function recordFirstInteraction(state) {
@@ -147,8 +270,36 @@ function recordTyping(state) {
 
 function trackSubmit(event) {
   const target = event.target?.matches?.('form') ? event.target : null;
-  if (!target || isSensitiveForm(target)) return;
+  if (!target) return;
+  const key = target.dataset?.fluxKey;
+  if (key === 'form.auth.otp-request') {
+    emitAuthMilestone('auth.otp.requested');
+    return;
+  }
+  if (key === 'form.auth.otp-verify') {
+    window.sessionStorage?.setItem(AUTH_PENDING_KEY, String(Date.now()));
+    return;
+  }
+  if (isSensitiveForm(target)) return;
   window.flux('event', 'nav', 'flow.submit', { role: 'form', element_key: formKey(target) });
+}
+
+function resolveFailedOtpAttempt(target) {
+  if (!window.sessionStorage?.getItem(AUTH_PENDING_KEY)) return;
+  if (String(target?.autocomplete || '').toLowerCase() !== 'one-time-code') return;
+  window.sessionStorage.removeItem(AUTH_PENDING_KEY);
+  emitAuthMilestone('auth.otp.failed');
+}
+
+function resolvePendingOtpSuccess() {
+  if (!window.sessionStorage?.getItem(AUTH_PENDING_KEY)) return;
+  if (pageKey() !== 'page.account') return;
+  window.sessionStorage.removeItem(AUTH_PENDING_KEY);
+  emitAuthMilestone('auth.otp.succeeded');
+}
+
+function emitAuthMilestone(action) {
+  window.flux('event', 'trust', action, { role: 'service', element_key: 'auth.otp' });
 }
 
 function trackInvalid(event) {
@@ -191,7 +342,9 @@ function isExcludedSensitiveInput(element) {
   if (!element?.matches?.('input')) return false;
   const type = (element.type || 'text').toLowerCase();
   const autocomplete = (element.autocomplete || '').toLowerCase();
-  return ['password', 'email', 'tel'].includes(type) || ['one-time-code', 'current-password', 'new-password'].includes(autocomplete);
+  return ['password', 'email', 'tel'].includes(type)
+    || ['one-time-code', 'current-password', 'new-password'].includes(autocomplete)
+    || autocomplete.split(/\s+/).some((token) => token.startsWith('cc-'));
 }
 
 function isSensitiveForm(form) {
@@ -214,6 +367,12 @@ function stableKey(element) {
   if (typeof element?.dataset?.fluxKey === 'string' && /^[A-Za-z0-9._:-]{1,120}$/.test(element.dataset.fluxKey)) {
     return element.dataset.fluxKey;
   }
+  const semanticKey = semanticFallbackKey(element);
+  if (semanticKey) {
+    element.setAttribute?.('data-flux-key', semanticKey);
+    element.setAttribute?.('data-flux-role', semanticControlType(element) === 'field' ? 'field' : 'control');
+    return semanticKey;
+  }
   if (!element?.matches?.('a,button,input,select,textarea,[role="button"],[tabindex]')) return null;
   const controls = [...document.querySelectorAll('a,button,input,select,textarea,[role="button"],[tabindex]')];
   const position = controls.indexOf(element);
@@ -221,6 +380,55 @@ function stableKey(element) {
   const kind = element.tagName.toLowerCase();
   const type = typeof element.type === 'string' && /^[a-z]+$/i.test(element.type) ? `.${element.type.toLowerCase()}` : '';
   return `auto.${kind}${type}.${position + 1}`;
+}
+
+function semanticFallbackKey(element) {
+  const type = semanticControlType(element);
+  if (!type) return null;
+  const purpose = type === 'link'
+    ? semanticHref(element.getAttribute?.('href') || element.href)
+    : semanticSlug(element.id || element.name);
+  if (!purpose) return null;
+  const scope = type === 'link' ? 'navigation' : pageScope();
+  return `${type}.${scope}.${purpose}`.slice(0, 120);
+}
+
+function semanticControlType(element) {
+  const tag = String(element?.tagName || '').toLowerCase();
+  if (tag === 'a') return 'link';
+  if (['input', 'select', 'textarea'].includes(tag)) return 'field';
+  if (tag === 'button' || element?.matches?.('[role="button"]')) return 'button';
+  return null;
+}
+
+function semanticHref(value) {
+  const href = String(value || '').trim();
+  if (!href || href === '#') return '';
+  try {
+    const url = new URL(href, window.location?.origin || 'https://publisher.invalid');
+    if (url.protocol === 'mailto:') return 'contact-email';
+    if (url.protocol === 'tel:') return 'contact-telephone';
+    const path = url.pathname.replace(/^\/pages\/?/, '').replace(/^\/+|\/+$/g, '');
+    return semanticSlug(url.hash.replace(/^#/, '') || path || (url.pathname === '/' ? 'home' : ''));
+  } catch {
+    return '';
+  }
+}
+
+function pageScope() {
+  const declared = document.body?.dataset?.fluxPage;
+  return semanticSlug(String(declared || '').replace(/^page\./, '')) || 'page';
+}
+
+function semanticSlug(value) {
+  return String(value || '')
+    .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+    .toLowerCase()
+    .replace(/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/g, '')
+    .replace(/(^|-)(rec[a-z0-9]{10,}|[a-f0-9]{12,}|\d{4,})(?=-|$)/g, '$1')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80);
 }
 
 function formKey(form) {

@@ -28,7 +28,7 @@ export function installFluxBrowserTag(windowLike, config = {}) {
     transport,
     sessionId: config.sessionId,
     visitorId: config.visitorId,
-    sessionIdFactory: () => persistentSessionId(windowLike),
+    sessionIdFactory: () => persistentSessionId(windowLike, config.now),
     visitorIdFactory: () => persistentVisitorId(windowLike),
     resetIdentifiers: () => clearPersistentIdentifiers(windowLike),
     tenantId: config.tenantId ?? readTenantFromScript(windowLike),
@@ -85,8 +85,19 @@ function persistentVisitorId(windowLike) {
   return persistentIdentifier(windowLike.localStorage, 'flux.behaviour.visitor_id', 'visitor', windowLike);
 }
 
-function persistentSessionId(windowLike) {
-  return persistentIdentifier(windowLike.sessionStorage, 'flux.behaviour.session_id', 'session', windowLike);
+function persistentSessionId(windowLike, now = Date.now) {
+  const storage = windowLike.sessionStorage;
+  const currentTime = typeof now === 'function' ? now() : Date.now();
+  const existing = storage?.getItem('flux.behaviour.session_id');
+  const lastActivity = Number(storage?.getItem('flux.behaviour.session_activity_ms'));
+  if (existing && Number.isFinite(lastActivity) && lastActivity > 0 && currentTime - lastActivity < 30 * 60 * 1000) {
+    storage?.setItem('flux.behaviour.session_activity_ms', currentTime);
+    return existing;
+  }
+  const id = `session-${randomSuffix(windowLike)}`;
+  storage?.setItem('flux.behaviour.session_id', id);
+  storage?.setItem('flux.behaviour.session_activity_ms', currentTime);
+  return id;
 }
 
 function persistentIdentifier(storage, key, prefix, windowLike) {
@@ -100,6 +111,7 @@ function persistentIdentifier(storage, key, prefix, windowLike) {
 function clearPersistentIdentifiers(windowLike) {
   windowLike.localStorage?.removeItem('flux.behaviour.visitor_id');
   windowLike.sessionStorage?.removeItem('flux.behaviour.session_id');
+  windowLike.sessionStorage?.removeItem('flux.behaviour.session_activity_ms');
 }
 
 function randomSuffix(windowLike) {

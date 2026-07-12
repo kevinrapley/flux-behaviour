@@ -125,6 +125,34 @@ test('event validation rejects optional metadata on authentication milestones', 
   assert.ok(result.errors.some((error) => error.code === EVENT_VALIDATION_ERROR_CODES.PRIVACY_POLICY));
 });
 
+test('event validation accepts a content-free sensitive autocomplete milestone', () => {
+  const event = JSON.parse(readFileSync('fixtures/events/valid/focus-enter.json', 'utf8'));
+  Object.assign(event, {
+    event_class: 'trust',
+    action: 'field.autocomplete.email.used',
+    role: 'service',
+    element_key: 'autocomplete.email',
+  });
+  delete event.duration_ms;
+
+  assert.deepEqual(validateEvent(event, schema), { valid: true, errors: [] });
+});
+
+test('event validation rejects metadata on sensitive autocomplete milestones', () => {
+  const event = JSON.parse(readFileSync('fixtures/events/valid/focus-enter.json', 'utf8'));
+  Object.assign(event, {
+    event_class: 'trust',
+    action: 'field.autocomplete.email.used',
+    role: 'service',
+    element_key: 'autocomplete.email',
+    value_length: 24,
+  });
+
+  const result = validateEvent(event, schema);
+  assert.equal(result.valid, false);
+  assert.ok(result.errors.some((error) => error.code === EVENT_VALIDATION_ERROR_CODES.PRIVACY_POLICY));
+});
+
 test('event validation rejects authentication form submits', () => {
   const event = JSON.parse(readFileSync('fixtures/events/valid/focus-enter.json', 'utf8'));
   Object.assign(event, {
