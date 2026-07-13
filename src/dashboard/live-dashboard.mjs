@@ -213,7 +213,7 @@ function renderDashboard(data) {
   fieldReport.replaceChildren(renderFieldReport(analytics.field_report));
   health.replaceChildren(renderHealth(summary));
   interactions.replaceChildren(renderInteractions(analytics.actions ?? []));
-  cohorts.replaceChildren(renderCohorts(analytics.cohorts ?? {}));
+  cohorts.replaceChildren(renderCohorts(analytics.cohorts ?? {}, analytics.lifecycle));
   signals.replaceChildren(renderSignals(analytics.dimension_scores ?? []));
   journeys.replaceChildren(...(data.journeys ?? []).map(journeyCard));
   governance.replaceChildren(renderGovernance(analytics.governance));
@@ -754,7 +754,7 @@ function semanticElementLabel(value) {
   return String(value ?? '').split('.').map(capitalise).join(' › ');
 }
 
-function renderCohorts(data) {
+function renderCohorts(data, lifecycle) {
   const wrapper = document.createElement('div');
   wrapper.className = 'flux-cohorts';
   wrapper.append(element('p', 'flux-cohorts__privacy', data.privacy_note ?? 'Named cohort results are shown only when at least 5 journeys share the pattern.'));
@@ -763,7 +763,45 @@ function renderCohorts(data) {
     cohortGroup('Outcome paths', 'Whether journeys completed smoothly, recovered from friction or did not reach an outcome.', data.outcome_paths),
     cohortGroup('Interaction patterns', 'Heuristic journey patterns derived from supported, content-free signals.', data.journey_patterns, journeyPatternCoverage(data.journey_patterns))
   );
+  wrapper.append(renderLifecycle(lifecycle));
   return wrapper;
+}
+
+function renderLifecycle(data) {
+  const section = document.createElement('section');
+  section.className = 'flux-cohort-group flux-lifecycle';
+  section.append(
+    element('h3', 'govuk-heading-m flux-cohort-group__title', 'Repeat visits and change over time'),
+    element('p', 'govuk-body-s', data?.privacy_note ?? 'Lifecycle evidence appears after enough consented repeat journeys are recorded.'),
+    element('p', 'govuk-body-s flux-safeguard', data?.interpretation_note ?? 'Changes describe service journeys, not people.')
+  );
+  if (!data) {
+    section.append(emptyState('Lifecycle evidence unavailable', 'Choose a bounded period with enough consented journeys.'));
+    return section;
+  }
+  const summary = document.createElement('dl');
+  summary.className = 'flux-health-list';
+  const recency = data.recency ?? {};
+  const frequency = data.frequency ?? {};
+  for (const [label, value, note] of [
+    ['Typical return interval', recency.available ? formatLifecycleInterval(recency.median_interval_ms) : 'Suppressed', recency.available ? `90th percentile ${formatLifecycleInterval(recency.p90_interval_ms)} · ${numberFormat.format(recency.returning_journey_count)} repeat journeys` : `${numberFormat.format(recency.suppressed_journey_count ?? 0)} repeat journeys; at least 5 are required`],
+    ['Journeys per visitor', frequency.available ? formatDecimal(frequency.average_journeys) : 'Suppressed', frequency.available ? `${numberFormat.format(frequency.repeat_visitor_count)} of ${numberFormat.format(frequency.visitor_count)} visitors had more than one journey in the selected period` : `${numberFormat.format(frequency.visitor_count ?? 0)} visitors; at least 5 are required`]
+  ]) {
+    const row = document.createElement('div');
+    row.className = 'flux-health-list__row';
+    const copy = document.createElement('div');
+    copy.append(element('h4', 'flux-health-list__label', label), element('p', 'flux-health-list__note', note));
+    row.append(copy, element('strong', 'flux-health-list__value', value));
+    summary.append(row);
+  }
+  section.append(summary);
+  section.append(reportDetails('Visit-maturity movement', `${numberFormat.format(data.maturity_movement?.selected_session_count ?? 0)} selected journeys`,
+    ['Journey group', 'Journeys', 'Share', 'Previous share', 'Change'],
+    (data.maturity_movement?.rows ?? []).map((row) => [row.label, row.session_count, formatPercent(row.share), row.previous_share === null ? 'Unavailable or suppressed' : formatPercent(row.previous_share), row.change_percentage_points === null ? 'Unavailable or suppressed' : formatChangePoints(row.change_percentage_points, data.comparison_available)])));
+  section.append(reportDetails('Like-for-like service-friction movement', 'Rates use journeys in each period as the denominator. They do not establish why behaviour changed.',
+    ['Signal', 'Affected journeys', 'Rate', 'Previous rate', 'Change', 'Direction'],
+    (data.celeration ?? []).map((row) => [row.label, row.affected_session_count === null ? 'Suppressed' : `${numberFormat.format(row.affected_session_count)} of ${numberFormat.format(row.session_count)}`, row.rate === null ? 'Suppressed' : formatPercent(row.rate), row.previous_rate === null ? 'Unavailable' : formatPercent(row.previous_rate), row.change_percentage_points === null ? 'Unavailable' : formatChangePoints(row.change_percentage_points, data.comparison_available), row.direction === 'little_change' ? 'Little change' : capitalise(row.direction)])));
+  return section;
 }
 
 function cohortGroup(title, description, data = {}, coverage = '') {
@@ -986,6 +1024,18 @@ function formatDuration(value) {
   const minutes = Math.floor(seconds / 60);
   const remainder = Math.round(seconds % 60);
   return `${minutes}m ${remainder}s`;
+}
+
+function formatLifecycleInterval(value) {
+  const milliseconds = Math.max(0, Number(value) || 0);
+  if (milliseconds < 86400000) return formatDuration(milliseconds);
+  let days = Math.floor(milliseconds / 86400000);
+  let hours = Math.round((milliseconds % 86400000) / 3600000);
+  if (hours === 24) {
+    days += 1;
+    hours = 0;
+  }
+  return `${numberFormat.format(days)} day${days === 1 ? '' : 's'}${hours ? ` ${numberFormat.format(hours)}h` : ''}`;
 }
 
 function formatChangePoints(value, comparisonAvailable = true) {

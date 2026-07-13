@@ -267,6 +267,10 @@
 	-webkit-overflow-scrolling: touch;
 }
 
+[data-flux-report-area][hidden] {
+	display: none !important;
+}
+
 .flux-report-navigation__list {
 	display: flex;
 	gap: 4px;

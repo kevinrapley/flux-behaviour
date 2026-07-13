@@ -1,4 +1,11 @@
 records:
+  - id: CONF-026
+    rule: Lifecycle analytics must remain aggregate, privacy-suppressed and neutral about individual learning or ability
+    expected_evidence: Return intervals, visit frequency, maturity movement and comparable friction rates use explicit samples, k=5 controls, bounded periods and alternative explanations without returning identifiers
+    actual_evidence: src/product/lifecycle-analytics.mjs and the Cohorts dashboard area provide aggregate MODEL-12 evidence. Regression tests cover suppression, interval history, denominators, celeration and response privacy.
+    status: present-with-release-blockers
+    owner: governance-lead
+
   - id: CONF-025
     rule: Dashboard report areas and uncertainty must support accessible investigation without overstating precision
     expected_evidence: Target report areas share URL-backed filters; rates expose samples and bounded intervals; governance keeps unknown collection controls visible

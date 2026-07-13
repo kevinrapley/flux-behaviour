@@ -62,10 +62,10 @@ A fully neutral score set always produces **no dominant pattern**, and careful c
 The documentation suggests the following next improvements, in order:
 
 1. **Task-complexity baselines** — let service owners declare question complexity, then compare dwell, error and help rates against equivalent questions rather than treating all pauses alike.
-2. **Experience and recency** — show repeat-visit intervals, time since previous visit and cohort movement over time, with explicit retention limits.
+2. **Experience and recency** — implemented as aggregate repeat-visit intervals, selected-period frequency and privacy-suppressed visit-maturity movement. See `docs/product/lifecycle-analytics.md`.
 3. **Recovery funnels** — distinguish help or validation followed by successful recovery from unresolved friction.
 4. **Field interaction coverage** — show the proportion of journeys interacting with each safe element key, split by required versus optional controls without recording values.
-5. **Repeatability and celeration** — trend whether like-for-like help, validation and revisit signals are increasing or decreasing at service level.
+5. **Repeatability and celeration** — implemented as like-for-like previous-period journey rates for help, validation and revisit signals, with denominators and alternative explanations.
 6. **Interaction-mode evidence** — compare keyboard, pointer and touch journeys only after an accessibility and false-positive review; never equate an input mode with ability.
 7. **Custom ranges and cohort comparison** — add date-range selection and like-for-like cohort deltas once retention policy and query limits are approved.
 8. **Natural-language aggregate queries** — only after role controls, prompt redaction, audit logs, source/caveat display and the documented minimum group-size enforcement exist.
