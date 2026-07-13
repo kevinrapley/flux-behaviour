@@ -31,8 +31,8 @@ This audit distinguishes repository implementation from live production proof. T
 | DASH-04 | Implemented | Range contract, controlled comparisons, k=5 suppression and tests | Retention policy remains a production gate |
 | DASH-05 | Implemented with statistical limits | Funnel percentiles, field distributions, samples, Wilson intervals and governance caveats | Intervals do not correct dependence, selection or collection gaps |
 | DASH-06 | Implemented | Aggregate export allow-list, provenance, formula protection, route and tests | Raw event export remains unavailable |
-| DASH-07 | Retained | No governed acquisition/source/campaign contract found | Only allow-listed, identifier-free categories after necessity review |
-| DASH-08 | Partial, retained | Visit/outcome/task/input-mode comparisons and journey cohorts | Governed non-sensitive service-property contract remains absent |
+| DASH-07 | Retained | No governed acquisition/source/campaign contract found | GAP-018: allow-listed, identifier-free categories only after necessity review |
+| DASH-08 | Partial, retained | Visit/outcome/task/input-mode comparisons and journey cohorts | GAP-018: governed, non-sensitive service-property contract |
 | DASH-09 | Retained | No release/intervention/hypothesis/owner/follow-up model found | GAP-016: accountable analytics-to-action layer |
 | DASH-10 | Implemented | Nine URL-backed report areas, shared filters, focus, hidden-state and responsive tests | Full screen-reader evidence remains GAP-003/GAP-006 |
 | NLP-01 | Retained and blocked | No aggregate NL intent/query/audit service; prerequisite controls recorded | GAP-017: RBAC, redaction, k≥5, citations, audit and refusal evaluation |
@@ -40,7 +40,7 @@ This audit distinguishes repository implementation from live production proof. T
 
 ## Source and screenshot coverage
 
-The source register in `behaviour-model-dashboard-gap-analysis.md` maps all supplied artefact families to requirements. The three Google Analytics screenshots are represented by realtime activity (DASH-01), event/key-event and page/entity reporting (DASH-02/03), range and comparison controls (DASH-04), acquisition/source context (DASH-07), and audience/property panels (DASH-08). The first four are implemented; source and general property context remain deliberately retained gaps rather than being silently omitted.
+The source register in `behaviour-model-dashboard-gap-analysis.md` maps all supplied artefact families to requirements. The three Google Analytics screenshots are represented by realtime activity (DASH-01), event/key-event and page/entity reporting (DASH-02/03), range and comparison controls (DASH-04), acquisition/source context (DASH-07), and audience/property panels (DASH-08). DASH-01 through DASH-04 are implemented. DASH-07 and the remaining general-property part of DASH-08 are retained in GAP-018 rather than being silently omitted.
 
 The historical high-risk expectations are also accounted for. Education, literacy, intelligence, personality, social-profile, visited-link, password-content and free-text sentiment inference are rejected. Precise realtime user maps and opaque personal adaptation are reframed to aggregate service health and user-controlled assistance. These decisions are governance outcomes, not missing implementation.
 
@@ -54,4 +54,4 @@ The historical high-risk expectations are also accounted for. Education, literac
 
 ## Completion boundary
 
-This audit completes identification and classification of the requested model/dashboard gaps. It does not close GAP-002–010 or GAP-012–017, and it does not claim general availability. Any future implementation must update this ledger, the source matrix, conformance evidence, gap register and harm register together so the roadmap cannot drift back into stale claims.
+This audit completes identification and classification of the requested model/dashboard gaps. It does not close GAP-001, GAP-002, GAP-003, GAP-004, GAP-005, GAP-006, GAP-007, GAP-008, GAP-009, GAP-010, GAP-011, GAP-012, GAP-013, GAP-015, GAP-016, GAP-017 or GAP-018, and it does not claim general availability. Any future implementation must update this ledger, the source matrix, conformance evidence, gap register and harm register together so the roadmap cannot drift back into stale claims.

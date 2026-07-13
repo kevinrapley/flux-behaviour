@@ -28,6 +28,7 @@ test('audit preserves source coverage, live-evidence limits and owned residual g
   assert.match(audit, /GAP-015: correction-context contract/);
   assert.match(audit, /GAP-016: accountable analytics-to-action layer/);
   assert.match(audit, /GAP-017: RBAC, redaction/);
+  assert.match(audit, /GAP-018: allow-listed, identifier-free categories/);
   for (const id of EXPECTED) assert.match(roadmap, new RegExp(`\\| ${id.replace('-', '\\-')} \\|`));
-  for (const id of ['GAP-013', 'GAP-015', 'GAP-016', 'GAP-017']) assert.match(gaps, new RegExp(`id: ${id}`));
+  for (const id of ['GAP-013', 'GAP-015', 'GAP-016', 'GAP-017', 'GAP-018']) assert.match(gaps, new RegExp(`id: ${id}`));
 });

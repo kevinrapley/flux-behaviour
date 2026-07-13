@@ -1,6 +1,6 @@
 gaps:
   - id: GAP-013
-    title: Publisher-declared service model is missing
+    title: Publisher service inventory and comparison baselines are incomplete
     severity: high
     observed_state: Flux now publishes and persists a validated versioned service hierarchy with required status, question and transaction complexity, semantic bindings, configured outcomes and key events; event-time model context, selected-period mapping/outcome evidence, entity performance, publisher-ordered funnels and dedicated privacy-safe field coverage are implemented. The ResearchOps model remains an initial rather than complete service inventory.
     expected_state: Tenant owners can publish a validated, versioned, non-identifying service model that events resolve against and aggregate reports use consistently.
@@ -49,6 +49,16 @@ gaps:
     owner: governance-lead
     status: open
 
+  - id: GAP-018
+    title: Acquisition source and service-property reporting lacks a governed contract
+    severity: medium
+    observed_state: Realtime, event, page/entity and controlled comparison reporting are implemented, but no allow-listed acquisition/source/campaign contract exists and general audience properties are limited to existing non-sensitive journey cohorts and controlled comparisons.
+    expected_state: Necessary source categories and publisher-defined service properties can be compared as aggregates without query strings, identifiers, sensitive traits or small groups.
+    risk: Unowned dashboard expectations could either remain silently absent or be added later as invasive, fingerprinting or demographic-style data collection.
+    action: Define a necessity-reviewed, identifier-free source/property contract with direct/unknown defaults, k=5 suppression, retention limits and explicit prohibited fields before implementing DASH-07 or the remaining DASH-08 scope.
+    owner: product-lead
+    status: open
+
   - id: GAP-012
     title: UK English writing indicators need representative corpus, accessibility and fairness validation
     severity: high
@@ -77,6 +87,7 @@ gaps:
     action: Complete release assurance and retain the production blocks in GAP-003, GAP-004 and GAP-005.
     owner: product-lead
     status: open
+
   - id: GAP-003
     title: DPIA and accessibility evidence are not complete
     severity: high

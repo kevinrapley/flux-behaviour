@@ -23,9 +23,9 @@ files_read:
   - docs/product/event-entity-reports.md
   - docs/product/realtime-analytics.md
   - docs/product/publisher-service-model.md
-  - /Users/kevin.rapley/.codex/attachments/20656f22-0f9b-4ae5-8913-8df2f2f5928a/image-1.png
-  - /Users/kevin.rapley/.codex/attachments/20656f22-0f9b-4ae5-8913-8df2f2f5928a/image-2.png
-  - /Users/kevin.rapley/.codex/attachments/20656f22-0f9b-4ae5-8913-8df2f2f5928a/image-3.png
+  - Private source: supplied Google Analytics overview and 30-minute activity screenshot
+  - Private source: supplied Google Analytics event, key-event and user-property screenshot
+  - Private source: supplied Google Analytics realtime, comparison, source, audience and page screenshot
 files_changed:
   - docs/product/model-dashboard-completion-audit.md
   - docs/product/behaviour-model-dashboard-gap-analysis.md
@@ -37,6 +37,11 @@ files_changed:
   - harm-register.yaml
   - RECENT_LEARNINGS.md
   - agent-evidence.yaml
+promotion_decisions:
+  - Treat requirement reconciliation as complete only when every roadmap item has one current state and an owned residual boundary.
+  - Keep implemented repository evidence distinct from live production and release-assurance evidence.
+  - Retain risky person-level inference as rejected or reframed rather than presenting it as missing product functionality.
+  - Record source/property reporting as GAP-018 instead of allowing retained DASH-07 and DASH-08 work to become unowned.
 commands_run:
   - command: node --test tests/model-dashboard-completion-audit.test.mjs
     status: passed
@@ -59,6 +64,9 @@ commands_run:
   - command: Visual recheck of the three supplied Google Analytics screenshots
     status: passed
     evidence: Realtime, comparison, event/key-event, page/screen, acquisition-source and audience/property patterns were visibly confirmed and reconciled in the completion ledger.
+  - command: Codex review of PR 47 at commit 573935992de0d67162f30c99f283ad6a51a246d3
+    status: passed
+    evidence: "Six P2 findings were validated and corrected: private source labels, screenshot scope, provenance, required evidence sections, explicit open-gap IDs and owned source/property work."
 contracts_validated:
   - conformance-matrix.yaml
   - gap-register.yaml
@@ -75,6 +83,7 @@ gaps_recorded:
   - GAP-015
   - GAP-016
   - GAP-017
+  - GAP-018
 waivers_recorded: []
 artifacts_created:
   - docs/product/model-dashboard-completion-audit.md
@@ -89,6 +98,9 @@ github_settings:
 security:
   runtime_change: false
   release_blockers_preserved: true
+privacy:
+  runtime_change: false
+  evidence_boundary: No captured values, visitor/session identifiers or external source locations were added; retained reporting gaps preserve minimisation and k-anonymity gates.
 accessibility:
   required: false
   reason: Documentation and governance audit only; no interface change.
