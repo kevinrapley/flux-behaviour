@@ -4,6 +4,7 @@ const content = document.querySelector('[data-flux-dashboard-content]');
 const overview = document.querySelector('[data-flux-overview]');
 const periodCopy = document.querySelector('[data-flux-period-copy]');
 const trend = document.querySelector('[data-flux-trend]');
+const serviceModel = document.querySelector('[data-flux-service-model]');
 const health = document.querySelector('[data-flux-health]');
 const interactions = document.querySelector('[data-flux-interactions]');
 const cohorts = document.querySelector('[data-flux-cohorts]');
@@ -91,6 +92,7 @@ function renderDashboard(data) {
   periodCopy.textContent = periodDescription(analytics.period, summary);
   overview.replaceChildren(...overviewCards(summary, analytics.comparison));
   trend.replaceChildren(renderTrend(analytics.trend ?? []));
+  serviceModel.replaceChildren(renderServiceModel(analytics.service_model));
   health.replaceChildren(renderHealth(summary));
   interactions.replaceChildren(renderInteractions(analytics.actions ?? []));
   cohorts.replaceChildren(renderCohorts(analytics.cohorts ?? {}));
@@ -197,7 +199,7 @@ function renderHealth(data) {
   const list = document.createElement('div');
   list.className = 'flux-health-list';
   const rows = [
-    ['Completion rate', formatPercent(data.completion_rate), `${numberFormat.format(data.completed_session_count ?? 0)} sessions reached a submit action`],
+    ['Completion rate', formatPercent(data.completion_rate), `${numberFormat.format(data.completed_session_count ?? 0)} sessions reached a configured success outcome`],
     ['Average session', formatDuration(data.average_session_duration_ms), 'Time between the first and latest interaction'],
     ['Median field dwell', formatDuration(data.median_field_dwell_ms), 'Typical time spent in an interacted field'],
     ['Correction rate', formatPercent(data.correction_rate), `${numberFormat.format(data.correction_count ?? 0)} corrections across typed interactions`]
@@ -241,6 +243,55 @@ function renderInteractions(rows) {
     list.append(item);
   }
   return list;
+}
+
+function renderServiceModel(data) {
+  if (!data) return emptyState('No published service model', 'Publish a validated model before interpreting task, field or complexity analytics.');
+  const wrapper = document.createElement('div');
+  wrapper.className = 'flux-service-model';
+  const metrics = document.createElement('div');
+  metrics.className = 'flux-health-list';
+  const configuredEntities = Object.values(data.entity_counts ?? {}).reduce((sum, count) => sum + (Number(count) || 0), 0);
+  for (const [label, value, note] of [
+    ['Published model', `Version ${numberFormat.format(data.version ?? 0)}`, data.model_key ?? 'No stable model key'],
+    ['Configured entities', numberFormat.format(configuredEntities), `${numberFormat.format(data.binding_count ?? 0)} semantic bindings`],
+    ['Configured outcomes', numberFormat.format(data.outcome_count ?? 0), `${numberFormat.format(data.key_event_count ?? 0)} key events`],
+    ['Semantic mapping coverage', formatPercent(data.coverage?.mapping_rate), `${numberFormat.format(data.coverage?.resolved_event_count ?? 0)} of ${numberFormat.format(data.coverage?.event_count ?? 0)} current-or-unmapped interactions resolved · ${numberFormat.format(data.coverage?.retired_model_event_count ?? 0)} retired-version interactions reported separately`]
+  ]) {
+    const row = document.createElement('div');
+    row.className = 'flux-health-list__row';
+    const copy = document.createElement('div');
+    copy.append(element('h3', 'flux-health-list__label', label), element('p', 'flux-health-list__note', note));
+    row.append(copy, element('strong', 'flux-health-list__value', value));
+    metrics.append(row);
+  }
+  const complexity = data.transaction_complexity ?? [];
+  const details = document.createElement('details');
+  details.className = 'govuk-details';
+  const summary = document.createElement('summary');
+  summary.className = 'govuk-details__summary';
+  summary.append(element('span', 'govuk-details__summary-text', 'Transaction complexity'));
+  const table = document.createElement('table');
+  table.className = 'govuk-table govuk-table--small-text-until-tablet';
+  table.append(tableHead(['Transaction', 'Questions', 'Complexity']), tableBody(complexity.map((row) => [row.label, row.question_count, row.complexity === null ? 'Not established' : `${formatDecimal(row.complexity)} of 7`])));
+  details.append(summary, table);
+  const outcomes = document.createElement('details');
+  outcomes.className = 'govuk-details';
+  const outcomesSummary = document.createElement('summary');
+  outcomesSummary.className = 'govuk-details__summary';
+  outcomesSummary.append(element('span', 'govuk-details__summary-text', 'Configured key events and outcomes'));
+  const outcomesTable = document.createElement('table');
+  outcomesTable.className = 'govuk-table govuk-table--small-text-until-tablet';
+  outcomesTable.append(
+    tableHead(['Key event', 'Outcome', 'Type', 'Events', 'Sessions']),
+    tableBody((data.key_events ?? []).map((row) => [row.label, row.outcome_label, capitalise(row.outcome_type), row.event_count, row.session_count]))
+  );
+  const outcomesTableScroll = document.createElement('div');
+  outcomesTableScroll.className = 'flux-service-model__table-scroll';
+  outcomesTableScroll.append(outcomesTable);
+  outcomes.append(outcomesSummary, outcomesTableScroll);
+  wrapper.append(metrics, details, outcomes);
+  return wrapper;
 }
 
 function renderCohorts(data) {
@@ -423,7 +474,7 @@ function sessionDimensionDetails(scores) {
 }
 
 function journeyOutcome(session) {
-  if (Number(session.submit_count) > 0) return 'Submit reached';
+  if (Number(session.successful_outcome_count) > 0) return 'Success outcome reached';
   if (Number(session.friction_event_count) > 0) return 'Friction signal';
   return 'In progress';
 }

@@ -41,7 +41,7 @@ test('journey-pattern cohorts aggregate service outcomes and exclude incomplete 
     events: [{ action: 'flow.submit' }, { action: 'field.revisit' }],
     event_count: 2,
     dimension_scores: scores({ efficiency: 75, engagement: 72, wayfinding: 70, proficiency: 64, trust: 57, frustration: 42 }),
-    submit_count: 1,
+    successful_outcome_count: 1,
     friction_event_count: 0,
     is_returning_visitor: index < 2,
     started_at_ms: 1000,
@@ -56,6 +56,21 @@ test('journey-pattern cohorts aggregate service outcomes and exclude incomplete 
   assert.deepEqual(result.rows.map(({ key, session_count, completion_rate, returning_session_rate }) => ({ key, session_count, completion_rate, returning_session_rate })), [
     { key: 'confident_navigator', session_count: 5, completion_rate: 100, returning_session_rate: 40 }
   ]);
+});
+
+test('a generic submit does not count as completion without a configured success outcome', () => {
+  const journeys = Array.from({ length: 5 }, (_, index) => ({
+    id: `submit-only-${index}`,
+    events: [{ action: 'flow.submit' }],
+    event_count: 1,
+    dimension_scores: scores({ efficiency: 75, engagement: 72, wayfinding: 70, proficiency: 64, trust: 57, frustration: 42 }),
+    submit_count: 1,
+    successful_outcome_count: 0,
+    started_at_ms: 1000,
+    last_seen_at_ms: 2000
+  }));
+
+  assert.equal(buildJourneyPatternCohorts(journeys).rows[0].completion_rate, 0);
 });
 
 test('contract assurance actions provide deliberate checking evidence', () => {

@@ -1,5 +1,13 @@
 # Recent Learnings
 
+## 2026-07-13 — Global categories and retired model context need explicit boundaries
+
+A content-free autocomplete category such as `autocomplete.email` is global, not proof that the visitor is in a sign-in field, so it must not be bound to a transaction-specific model entity without contextual capture. Publisher key events also need event-contract validation: syntactically valid but uncollectable action/element pairs create silent outcome gaps. When a model version changes, exclude retired-version context from current mapping coverage and report it separately from genuinely unmapped events.
+
+## 2026-07-13 — Completion is a configured outcome, not a submit event
+
+A submit records an interaction, not whether the service achieved its purpose. Bind an exact action and semantic element to a publisher-declared transaction outcome, freeze that model version beside the event, and calculate completion only from configured success outcomes. This prevents failed, progress-only and unrelated submissions from becoming false success evidence.
+
 ## 2026-07-13 — Public source registers must not contain private Drive access material
 
 Use descriptive source labels in public roadmap and evidence files. Keep Google document IDs, file IDs, resource keys and other link-access material in the product owner's private provenance record unless publication is explicitly approved.
@@ -149,3 +157,6 @@ The prototype `wrangler.toml` pattern includes environment-specific configuratio
 ## 2026-05-27 — Prototype source is lineage, not production code
 
 `kevinrapley/flux-behavioural-analytics` is useful source material, but runtime files must be promoted through reviewed PRs.
+## 2026-07-13 — Published-model evidence must be version-scoped
+
+Event-time context deliberately preserves historical model versions. Dashboard queries must therefore filter context rows to the exact published model key and version before labelling evidence with the current model; tenant and period filters alone can mix retired meanings into current reports. Runtime model validation must also enforce the JSON contract's collection bounds and normalise malformed input before walking it, so invalid publisher payloads fail safely instead of creating unbounded work or server errors.
