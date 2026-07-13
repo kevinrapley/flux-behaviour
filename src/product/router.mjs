@@ -11,6 +11,9 @@ import {
 } from './journey-cohorts.mjs';
 import { validateEventRuntime } from '../events/validate-event-runtime.mjs';
 import { fluxEventSchema } from '../events/flux-event-schema.mjs';
+import { publishServiceModel, readPublishedServiceModel, resolvePublishedServiceContext } from '../model/service-model-store.mjs';
+import { summariseServiceModel } from '../model/service-model-summary.mjs';
+import { validateServiceModel } from '../model/service-model.mjs';
 
 const HEADERS = { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' };
 
@@ -22,9 +25,30 @@ export async function handleProductRequest(request, env) {
   if (path === '/api/collect' && request.method === 'POST') return collect(request, env);
   if (path === '/api/auth/google/start' && request.method === 'GET') return startGoogleSignIn(request, env);
   if (path === '/api/auth/google/callback' && request.method === 'GET') return completeGoogleSignIn(request, env);
+  if (path.startsWith('/api/service-model/') && request.method === 'PUT') return publishTenantServiceModel(request, env, path);
+  if (path.startsWith('/api/service-model/') && request.method === 'GET') return readTenantServiceModel(request, env, path);
   if (path.startsWith('/api/dashboard/researchops/session/') && request.method === 'GET') return sessionHistory(request, env, path);
   if (path === '/api/dashboard/researchops' && request.method === 'GET') return dashboard(request, env);
   return json({ ok: false, error: 'not_found' }, 404);
+}
+
+async function readTenantServiceModel(request, env, path) {
+  const accountId = await authenticatedAccountId(request, env);
+  if (!accountId) return json({ ok: false, error: 'unauthorised' }, 401);
+  const tenantId = decodeURIComponent(path.slice('/api/service-model/'.length));
+  const result = await readPublishedServiceModel(env.FLUX_DB, accountId, tenantId);
+  return json(result, result.ok ? 200 : result.error === 'forbidden' ? 403 : result.error === 'service_model_not_found' ? 404 : 500);
+}
+
+async function publishTenantServiceModel(request, env, path) {
+  const accountId = await authenticatedAccountId(request, env);
+  if (!accountId) return json({ ok: false, error: 'unauthorised' }, 401);
+  const tenantId = decodeURIComponent(path.slice('/api/service-model/'.length));
+  const model = await safeJson(request);
+  if (!model || model.tenant_id !== tenantId) return json({ ok: false, error: 'invalid_service_model' }, 400);
+  const result = await publishServiceModel(env.FLUX_DB, accountId, model);
+  if (!result.ok) return json(result, result.error === 'forbidden' ? 403 : result.error === 'service_model_version_exists' ? 409 : 400);
+  return json(result, 201);
 }
 
 async function startGoogleSignIn(request, env) {
@@ -88,11 +112,34 @@ async function collect(request, env) {
   const now = Date.now();
   const existingVisitor = await env.FLUX_DB.prepare('SELECT session_count FROM visitors WHERE tenant_id = ? AND visitor_id = ?').bind(event.tenant_id, event.visitor_id).first();
   const existingSession = await env.FLUX_DB.prepare('SELECT id FROM sessions WHERE id = ? AND tenant_id = ?').bind(event.session_id, event.tenant_id).first();
+  const serviceContext = await resolvePublishedServiceContext(env.FLUX_DB, event.tenant_id, event.element_key, event.action);
+  const eventId = crypto.randomUUID();
   const statements = [
     env.FLUX_DB.prepare('INSERT INTO visitors (tenant_id, visitor_id, first_seen_at_ms, last_seen_at_ms, session_count) VALUES (?, ?, ?, ?, 1) ON CONFLICT(tenant_id, visitor_id) DO UPDATE SET last_seen_at_ms = excluded.last_seen_at_ms, session_count = session_count + ?').bind(event.tenant_id, event.visitor_id, now, now, existingSession ? 0 : 1),
     existingSession ? env.FLUX_DB.prepare('UPDATE sessions SET last_seen_at_ms = ? WHERE id = ?').bind(now, event.session_id) : env.FLUX_DB.prepare('INSERT OR IGNORE INTO sessions (id, tenant_id, visitor_id, started_at_ms, last_seen_at_ms, is_returning_visitor) VALUES (?, ?, ?, ?, ?, ?)').bind(event.session_id, event.tenant_id, event.visitor_id, now, now, existingVisitor ? 1 : 0),
-    env.FLUX_DB.prepare('INSERT INTO events (id, tenant_id, visitor_id, session_id, event_class, action, role, element_key, metadata_json, narrative, occurred_at_ms) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').bind(crypto.randomUUID(), event.tenant_id, event.visitor_id, event.session_id, event.event_class, event.action, event.role, event.element_key, JSON.stringify(metadata(event)), describeInteraction(event), event.timestamp_ms)
+    env.FLUX_DB.prepare('INSERT INTO events (id, tenant_id, visitor_id, session_id, event_class, action, role, element_key, metadata_json, narrative, occurred_at_ms) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').bind(eventId, event.tenant_id, event.visitor_id, event.session_id, event.event_class, event.action, event.role, event.element_key, JSON.stringify(metadata(event)), describeInteraction(event), event.timestamp_ms)
   ];
+  if (serviceContext) {
+    statements.push(env.FLUX_DB.prepare('INSERT INTO event_service_contexts (event_id, tenant_id, model_key, model_version, entity_key, service_key, transaction_key, task_key, step_key, question_key, field_key, field_required, question_complexity, transaction_complexity, key_event_key, outcome_key, outcome_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').bind(
+      eventId,
+      event.tenant_id,
+      serviceContext.model_key,
+      serviceContext.model_version,
+      serviceContext.entity_key,
+      serviceContext.service_key,
+      serviceContext.transaction_key,
+      serviceContext.task_key,
+      serviceContext.step_key,
+      serviceContext.question_key,
+      serviceContext.field_key,
+      serviceContext.field_required === null ? null : Number(serviceContext.field_required),
+      serviceContext.question_complexity,
+      serviceContext.transaction_complexity,
+      serviceContext.key_event_key ?? null,
+      serviceContext.outcome_key ?? null,
+      serviceContext.outcome_type ?? null
+    ));
+  }
   await env.FLUX_DB.batch(statements);
   return withCors(json({ ok: true, accepted: true, returning_visitor: Boolean(existingVisitor) }, 202), origin);
 }
@@ -123,11 +170,12 @@ async function dashboard(request, env) {
   const comparison = period.previous_start_at_ms === null ? null : await dashboardOverview(env, period.previous_start_at_ms, period.previous_end_at_ms);
   const trend = await env.FLUX_DB.prepare("SELECT date(started_at_ms / 1000, 'unixepoch') AS day, COUNT(DISTINCT visitor_id) AS visitors, COUNT(*) AS sessions, COUNT(DISTINCT CASE WHEN is_returning_visitor = 0 THEN visitor_id END) AS new_visitors, COUNT(DISTINCT CASE WHEN is_returning_visitor = 1 THEN visitor_id END) AS returning_visitors FROM sessions WHERE tenant_id = 'researchops' AND started_at_ms >= ? AND started_at_ms < ? GROUP BY day ORDER BY day ASC").bind(period.start_at_ms, period.end_at_ms).all();
   const actions = await env.FLUX_DB.prepare("SELECT e.action, COUNT(*) AS count FROM events e INNER JOIN sessions s ON s.id = e.session_id WHERE s.tenant_id = 'researchops' AND s.started_at_ms >= ? AND s.started_at_ms < ? GROUP BY e.action ORDER BY count DESC, e.action ASC LIMIT 8").bind(period.start_at_ms, period.end_at_ms).all();
-  const sessions = await env.FLUX_DB.prepare("SELECT s.id, s.started_at_ms, s.last_seen_at_ms, s.is_returning_visitor, COUNT(e.id) AS event_count, COUNT(DISTINCT CASE WHEN e.action = 'flow.submit' THEN e.id END) AS submit_count, COUNT(DISTINCT CASE WHEN e.action IN ('error.invalid', 'act.rage', 'field.revisit', 'assist.help') THEN e.id END) AS friction_event_count FROM sessions s LEFT JOIN events e ON e.session_id = s.id WHERE s.tenant_id = 'researchops' AND s.started_at_ms >= ? AND s.started_at_ms < ? GROUP BY s.id, s.started_at_ms, s.last_seen_at_ms, s.is_returning_visitor ORDER BY s.started_at_ms DESC LIMIT 12").bind(period.start_at_ms, period.end_at_ms).all();
+  const sessions = await env.FLUX_DB.prepare("SELECT s.id, s.started_at_ms, s.last_seen_at_ms, s.is_returning_visitor, COUNT(DISTINCT e.id) AS event_count, COUNT(DISTINCT CASE WHEN esc.outcome_type = 'success' THEN e.id END) AS successful_outcome_count, COUNT(DISTINCT CASE WHEN e.action IN ('error.invalid', 'act.rage', 'field.revisit', 'assist.help') THEN e.id END) AS friction_event_count FROM sessions s LEFT JOIN events e ON e.session_id = s.id LEFT JOIN event_service_contexts esc ON esc.event_id = e.id WHERE s.tenant_id = 'researchops' AND s.started_at_ms >= ? AND s.started_at_ms < ? GROUP BY s.id, s.started_at_ms, s.last_seen_at_ms, s.is_returning_visitor ORDER BY s.started_at_ms DESC LIMIT 12").bind(period.start_at_ms, period.end_at_ms).all();
   const events = await env.FLUX_DB.prepare("SELECT session_id, event_class, action, role, element_key, metadata_json, narrative, occurred_at_ms FROM (SELECT e.session_id, e.event_class, e.action, e.role, e.element_key, e.metadata_json, e.narrative, e.occurred_at_ms FROM events e WHERE e.tenant_id = 'researchops' AND e.session_id IN (SELECT id FROM sessions WHERE tenant_id = 'researchops' AND started_at_ms >= ? AND started_at_ms < ? ORDER BY started_at_ms DESC LIMIT 12) ORDER BY e.occurred_at_ms DESC LIMIT 500) ORDER BY occurred_at_ms ASC").bind(period.start_at_ms, period.end_at_ms).all();
   const presentedEvents = presentJourneyEvents(events.results ?? []);
   const journeys = groupJourneys(sessions.results, presentedEvents).map((journey) => ({ ...journey, dimension_scores: scoreSessionDimensions(journey.events) }));
   const cohorts = await dashboardCohorts(env, period.start_at_ms, period.end_at_ms, overview.session_count);
+  const serviceModel = await dashboardServiceModel(env, 'researchops', period.start_at_ms, period.end_at_ms);
   return json({
     ok: true,
     sessions: sessions.results,
@@ -139,16 +187,17 @@ async function dashboard(request, env) {
       comparison,
       trend: trend.results ?? [],
       actions: actions.results ?? [],
-      cohorts
+      cohorts,
+      service_model: serviceModel
     }
   });
 }
 
 export async function dashboardCohorts(env, startAtMs, endAtMs, selectedSessionCount) {
-  const sessionSignals = "WITH session_signals AS (SELECT s.id, s.is_returning_visitor, v.session_count AS lifetime_session_count, MAX(0, s.last_seen_at_ms - s.started_at_ms) AS duration_ms, MAX(CASE WHEN e.action = 'flow.submit' THEN 1 ELSE 0 END) AS completed, MAX(CASE WHEN e.action IN ('error.invalid', 'act.rage', 'field.revisit', 'assist.help') THEN 1 ELSE 0 END) AS friction FROM sessions s INNER JOIN visitors v ON v.tenant_id = s.tenant_id AND v.visitor_id = s.visitor_id LEFT JOIN events e ON e.session_id = s.id AND e.tenant_id = s.tenant_id WHERE s.tenant_id = 'researchops' AND s.started_at_ms >= ? AND s.started_at_ms < ? GROUP BY s.id, s.is_returning_visitor, v.session_count, s.started_at_ms, s.last_seen_at_ms) ";
+  const sessionSignals = "WITH session_signals AS (SELECT s.id, s.is_returning_visitor, v.session_count AS lifetime_session_count, MAX(0, s.last_seen_at_ms - s.started_at_ms) AS duration_ms, MAX(CASE WHEN esc.outcome_type = 'success' THEN 1 ELSE 0 END) AS completed, MAX(CASE WHEN e.action IN ('error.invalid', 'act.rage', 'field.revisit', 'assist.help') THEN 1 ELSE 0 END) AS friction FROM sessions s INNER JOIN visitors v ON v.tenant_id = s.tenant_id AND v.visitor_id = s.visitor_id LEFT JOIN events e ON e.session_id = s.id AND e.tenant_id = s.tenant_id LEFT JOIN event_service_contexts esc ON esc.event_id = e.id WHERE s.tenant_id = 'researchops' AND s.started_at_ms >= ? AND s.started_at_ms < ? GROUP BY s.id, s.is_returning_visitor, v.session_count, s.started_at_ms, s.last_seen_at_ms) ";
   const lifecycleQuery = `${sessionSignals}SELECT CASE WHEN is_returning_visitor = 0 THEN 'first_time' WHEN lifetime_session_count >= 4 THEN 'established' ELSE 'returning' END AS cohort_key, COUNT(*) AS session_count, SUM(completed) AS completed_session_count, SUM(friction) AS friction_session_count, SUM(is_returning_visitor) AS returning_session_count, AVG(duration_ms) AS average_session_duration_ms FROM session_signals GROUP BY cohort_key`;
   const outcomeQuery = `${sessionSignals}SELECT CASE WHEN completed = 1 AND friction = 0 THEN 'completed_smoothly' WHEN completed = 1 AND friction = 1 THEN 'completed_after_friction' WHEN completed = 0 AND friction = 1 THEN 'friction_unresolved' ELSE 'in_progress' END AS cohort_key, COUNT(*) AS session_count, SUM(completed) AS completed_session_count, SUM(friction) AS friction_session_count, SUM(is_returning_visitor) AS returning_session_count, AVG(duration_ms) AS average_session_duration_ms FROM session_signals GROUP BY cohort_key`;
-  const patternSessionsQuery = `SELECT s.id, s.started_at_ms, s.last_seen_at_ms, s.is_returning_visitor, COUNT(e.id) AS event_count, COUNT(DISTINCT CASE WHEN e.action = 'flow.submit' THEN e.id END) AS submit_count, COUNT(DISTINCT CASE WHEN e.action IN ('error.invalid', 'act.rage', 'field.revisit', 'assist.help') THEN e.id END) AS friction_event_count FROM sessions s LEFT JOIN events e ON e.session_id = s.id AND e.tenant_id = s.tenant_id WHERE s.tenant_id = 'researchops' AND s.started_at_ms >= ? AND s.started_at_ms < ? GROUP BY s.id, s.started_at_ms, s.last_seen_at_ms, s.is_returning_visitor ORDER BY s.started_at_ms DESC LIMIT ${JOURNEY_PATTERN_SAMPLE_LIMIT}`;
+  const patternSessionsQuery = `SELECT s.id, s.started_at_ms, s.last_seen_at_ms, s.is_returning_visitor, COUNT(DISTINCT e.id) AS event_count, COUNT(DISTINCT CASE WHEN esc.outcome_type = 'success' THEN e.id END) AS successful_outcome_count, COUNT(DISTINCT CASE WHEN e.action IN ('error.invalid', 'act.rage', 'field.revisit', 'assist.help') THEN e.id END) AS friction_event_count FROM sessions s LEFT JOIN events e ON e.session_id = s.id AND e.tenant_id = s.tenant_id LEFT JOIN event_service_contexts esc ON esc.event_id = e.id WHERE s.tenant_id = 'researchops' AND s.started_at_ms >= ? AND s.started_at_ms < ? GROUP BY s.id, s.started_at_ms, s.last_seen_at_ms, s.is_returning_visitor ORDER BY s.started_at_ms DESC LIMIT ${JOURNEY_PATTERN_SAMPLE_LIMIT}`;
   const patternEventsQuery = `SELECT session_id, action, metadata_json, occurred_at_ms FROM (SELECT e.session_id, e.action, e.metadata_json, e.occurred_at_ms FROM events e WHERE e.tenant_id = 'researchops' AND e.session_id IN (SELECT id FROM sessions WHERE tenant_id = 'researchops' AND started_at_ms >= ? AND started_at_ms < ? ORDER BY started_at_ms DESC LIMIT ${JOURNEY_PATTERN_SAMPLE_LIMIT}) ORDER BY e.occurred_at_ms DESC LIMIT 10000) ORDER BY occurred_at_ms ASC`;
   const [lifecycle, outcomes, patternSessions, patternEvents] = await Promise.all([
     env.FLUX_DB.prepare(lifecycleQuery).bind(startAtMs, endAtMs).all(),
@@ -168,9 +217,26 @@ export async function dashboardCohorts(env, startAtMs, endAtMs, selectedSessionC
   };
 }
 
+export async function dashboardServiceModel(env, tenantId, startAtMs, endAtMs) {
+  const published = await env.FLUX_DB.prepare("SELECT model_json FROM service_model_versions WHERE tenant_id = ? AND status = 'published'").bind(tenantId).first();
+  if (!published?.model_json) return null;
+  let model;
+  try {
+    model = JSON.parse(published.model_json);
+  } catch {
+    return null;
+  }
+  if (!validateServiceModel(model).valid) return null;
+  const [coverage, keyEvents] = await Promise.all([
+    env.FLUX_DB.prepare('SELECT COUNT(e.id) AS event_count, COUNT(esc.event_id) AS resolved_event_count FROM events e LEFT JOIN event_service_contexts esc ON esc.event_id = e.id WHERE e.tenant_id = ? AND e.occurred_at_ms >= ? AND e.occurred_at_ms < ?').bind(tenantId, startAtMs, endAtMs).first(),
+    env.FLUX_DB.prepare('SELECT esc.key_event_key, esc.outcome_key, esc.outcome_type, COUNT(*) AS event_count, COUNT(DISTINCT e.session_id) AS session_count FROM event_service_contexts esc INNER JOIN events e ON e.id = esc.event_id WHERE e.tenant_id = ? AND e.occurred_at_ms >= ? AND e.occurred_at_ms < ? AND esc.key_event_key IS NOT NULL GROUP BY esc.key_event_key, esc.outcome_key, esc.outcome_type').bind(tenantId, startAtMs, endAtMs).all()
+  ]);
+  return summariseServiceModel(model, coverage, keyEvents.results ?? []);
+}
+
 async function dashboardOverview(env, startAtMs, endAtMs) {
   const sessions = await env.FLUX_DB.prepare("SELECT COUNT(DISTINCT visitor_id) AS visitor_count, COUNT(DISTINCT CASE WHEN is_returning_visitor = 0 THEN visitor_id END) AS new_visitor_count, COUNT(DISTINCT CASE WHEN is_returning_visitor = 1 THEN visitor_id END) AS returning_visitor_count, COUNT(*) AS session_count, COALESCE(AVG(CASE WHEN last_seen_at_ms >= started_at_ms THEN last_seen_at_ms - started_at_ms ELSE 0 END), 0) AS average_session_duration_ms FROM sessions WHERE tenant_id = 'researchops' AND started_at_ms >= ? AND started_at_ms < ?").bind(startAtMs, endAtMs).first();
-  const events = await env.FLUX_DB.prepare("SELECT COUNT(*) AS event_count, COALESCE(AVG(CASE WHEN e.action = 'field.blur' THEN CASE WHEN json_type(e.metadata_json, '$.dwell_before_input_ms') = 'integer' THEN CAST(json_extract(e.metadata_json, '$.dwell_before_input_ms') AS REAL) WHEN COALESCE(CAST(json_extract(e.metadata_json, '$.key_press_count') AS INTEGER), 0) = 0 AND COALESCE(CAST(json_extract(e.metadata_json, '$.edit_count') AS INTEGER), 0) = 0 AND COALESCE(CAST(json_extract(e.metadata_json, '$.paste_count') AS INTEGER), 0) = 0 THEN CAST(json_extract(e.metadata_json, '$.duration_ms') AS REAL) END END), 0) AS average_field_dwell_ms, COALESCE(SUM(CASE WHEN e.action = 'field.blur' THEN CAST(json_extract(e.metadata_json, '$.key_press_count') AS REAL) ELSE 0 END), 0) AS typed_character_count, COALESCE(SUM(CASE WHEN e.action = 'field.blur' THEN CAST(json_extract(e.metadata_json, '$.backspace_count') AS REAL) ELSE 0 END), 0) AS correction_count, COALESCE(SUM(CASE WHEN json_extract(e.metadata_json, '$.pointer_type') = 'touch' THEN 1 ELSE 0 END), 0) AS touch_interaction_count, COUNT(DISTINCT CASE WHEN e.action = 'flow.submit' THEN e.session_id END) AS completed_session_count, COUNT(DISTINCT CASE WHEN e.action IN ('error.invalid', 'act.rage', 'field.revisit', 'assist.help') THEN e.session_id END) AS friction_session_count FROM events e INNER JOIN sessions s ON s.id = e.session_id WHERE s.tenant_id = 'researchops' AND s.started_at_ms >= ? AND s.started_at_ms < ?").bind(startAtMs, endAtMs).first();
+  const events = await env.FLUX_DB.prepare("SELECT COUNT(*) AS event_count, COALESCE(AVG(CASE WHEN e.action = 'field.blur' THEN CASE WHEN json_type(e.metadata_json, '$.dwell_before_input_ms') = 'integer' THEN CAST(json_extract(e.metadata_json, '$.dwell_before_input_ms') AS REAL) WHEN COALESCE(CAST(json_extract(e.metadata_json, '$.key_press_count') AS INTEGER), 0) = 0 AND COALESCE(CAST(json_extract(e.metadata_json, '$.edit_count') AS INTEGER), 0) = 0 AND COALESCE(CAST(json_extract(e.metadata_json, '$.paste_count') AS INTEGER), 0) = 0 THEN CAST(json_extract(e.metadata_json, '$.duration_ms') AS REAL) END END), 0) AS average_field_dwell_ms, COALESCE(SUM(CASE WHEN e.action = 'field.blur' THEN CAST(json_extract(e.metadata_json, '$.key_press_count') AS REAL) ELSE 0 END), 0) AS typed_character_count, COALESCE(SUM(CASE WHEN e.action = 'field.blur' THEN CAST(json_extract(e.metadata_json, '$.backspace_count') AS REAL) ELSE 0 END), 0) AS correction_count, COALESCE(SUM(CASE WHEN json_extract(e.metadata_json, '$.pointer_type') = 'touch' THEN 1 ELSE 0 END), 0) AS touch_interaction_count, COUNT(DISTINCT CASE WHEN esc.outcome_type = 'success' THEN e.session_id END) AS completed_session_count, COUNT(DISTINCT CASE WHEN e.action IN ('error.invalid', 'act.rage', 'field.revisit', 'assist.help') THEN e.session_id END) AS friction_session_count FROM events e INNER JOIN sessions s ON s.id = e.session_id LEFT JOIN event_service_contexts esc ON esc.event_id = e.id WHERE s.tenant_id = 'researchops' AND s.started_at_ms >= ? AND s.started_at_ms < ?").bind(startAtMs, endAtMs).first();
   return buildOverviewMetrics(sessions, events);
 }
 
@@ -267,6 +333,12 @@ async function safeJson(request) { try { return await request.json(); } catch { 
 async function safeResponseJson(response) { try { return await response.json(); } catch { return null; } }
 function normaliseEmail(value) { const email = typeof value === 'string' ? value.trim().toLowerCase() : ''; return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : null; }
 function readCookie(request, name) { return request.headers.get('cookie')?.match(new RegExp(`(?:^|; )${name}=([^;]+)`))?.[1] ?? null; }
+async function authenticatedAccountId(request, env) {
+  if (!env.FLUX_AUTH_SECRET) return null;
+  const [accountId, expires, signature] = readCookie(request, 'flux_session')?.split('.') ?? [];
+  if (!accountId || !signature || Number(expires) <= Date.now()) return null;
+  return await equal(signature, await hash(`${accountId}.${expires}`, env.FLUX_AUTH_SECRET)) ? accountId : null;
+}
 async function hash(value, secret) { const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`${secret}:${value}`)); return [...new Uint8Array(digest)].map((n) => n.toString(16).padStart(2, '0')).join(''); }
 async function equal(left, right) { if (left.length !== right.length) return false; let diff = 0; for (let index = 0; index < left.length; index += 1) diff |= left.charCodeAt(index) ^ right.charCodeAt(index); return diff === 0; }
 function randomToken() { const bytes = crypto.getRandomValues(new Uint8Array(24)); return [...bytes].map((value) => value.toString(16).padStart(2, '0')).join(''); }

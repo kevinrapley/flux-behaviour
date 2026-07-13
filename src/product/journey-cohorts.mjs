@@ -46,19 +46,19 @@ export const VISIT_MATURITY_COHORTS = Object.freeze({
 export const OUTCOME_COHORTS = Object.freeze({
   completed_smoothly: {
     label: 'Completed without observed friction',
-    description: 'A submit action was reached without help, validation, revisit or rapid-click signals.'
+    description: 'A configured success outcome was reached without help, validation, revisit or rapid-click signals.'
   },
   completed_after_friction: {
     label: 'Completed after friction',
-    description: 'A submit action was reached after at least one supported friction signal.'
+    description: 'A configured success outcome was reached after at least one supported friction signal.'
   },
   friction_unresolved: {
     label: 'Friction without completion',
-    description: 'Supported friction was observed and no submit action was reached in the session.'
+    description: 'Supported friction was observed and no configured success outcome was reached in the session.'
   },
   in_progress: {
     label: 'No outcome observed',
-    description: 'Neither a submit action nor a supported friction signal was observed.'
+    description: 'Neither a configured success outcome nor a supported friction signal was observed.'
   }
 });
 
@@ -160,7 +160,7 @@ export function buildJourneyPatternCohorts(journeys = [], selectedSessionCount =
       duration_total_ms: 0
     };
     group.session_count += 1;
-    group.completed_session_count += number(journey.submit_count) > 0 ? 1 : 0;
+    group.completed_session_count += number(journey.successful_outcome_count) > 0 ? 1 : 0;
     group.friction_session_count += number(journey.friction_event_count) > 0 ? 1 : 0;
     group.returning_session_count += journey.is_returning_visitor ? 1 : 0;
     group.duration_total_ms += Math.max(0, number(journey.last_seen_at_ms) - number(journey.started_at_ms));

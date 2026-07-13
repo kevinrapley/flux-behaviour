@@ -389,6 +389,15 @@
 	white-space: nowrap;
 }
 
+.flux-service-model__table-scroll {
+	max-width: 100%;
+	overflow-x: auto;
+}
+
+.flux-service-model__table-scroll .govuk-table {
+	min-width: 560px;
+}
+
 .flux-insight {
 	background: #e9f5ee;
 	border-left: 4px solid var(--flux-green);
