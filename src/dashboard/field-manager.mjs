@@ -298,7 +298,7 @@ function renderFormField(definition) {
     }
   } else {
     control.value = definition.value;
-    control.maxLength = definition.name === 'elementKey' ? 160 : 120;
+    control.maxLength = 120;
   }
   group.append(control);
   return group;
@@ -342,6 +342,7 @@ function errorCopy(code) {
     label_required: 'Enter a name before publishing.',
     invalid_complexity: 'Choose a declared complexity from 1 to 7.',
     invalid_element_key: 'Enter a valid data-flux-key using lowercase letters, numbers, dots, hyphens or underscores.',
+    global_autocomplete_key: 'Use the field-specific data-flux-key from the connected service. Global autocomplete categories cannot identify a field.',
     invalid_required_status: 'Choose whether the field is required or optional.',
     element_key_in_use: 'That data-flux-key is already assigned elsewhere in the model.'
   };

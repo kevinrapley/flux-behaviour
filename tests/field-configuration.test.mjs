@@ -160,3 +160,80 @@ test('deletes a question group and every field and binding beneath it', async ()
   assert.deepEqual(next.bindings, [{ element_key: 'form.support.details', entity_key: 'step.enter-details' }]);
   assert.deepEqual(validateServiceModel(next), { valid: true, errors: [] });
 });
+
+test('deletes an outcome that becomes unreachable when its field key event is removed', async () => {
+  const { createField, createQuestionGroup, deleteFieldEntity } = await import('../src/dashboard/field-configuration.mjs');
+  let current = createQuestionGroup(modelWithStep(), {
+    stepKey: 'step.enter-details', label: 'Contact details', complexity: 4
+  });
+  current = createField(current, {
+    questionKey: 'question.contact-details', label: 'Email address',
+    elementKey: 'field.support.email', required: true
+  });
+  current.outcomes.push({
+    key: 'outcome.support-requested', type: 'success', label: 'Support requested',
+    transaction_key: 'transaction.apply-for-support'
+  });
+  current.key_events.push({
+    key: 'event.support-requested', label: 'Support requested', action: 'flow.submit',
+    element_key: 'field.support.email', outcome_key: 'outcome.support-requested'
+  });
+
+  const next = deleteFieldEntity(current, 'field.email-address');
+
+  assert.deepEqual(next.key_events, []);
+  assert.deepEqual(next.outcomes, []);
+  assert.deepEqual(validateServiceModel(next), { valid: true, errors: [] });
+});
+
+test('claims a same-transaction success binding when its field is configured later', async () => {
+  const { createField, createQuestionGroup } = await import('../src/dashboard/field-configuration.mjs');
+  let current = createQuestionGroup(modelWithStep(), {
+    stepKey: 'step.enter-details', label: 'Contact details', complexity: 4
+  });
+  current.bindings.push({
+    element_key: 'field.support.confirmation', entity_key: 'transaction.apply-for-support'
+  });
+  current.outcomes.push({
+    key: 'outcome.support-requested', type: 'success', label: 'Support requested',
+    transaction_key: 'transaction.apply-for-support'
+  });
+  current.key_events.push({
+    key: 'event.support-requested', label: 'Support requested', action: 'flow.submit',
+    element_key: 'field.support.confirmation', outcome_key: 'outcome.support-requested'
+  });
+
+  const next = createField(current, {
+    questionKey: 'question.contact-details', label: 'Confirmation',
+    elementKey: 'field.support.confirmation', required: true
+  });
+
+  assert.deepEqual(next.bindings.find(({ element_key }) => element_key === 'field.support.confirmation'), {
+    element_key: 'field.support.confirmation', entity_key: 'field.confirmation'
+  });
+  assert.deepEqual(validateServiceModel(next), { valid: true, errors: [] });
+});
+
+test('rejects field bindings longer than the collectable event key limit', async () => {
+  const { createField, createQuestionGroup } = await import('../src/dashboard/field-configuration.mjs');
+  const current = createQuestionGroup(modelWithStep(), {
+    stepKey: 'step.enter-details', label: 'Contact details', complexity: 4
+  });
+
+  assert.throws(() => createField(current, {
+    questionKey: 'question.contact-details', label: 'Long key',
+    elementKey: `field.${'a'.repeat(115)}`, required: true
+  }), /invalid_element_key/);
+});
+
+test('rejects global autocomplete categories as field-specific bindings', async () => {
+  const { createField, createQuestionGroup } = await import('../src/dashboard/field-configuration.mjs');
+  const current = createQuestionGroup(modelWithStep(), {
+    stepKey: 'step.enter-details', label: 'Contact details', complexity: 4
+  });
+
+  assert.throws(() => createField(current, {
+    questionKey: 'question.contact-details', label: 'Email address',
+    elementKey: 'autocomplete.email', required: true
+  }), /global_autocomplete_key/);
+});

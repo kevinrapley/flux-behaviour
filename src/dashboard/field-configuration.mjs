@@ -23,10 +23,17 @@ export function updateQuestionGroup(model, questionKey, { label, complexity }) {
 
 export function createField(model, { questionKey, label, elementKey, required }) {
   const next = nextVersion(model);
-  requireEntity(next, questionKey, 'question');
+  const question = requireEntity(next, questionKey, 'question');
   const fieldLabel = requiredLabel(label);
   const semanticElementKey = requiredElementKey(elementKey);
-  if (next.bindings.some((binding) => binding.element_key === semanticElementKey)) throw new TypeError('element_key_in_use');
+  const existingBinding = next.bindings.find((binding) => binding.element_key === semanticElementKey);
+  if (existingBinding) {
+    const boundEntity = next.entities.find(({ key }) => key === existingBinding.entity_key);
+    const questionTransaction = ancestor(next, question, 'transaction');
+    if (boundEntity?.type !== 'transaction' || boundEntity.key !== questionTransaction?.key) {
+      throw new TypeError('element_key_in_use');
+    }
+  }
   const key = uniqueKey(next, 'field', fieldLabel);
   next.entities.push({
     key,
@@ -36,7 +43,8 @@ export function createField(model, { questionKey, label, elementKey, required })
     position: children(next, questionKey, 'field').length + 1,
     required: requiredBoolean(required)
   });
-  next.bindings.push({ element_key: semanticElementKey, entity_key: key });
+  if (existingBinding) existingBinding.entity_key = key;
+  else next.bindings.push({ element_key: semanticElementKey, entity_key: key });
   return next;
 }
 
@@ -72,9 +80,14 @@ export function deleteFieldEntity(model, entityKey) {
   const deletedElementKeys = new Set(
     next.bindings.filter(({ entity_key }) => deletedKeys.has(entity_key)).map(({ element_key }) => element_key)
   );
+  const candidateOutcomeKeys = new Set(
+    next.key_events.filter(({ element_key }) => deletedElementKeys.has(element_key)).map(({ outcome_key }) => outcome_key)
+  );
   next.entities = next.entities.filter(({ key }) => !deletedKeys.has(key));
   next.bindings = next.bindings.filter(({ entity_key }) => !deletedKeys.has(entity_key));
   next.key_events = next.key_events.filter(({ element_key }) => !deletedElementKeys.has(element_key));
+  const retainedOutcomeKeys = new Set(next.key_events.map(({ outcome_key }) => outcome_key));
+  next.outcomes = next.outcomes.filter(({ key }) => !candidateOutcomeKeys.has(key) || retainedOutcomeKeys.has(key));
   reindexEntities(next);
   return next;
 }
@@ -99,7 +112,8 @@ function requiredComplexity(value) {
 
 function requiredElementKey(value) {
   const key = typeof value === 'string' ? value.trim().toLowerCase() : '';
-  if (key.length < 3 || key.length > 160 || !/^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$/.test(key)) {
+  if (key.startsWith('autocomplete.')) throw new TypeError('global_autocomplete_key');
+  if (key.length < 3 || key.length > 120 || !/^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$/.test(key)) {
     throw new TypeError('invalid_element_key');
   }
   return key;
@@ -115,6 +129,15 @@ function requireEntity(model, key, type) {
   const entity = model.entities.find((candidate) => candidate.key === key);
   if (entity?.type !== type) throw new TypeError(`${type}_not_found`);
   return entity;
+}
+
+function ancestor(model, entity, type) {
+  let current = entity;
+  while (current?.parent_key) {
+    current = model.entities.find(({ key }) => key === current.parent_key);
+    if (current?.type === type) return current;
+  }
+  return null;
 }
 
 function children(model, parentKey, type) {

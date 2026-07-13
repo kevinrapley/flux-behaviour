@@ -2,7 +2,7 @@ records:
   - id: CONF-029
     rule: Fields and service complexity must be tenant-owner configuration rather than product-hardcoded definitions
     expected_evidence: An authenticated owner can create, edit and delete question groups with 1–7 service complexity and required/optional fields with exact publisher bindings; saves publish immutable validated next versions and viewers remain read-only
-    actual_evidence: src/dashboard/field-configuration.mjs, src/dashboard/field-manager.mjs, the collapsed Fields dashboard configuration surface and focused tests implement owner-managed hierarchy, stable-key edits, binding collision rejection, cascading deletion and responsive presentation.
+    actual_evidence: src/dashboard/field-configuration.mjs, src/dashboard/field-manager.mjs, the collapsed Fields dashboard configuration surface and focused tests implement owner-managed hierarchy, stable-key edits, same-transaction success-binding claims, 120-character collectable-key limits, global-autocomplete rejection, orphan-outcome cleanup, collision rejection and responsive presentation.
     status: present-with-release-blockers
     owner: product-lead
 
