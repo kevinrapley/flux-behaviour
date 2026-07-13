@@ -213,12 +213,19 @@ function entitySql(period) {
       WHERE outcome_type = 'success' AND transaction_key IS NOT NULL
       GROUP BY session_id, transaction_key
     ), entity_events AS (
-      SELECT *, 'service' AS entity_type, service_key AS entity_key FROM contextual_events WHERE service_key IS NOT NULL
-      UNION ALL SELECT *, 'transaction', transaction_key FROM contextual_events WHERE transaction_key IS NOT NULL
-      UNION ALL SELECT *, 'task', task_key FROM contextual_events WHERE task_key IS NOT NULL
-      UNION ALL SELECT *, 'step', step_key FROM contextual_events WHERE step_key IS NOT NULL
-      UNION ALL SELECT *, 'question', question_key FROM contextual_events WHERE question_key IS NOT NULL
-      UNION ALL SELECT *, 'field', field_key FROM contextual_events WHERE field_key IS NOT NULL
+      SELECT contextual_events.*,
+        json_extract(entity.value, '$.type') AS entity_type,
+        json_extract(entity.value, '$.key') AS entity_key
+      FROM contextual_events
+      CROSS JOIN json_each(json_array(
+        json_object('type', 'service', 'key', service_key),
+        json_object('type', 'transaction', 'key', transaction_key),
+        json_object('type', 'task', 'key', task_key),
+        json_object('type', 'step', 'key', step_key),
+        json_object('type', 'question', 'key', question_key),
+        json_object('type', 'field', 'key', field_key)
+      )) AS entity
+      WHERE json_extract(entity.value, '$.key') IS NOT NULL
     ), ranked AS (
       SELECT entity_events.*,
         CASE WHEN successful_transactions.session_id IS NULL THEN 0 ELSE 1 END AS transaction_has_success,

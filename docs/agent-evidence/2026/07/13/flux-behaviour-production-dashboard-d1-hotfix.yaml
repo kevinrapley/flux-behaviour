@@ -1,0 +1,67 @@
+evidence_records:
+  - task_id: flux-behaviour-production-dashboard-d1-hotfix
+    mode: repo-fix
+    repository: kevinrapley/flux-behaviour
+    risk_level: high
+    base_branch: main
+    working_branch: fix/d1-entity-report-compatibility
+    files_read:
+      - README.md
+      - AGENTS.md
+      - RECENT_LEARNINGS.md
+      - CONTRIBUTING.md
+      - SECURITY.md
+      - repository-contract.yaml
+      - github-settings.yaml
+      - conformance-matrix.yaml
+      - gap-register.yaml
+      - harm-register.yaml
+      - docs/product/production-runtime.md
+    files_changed:
+      - src/product/event-entity-reports.mjs
+      - tests/event-entity-reports.test.mjs
+      - RECENT_LEARNINGS.md
+      - agent-evidence.yaml
+      - conformance-matrix.yaml
+      - gap-register.yaml
+      - harm-register.yaml
+    promotion_decisions:
+      - decision: Expand controlled service hierarchy keys with json_each instead of a six-term compound SELECT.
+        reason: Production D1 rejects the compound query that local SQLite accepts; json_each preserves the same bounded rows within the provider limit.
+      - decision: Require an authenticated production dashboard smoke check after deployment.
+        reason: Static hashes and an unauthenticated 401 do not execute protected report SQL.
+    commands_run:
+      - command: node --test tests/event-entity-reports.test.mjs
+        state: verified
+        status: passed
+        evidence: All 7 focused report tests passed, including the production D1 compound-query regression.
+      - command: remote D1 minimal entity hierarchy query using json_each
+        state: verified
+        status: passed
+        evidence: Production D1 executed the replacement query successfully.
+      - command: npm test
+        state: verified
+        status: passed
+        evidence: All 289 repository tests passed.
+      - command: npm run validate
+        state: verified
+        status: passed
+        evidence: Repository governance file check passed for 19 files.
+      - command: npm run security:secrets
+        state: verified
+        status: passed
+        evidence: Secret pattern sanity scan passed.
+      - command: npm run sbom
+        state: verified
+        status: passed
+        evidence: CycloneDX SBOM generation completed.
+    recent_learnings:
+      - Authenticated production smoke checks are required to exercise protected report SQL.
+    security:
+      - Authentication, tenant scoping and output fields are unchanged.
+    privacy:
+      - Hierarchy expansion uses only controlled service-model keys and adds no event content or identifiers.
+    accessibility:
+      - Restores the existing accessible dashboard reports without changing their presentation.
+    risks:
+      - Production operational controls remain tracked in GAP-004.

@@ -198,3 +198,7 @@ Adding a selector or CSV endpoint is not sufficient. Comparison dimensions must 
 ## 2026-07-13 — D1 migration rehearsal must match remote transaction constraints
 
 Local D1 accepted explicit `BEGIN TRANSACTION` and `COMMIT` statements that remote D1 rejected. Generated seed migrations must rely on Wrangler's migration-level atomicity, and regression checks must reject explicit SQL transaction control before a production migration is attempted.
+
+## 2026-07-13 — Production D1 query limits require authenticated smoke testing
+
+Local SQLite accepted a six-term compound service-hierarchy query that production D1 rejected with `too many terms in compound SELECT`. Provider-limit regression tests must accompany complex report SQL, and a release is not verified until an authenticated production dashboard request returns usable analytics rather than merely enforcing its `401` boundary.
