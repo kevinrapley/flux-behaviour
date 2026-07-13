@@ -22,5 +22,10 @@ test('dashboard renders accessible event, key-event and semantic entity reports'
   assert.match(dashboard, /Steps/);
   assert.match(dashboard, /Questions/);
   assert.match(dashboard, /Fields/);
+  assert.match(dashboard, /Number\(row\.event_count\) === 0 \? 0/);
+  assert.match(dashboard, /formatChange\(row\.event_count_change, data\.comparison_available\)/);
+  assert.match(styles, /govuk\.govuk-colour\("mid-grey"\)/);
+  assert.match(styles, /govuk\.govuk-colour\("light-grey"\)/);
+  assert.match(styles, /govuk\.govuk-colour\("blue"\)/);
   assert.match(styles, /\.flux-report-table\s*\{[^}]*overflow-x:\s*auto/s);
 });

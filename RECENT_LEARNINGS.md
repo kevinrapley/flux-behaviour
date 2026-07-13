@@ -8,6 +8,8 @@ A content-free autocomplete category such as `autocomplete.email` is global, not
 
 An occurrence-time event report can include a session that started before the selected period. Dividing its unique-session counts by sessions started in the period can therefore exceed 100%. Calculate the denominator from distinct sessions with events in the same occurrence-time window, and reuse it for event, element and semantic-entity reach. Preserve exact model-version filters before applying current publisher labels.
 
+Configured success milestones are commonly bound to an enclosing form or step, not the field or question used earlier in the journey. Entity performance must therefore propagate success only across the same session and configured transaction. Separately, an all-time range has no previous period: carry that state explicitly so the dashboard does not describe every non-zero row as new activity.
+
 Generated production markup is not the source of truth. The journey page had a tenant attribute in tracked output but not in its Nunjucks template, so an ordinary build silently removed tenant routing. Fix source/build drift where it is discovered and validate the rebuilt artefact, not just the previously committed output.
 
 ## 2026-07-13 — Realtime freshness needs server acceptance time

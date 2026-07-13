@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { DatabaseSync } from 'node:sqlite';
 
 import { buildEntityReport, buildEventReport, dashboardEventEntityReports } from '../src/product/event-entity-reports.mjs';
 
@@ -106,6 +107,26 @@ test('builds semantic entity performance with journeys, entry, exit, outcomes, f
   assert.deepEqual(report.by_type.task, report.entities);
 });
 
+test('distinguishes an unavailable comparison period from a previous period with zero activity', () => {
+  const events = buildEventReport({
+    selectedSessionCount: 2,
+    comparisonAvailable: false,
+    eventRows: [{ event_class: 'navigation', action: 'page.loaded', event_count: 2, session_count: 2 }]
+  });
+  const entities = buildEntityReport({
+    selectedSessionCount: 2,
+    comparisonAvailable: false,
+    rows: [{ entity_type: 'task', entity_key: 'task.home', label: 'Open home', session_count: 2 }]
+  });
+
+  assert.equal(events.comparison_available, false);
+  assert.equal(events.events[0].previous_event_count, null);
+  assert.equal(events.events[0].event_count_change, null);
+  assert.equal(entities.comparison_available, false);
+  assert.equal(entities.entities[0].previous_session_count, null);
+  assert.equal(entities.entities[0].session_count_change, null);
+});
+
 test('queries event and entity reports for the exact published model and comparison period', async () => {
   const calls = [];
   const db = {
@@ -149,6 +170,52 @@ test('queries event and entity reports for the exact published model and compari
   assert.equal(calls.length, 9);
   assert.ok(calls.filter(({ sql }) => sql.includes('report-key-events') || sql.includes('report-elements') || sql.includes('report-entities')).every(({ values }) => values.includes('model.researchops') && values.includes(3)));
   assert.ok(calls.some(({ sql, values }) => sql.includes('report-events:previous') && values.join(',') === 'researchops,0,1000'));
+  const entityQuery = calls.find(({ sql }) => sql.includes('report-entities:current')).sql;
+  assert.match(entityQuery, /successful_transactions/);
+  assert.match(entityQuery, /transaction_has_success/);
+});
+
+test('attributes a transaction success to a field reached earlier in the same journey', async () => {
+  const sqlite = new DatabaseSync(':memory:');
+  sqlite.exec(`
+    CREATE TABLE events (id TEXT PRIMARY KEY, tenant_id TEXT, session_id TEXT, occurred_at_ms INTEGER, event_class TEXT, action TEXT, element_key TEXT, role TEXT);
+    CREATE TABLE event_service_contexts (event_id TEXT PRIMARY KEY, tenant_id TEXT, model_key TEXT, model_version INTEGER, entity_key TEXT, service_key TEXT, transaction_key TEXT, task_key TEXT, step_key TEXT, question_key TEXT, field_key TEXT, transaction_complexity INTEGER, key_event_key TEXT, outcome_key TEXT, outcome_type TEXT);
+    CREATE TABLE service_model_entities (tenant_id TEXT, model_key TEXT, version INTEGER, entity_key TEXT, label TEXT, complexity INTEGER, required INTEGER);
+    INSERT INTO service_model_entities VALUES ('researchops', 'model.researchops', 3, 'field.objective', 'Objective editor', NULL, 1);
+    INSERT INTO service_model_entities VALUES ('researchops', 'model.researchops', 3, 'step.describe-objective', 'Describe objective', NULL, NULL);
+    INSERT INTO events VALUES ('field-event', 'researchops', 'session-1', 1100, 'interaction', 'field.blur', 'field.project.objective', 'field');
+    INSERT INTO events VALUES ('success-event', 'researchops', 'session-1', 1200, 'interaction', 'flow.submit', 'form.project.objective', 'form');
+    INSERT INTO event_service_contexts VALUES ('field-event', 'researchops', 'model.researchops', 3, 'field.objective', 'service.researchops', 'transaction.manage-project', 'task.add-objective', 'step.describe-objective', 'question.objective', 'field.objective', 5, NULL, NULL, NULL);
+    INSERT INTO event_service_contexts VALUES ('success-event', 'researchops', 'model.researchops', 3, 'step.describe-objective', 'service.researchops', 'transaction.manage-project', 'task.add-objective', 'step.describe-objective', NULL, NULL, 5, 'key-event.objective-saved', 'outcome.objective-saved', 'success');
+  `);
+  const db = {
+    prepare(sql) {
+      let values = [];
+      return {
+        bind(...nextValues) { values = nextValues; return this; },
+        async all() { return { results: sqlite.prepare(sql).all(...values) }; }
+      };
+    }
+  };
+  const reports = await dashboardEventEntityReports(db, {
+    tenantId: 'researchops',
+    model: {
+      model_key: 'model.researchops', version: 3,
+      key_events: [{ key: 'key-event.objective-saved', label: 'Objective saved', outcome_key: 'outcome.objective-saved' }],
+      outcomes: [{ key: 'outcome.objective-saved', label: 'Objective saved', type: 'success' }]
+    },
+    selectedSessionCount: 1,
+    startAtMs: 1000,
+    endAtMs: 2000,
+    previousStartAtMs: null,
+    previousEndAtMs: null
+  });
+
+  const field = reports.entities.by_type.field[0];
+  assert.equal(field.session_count, 1);
+  assert.equal(field.success_session_count, 1);
+  assert.equal(field.success_rate, 100);
+  sqlite.close();
 });
 
 test('authenticated dashboard includes event and semantic entity reports', () => {

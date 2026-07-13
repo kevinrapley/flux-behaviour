@@ -382,13 +382,13 @@ function renderEventReport(data) {
   wrapper.append(renderEventTrend(data.trend ?? []));
   const events = reportDetails('Ranked events', `${numberFormat.format((data.events ?? []).length)} event types`,
     ['Event', 'Class', 'Interactions', 'Journeys', 'Journey rate', 'Change'],
-    (data.events ?? []).map((row) => [actionLabel(row.action), capitalise(row.event_class), row.event_count, row.session_count, formatPercent(row.sessions_rate), formatChange(row.event_count_change)]));
+    (data.events ?? []).map((row) => [actionLabel(row.action), capitalise(row.event_class), row.event_count, row.session_count, formatPercent(row.sessions_rate), formatChange(row.event_count_change, data.comparison_available)]));
   const keyEvents = reportDetails('Configured key events', `${numberFormat.format((data.key_events ?? []).length)} key events with selected-period evidence`,
     ['Key event', 'Outcome', 'Interactions', 'Journeys', 'Journey rate', 'Change'],
-    (data.key_events ?? []).map((row) => [row.label, `${row.outcome_label} · ${capitalise(row.outcome_type)}`, row.event_count, row.session_count, formatPercent(row.sessions_rate), formatChange(row.event_count_change)]));
+    (data.key_events ?? []).map((row) => [row.label, `${row.outcome_label} · ${capitalise(row.outcome_type)}`, row.event_count, row.session_count, formatPercent(row.sessions_rate), formatChange(row.event_count_change, data.comparison_available)]));
   const elements = reportDetails('Pages, forms and controls', `${numberFormat.format((data.elements ?? []).length)} configured elements with selected-period evidence`,
     ['Element', 'Type', 'Mapped purpose', 'Interactions', 'Journeys', 'Journey rate', 'Change'],
-    (data.elements ?? []).map((row) => [semanticElementLabel(row.element_key), capitalise(row.role), row.entity_label, row.event_count, row.session_count, formatPercent(row.sessions_rate), formatChange(row.event_count_change)]));
+    (data.elements ?? []).map((row) => [semanticElementLabel(row.element_key), capitalise(row.role), row.entity_label, row.event_count, row.session_count, formatPercent(row.sessions_rate), formatChange(row.event_count_change, data.comparison_available)]));
   wrapper.append(events, keyEvents, elements);
   return wrapper;
 }
@@ -403,7 +403,7 @@ function renderEventTrend(rows) {
   for (const row of rows) {
     const bar = document.createElement('span');
     bar.className = 'flux-event-trend__bar';
-    bar.style.height = `${Math.max(2, (Number(row.event_count || 0) / maximum) * 100)}%`;
+    bar.style.height = `${Number(row.event_count) === 0 ? 0 : Math.max(2, (Number(row.event_count) / maximum) * 100)}%`;
     bar.title = `${shortDate(row.day)}: ${numberFormat.format(row.event_count)} interactions; ${numberFormat.format(row.key_event_count)} key event${Number(row.key_event_count) === 1 ? '' : 's'}`;
     chart.append(bar);
   }
@@ -428,7 +428,7 @@ function renderEntityReport(data) {
     const rows = data.by_type?.[type] ?? [];
     wrapper.append(reportDetails(label, `${numberFormat.format(rows.length)} configured ${type}${rows.length === 1 ? '' : 's'} with evidence`,
       ['Service entity', 'Journeys', 'Entry', 'Exit', 'Success', 'Friction', 'Average time', 'Change'],
-      rows.map((row) => [entityLabel(row), row.session_count, row.entry_session_count, row.exit_session_count, formatPercent(row.success_rate), formatPercent(row.friction_rate), formatDuration(row.average_duration_ms), formatChange(row.session_count_change)])));
+      rows.map((row) => [entityLabel(row), row.session_count, row.entry_session_count, row.exit_session_count, formatPercent(row.success_rate), formatPercent(row.friction_rate), formatDuration(row.average_duration_ms), formatChange(row.session_count_change, data.comparison_available)])));
   }
   return wrapper;
 }
@@ -671,7 +671,8 @@ function rateComparison(current, previous) {
   return `${Math.abs(change).toFixed(1)} percentage points ${change > 0 ? 'up' : 'down'}`;
 }
 
-function formatChange(value) {
+function formatChange(value, comparisonAvailable = true) {
+  if (!comparisonAvailable) return 'No comparison period';
   if (value === null || value === undefined) return 'New in this period';
   const change = Number(value) || 0;
   if (Math.abs(change) < 0.05) return 'No change';

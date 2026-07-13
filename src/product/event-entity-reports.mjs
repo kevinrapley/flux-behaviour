@@ -1,5 +1,6 @@
 export function buildEventReport({
   selectedSessionCount,
+  comparisonAvailable = true,
   eventRows = [],
   previousEventRows = [],
   keyEventRows = [],
@@ -14,11 +15,12 @@ export function buildEventReport({
   const previousKeyEvents = new Map(previousKeyEventRows.map((row) => [row.key_event_key, row]));
   const previousElements = new Map(previousElementRows.map((row) => [`${row.element_key}:${row.role}`, row]));
   return {
-    events: eventRows.map((row) => eventRow(row, previousEvents.get(`${row.event_class}:${row.action}`), selectedSessionCount))
+    comparison_available: comparisonAvailable,
+    events: eventRows.map((row) => eventRow(row, previousEvents.get(`${row.event_class}:${row.action}`), selectedSessionCount, comparisonAvailable))
       .sort((left, right) => right.event_count - left.event_count || left.action.localeCompare(right.action)),
-    key_events: keyEventRows.map((row) => keyEventRow(row, previousKeyEvents.get(row.key_event_key), selectedSessionCount))
+    key_events: keyEventRows.map((row) => keyEventRow(row, previousKeyEvents.get(row.key_event_key), selectedSessionCount, comparisonAvailable))
       .sort((left, right) => right.event_count - left.event_count || left.label.localeCompare(right.label)),
-    elements: elementRows.map((row) => elementRow(row, previousElements.get(`${row.element_key}:${row.role}`), selectedSessionCount))
+    elements: elementRows.map((row) => elementRow(row, previousElements.get(`${row.element_key}:${row.role}`), selectedSessionCount, comparisonAvailable))
       .sort((left, right) => right.event_count - left.event_count || left.element_key.localeCompare(right.element_key)),
     trend: completeDailyTrend(trendRows, startAtMs, endAtMs)
   };
@@ -38,10 +40,10 @@ function completeDailyTrend(rows, startAtMs, endAtMs) {
   });
 }
 
-function elementRow(row, previous, selectedSessionCount) {
+function elementRow(row, previous, selectedSessionCount, comparisonAvailable) {
   const eventCount = number(row.event_count);
   const sessionCount = number(row.session_count);
-  const previousEventCount = number(previous?.event_count);
+  const previousEventCount = comparisonAvailable ? number(previous?.event_count) : null;
   return {
     element_key: row.element_key,
     role: row.role,
@@ -51,15 +53,15 @@ function elementRow(row, previous, selectedSessionCount) {
     session_count: sessionCount,
     sessions_rate: rate(sessionCount, selectedSessionCount),
     previous_event_count: previousEventCount,
-    event_count_change: change(eventCount, previousEventCount)
+    event_count_change: comparisonAvailable ? change(eventCount, previousEventCount) : null
   };
 }
 
-export function buildEntityReport({ selectedSessionCount, rows = [], previousRows = [] }) {
+export function buildEntityReport({ selectedSessionCount, comparisonAvailable = true, rows = [], previousRows = [] }) {
   const previous = new Map(previousRows.map((row) => [`${row.entity_type}:${row.entity_key}`, row]));
   const entities = rows.map((row) => {
     const sessionCount = number(row.session_count);
-    const previousSessionCount = number(previous.get(`${row.entity_type}:${row.entity_key}`)?.session_count);
+    const previousSessionCount = comparisonAvailable ? number(previous.get(`${row.entity_type}:${row.entity_key}`)?.session_count) : null;
     return {
       entity_type: row.entity_type,
       entity_key: row.entity_key,
@@ -77,10 +79,11 @@ export function buildEntityReport({ selectedSessionCount, rows = [], previousRow
       complexity: row.complexity === null || row.complexity === undefined ? null : number(row.complexity),
       required: row.required === null || row.required === undefined ? null : Boolean(row.required),
       previous_session_count: previousSessionCount,
-      session_count_change: change(sessionCount, previousSessionCount)
+      session_count_change: comparisonAvailable ? change(sessionCount, previousSessionCount) : null
     };
   }).sort((left, right) => right.session_count - left.session_count || left.label.localeCompare(right.label));
   return {
+    comparison_available: comparisonAvailable,
     entities,
     by_type: Object.fromEntries(['service', 'transaction', 'task', 'step', 'question', 'field'].map((type) => [type, entities.filter((row) => row.entity_type === type)]))
   };
@@ -124,6 +127,7 @@ export async function dashboardEventEntityReports(db, {
   return {
     events: buildEventReport({
       selectedSessionCount: reportSessionCount,
+      comparisonAvailable: hasComparison,
       eventRows,
       previousEventRows,
       keyEventRows: keyRows.map(enrichKeyEvent),
@@ -134,7 +138,7 @@ export async function dashboardEventEntityReports(db, {
       startAtMs,
       endAtMs
     }),
-    entities: buildEntityReport({ selectedSessionCount: reportSessionCount, rows: entityRows, previousRows: previousEntityRows })
+    entities: buildEntityReport({ selectedSessionCount: reportSessionCount, comparisonAvailable: hasComparison, rows: entityRows, previousRows: previousEntityRows })
   };
 }
 
@@ -203,6 +207,11 @@ function entitySql(period) {
       INNER JOIN event_service_contexts esc ON esc.event_id = e.id
       WHERE e.tenant_id = ? AND e.occurred_at_ms >= ? AND e.occurred_at_ms < ?
         AND esc.model_key = ? AND esc.model_version = ?
+    ), successful_transactions AS (
+      SELECT session_id, transaction_key
+      FROM contextual_events
+      WHERE outcome_type = 'success' AND transaction_key IS NOT NULL
+      GROUP BY session_id, transaction_key
     ), entity_events AS (
       SELECT *, 'service' AS entity_type, service_key AS entity_key FROM contextual_events WHERE service_key IS NOT NULL
       UNION ALL SELECT *, 'transaction', transaction_key FROM contextual_events WHERE transaction_key IS NOT NULL
@@ -211,10 +220,14 @@ function entitySql(period) {
       UNION ALL SELECT *, 'question', question_key FROM contextual_events WHERE question_key IS NOT NULL
       UNION ALL SELECT *, 'field', field_key FROM contextual_events WHERE field_key IS NOT NULL
     ), ranked AS (
-      SELECT *,
-        ROW_NUMBER() OVER (PARTITION BY session_id, entity_type ORDER BY occurred_at_ms, id, entity_key) AS entry_rank,
-        ROW_NUMBER() OVER (PARTITION BY session_id, entity_type ORDER BY occurred_at_ms DESC, id DESC, entity_key DESC) AS exit_rank
+      SELECT entity_events.*,
+        CASE WHEN successful_transactions.session_id IS NULL THEN 0 ELSE 1 END AS transaction_has_success,
+        ROW_NUMBER() OVER (PARTITION BY entity_events.session_id, entity_events.entity_type ORDER BY entity_events.occurred_at_ms, entity_events.id, entity_events.entity_key) AS entry_rank,
+        ROW_NUMBER() OVER (PARTITION BY entity_events.session_id, entity_events.entity_type ORDER BY entity_events.occurred_at_ms DESC, entity_events.id DESC, entity_events.entity_key DESC) AS exit_rank
       FROM entity_events
+      LEFT JOIN successful_transactions
+        ON successful_transactions.session_id = entity_events.session_id
+        AND successful_transactions.transaction_key = entity_events.transaction_key
     ), session_entity AS (
       SELECT entity_type, entity_key, session_id,
         COUNT(*) AS interaction_count,
@@ -222,7 +235,7 @@ function entitySql(period) {
         MAX(occurred_at_ms) AS last_at_ms,
         MAX(CASE WHEN entry_rank = 1 THEN 1 ELSE 0 END) AS is_entry,
         MAX(CASE WHEN exit_rank = 1 THEN 1 ELSE 0 END) AS is_exit,
-        MAX(CASE WHEN outcome_type = 'success' THEN 1 ELSE 0 END) AS has_success,
+        MAX(transaction_has_success) AS has_success,
         MAX(CASE WHEN action IN ('error.invalid', 'act.rage', 'field.revisit', 'assist.help') THEN 1 ELSE 0 END) AS has_friction,
         MAX(transaction_complexity) AS transaction_complexity
       FROM ranked GROUP BY entity_type, entity_key, session_id
@@ -243,10 +256,10 @@ function entitySql(period) {
     GROUP BY se.entity_type, se.entity_key, sme.label`;
 }
 
-function eventRow(row, previous, selectedSessionCount) {
+function eventRow(row, previous, selectedSessionCount, comparisonAvailable) {
   const eventCount = number(row.event_count);
   const sessionCount = number(row.session_count);
-  const previousEventCount = number(previous?.event_count);
+  const previousEventCount = comparisonAvailable ? number(previous?.event_count) : null;
   return {
     event_class: row.event_class,
     action: row.action,
@@ -254,14 +267,14 @@ function eventRow(row, previous, selectedSessionCount) {
     session_count: sessionCount,
     sessions_rate: rate(sessionCount, selectedSessionCount),
     previous_event_count: previousEventCount,
-    event_count_change: change(eventCount, previousEventCount)
+    event_count_change: comparisonAvailable ? change(eventCount, previousEventCount) : null
   };
 }
 
-function keyEventRow(row, previous, selectedSessionCount) {
+function keyEventRow(row, previous, selectedSessionCount, comparisonAvailable) {
   const eventCount = number(row.event_count);
   const sessionCount = number(row.session_count);
-  const previousEventCount = number(previous?.event_count);
+  const previousEventCount = comparisonAvailable ? number(previous?.event_count) : null;
   return {
     key_event_key: row.key_event_key,
     label: row.label,
@@ -271,7 +284,7 @@ function keyEventRow(row, previous, selectedSessionCount) {
     session_count: sessionCount,
     sessions_rate: rate(sessionCount, selectedSessionCount),
     previous_event_count: previousEventCount,
-    event_count_change: change(eventCount, previousEventCount)
+    event_count_change: comparisonAvailable ? change(eventCount, previousEventCount) : null
   };
 }
 
