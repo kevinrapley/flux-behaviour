@@ -1,4 +1,54 @@
 gaps:
+  - id: GAP-013
+    title: Publisher-declared service model is missing
+    severity: high
+    observed_state: Flux stores semantic event keys but has no versioned definitions for transactions, tasks, steps, questions, fields, required status, complexity or configured outcomes.
+    expected_state: Tenant owners can publish a validated, versioned, non-identifying service model that events resolve against and aggregate reports use consistently.
+    risk: Funnels, field coverage, complexity-adjusted effort and outcome analysis remain unreliable or impossible.
+    action: Deliver MODEL-01 through MODEL-05 from docs/product/behaviour-model-dashboard-gap-analysis.md before expanding inference.
+    owner: product-lead
+    status: open
+
+  - id: GAP-014
+    title: Dashboard lacks mature analytics report breadth
+    severity: high
+    observed_state: The dashboard provides period overview, daily audience trend, health summaries, action ranking, cohorts, indicators and journey histories, but no realtime, key-event, page/task/control, field, funnel, custom-comparison or export reports.
+    expected_state: The target information architecture and P1 dashboard reports in the source-grounded gap analysis are implemented with shared filters, accessible tables and provenance.
+    risk: Teams can inspect individual journeys but cannot reliably locate systemic friction, compare changes or prioritise service action.
+    action: Deliver DASH-01 through DASH-06 after the service model foundation.
+    owner: product-lead
+    status: open
+
+  - id: GAP-015
+    title: Behavioural lifecycle coverage is incomplete
+    severity: medium
+    observed_state: Capture covers core navigation, fields, writing, help disclosure, validation and submit metadata, but not configured recovery, idle/visibility, help dialogue, search/refinement, repeatability, recency, celeration or safe environment context.
+    expected_state: The P2 behavioural lifecycles are captured as consented bounded metadata with alternative interpretations and aggregate reporting.
+    risk: Flux can overemphasise isolated interactions while missing whether people recover, learn, return or face repeated service problems.
+    action: Deliver MODEL-06 and MODEL-08 through MODEL-13 with privacy, accessibility and golden-corpus evidence.
+    owner: product-lead
+    status: open
+
+  - id: GAP-016
+    title: Analytics-to-action layer is missing
+    severity: medium
+    observed_state: Flux reports evidence but has no release/intervention annotations, hypotheses, owners, before/after outcome comparisons or governed recommendations.
+    expected_state: Teams can connect a detected problem to a reversible service intervention and assess whether outcomes improve, with audit and uncertainty.
+    risk: "The dashboard reproduces the Action Chasm described in the product sources: insight accumulates without accountable action."
+    action: Deliver DASH-09 and deterministic explainability before any adaptive interface feature.
+    owner: product-lead
+    status: open
+
+  - id: GAP-017
+    title: Natural-language analytics and adaptive assistance lack prerequisite controls
+    severity: high
+    observed_state: The source corpus defines aggregate NL queries and adaptive assistance, but Flux has no stable report API, RBAC policy for analytics queries, redaction, k-anonymity enforcement, prompt audit, citations, refusal evaluations or user-controlled adaptation contract.
+    expected_state: NLP-01 and ADAPT-01 prerequisites pass privacy, accessibility, security, explainability, fairness and audit gates before deployment.
+    risk: Premature implementation could enable opaque person-level profiling, disclosure of small groups or manipulative personalisation.
+    action: Keep these capabilities blocked until Releases A–C are evidenced and the Release D controls pass.
+    owner: governance-lead
+    status: open
+
   - id: GAP-012
     title: UK English writing indicators need representative corpus, accessibility and fairness validation
     severity: high

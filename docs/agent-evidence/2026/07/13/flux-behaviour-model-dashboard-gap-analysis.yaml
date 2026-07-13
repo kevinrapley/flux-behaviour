@@ -1,0 +1,76 @@
+evidence_records:
+  - task_id: flux-behaviour-model-dashboard-gap-analysis
+    mode: repo-conformance
+    repository: kevinrapley/flux-behaviour
+    risk_level: high
+    base_branch: main
+    working_branch: feature/behaviour-model-gap-analysis
+    files_read:
+      - README.md
+      - AGENTS.md
+      - RECENT_LEARNINGS.md
+      - CONTRIBUTING.md
+      - SECURITY.md
+      - repository-contract.yaml
+      - github-settings.yaml
+      - conformance-matrix.yaml
+      - gap-register.yaml
+      - harm-register.yaml
+      - contracts/events/flux-event.schema.json
+      - src/events/flux-event-schema.mjs
+      - src/sdk/flux-auto-capture.mjs
+      - src/product/router.mjs
+      - src/product/live-analytics.mjs
+      - src/product/session-dimensions.mjs
+      - src/product/journey-cohorts.mjs
+      - src/dashboard/live-dashboard.mjs
+      - demo/templates/pages/dashboard.njk
+      - docs/product/production-runtime.md
+      - docs/product/behaviour-signal-map.md
+      - docs/product/cohort-analytics.md
+      - docs/instrumentation/event-taxonomy.md
+      - docs/instrumentation/tag-integration.md
+      - User-provided Google Drive corpus and three Google Analytics screenshots listed in the gap analysis source register
+    files_changed:
+      - docs/product/behaviour-model-dashboard-gap-analysis.md
+      - docs/agent-evidence/2026/07/13/flux-behaviour-model-dashboard-gap-analysis.yaml
+      - RECENT_LEARNINGS.md
+      - agent-evidence.yaml
+      - conformance-matrix.yaml
+      - gap-register.yaml
+      - harm-register.yaml
+    promotion_decisions:
+      - Establish the publisher-declared service model as the P0 dependency for trustworthy analytics breadth.
+      - Prioritise realtime, event/key-event, semantic entity, funnel, field, comparison and provenance reports after the model foundation.
+      - Reframe historical person-level inference and adaptive UI expectations around aggregate service evidence, user control and humane analytics.
+    commands_run:
+      - command: npm ci
+        state: verified
+        status: passed
+        evidence: Installed 60 packages from the lockfile; npm reported zero vulnerabilities.
+      - command: npm test
+        state: verified
+        status: passed
+        evidence: All 197 repository tests passed.
+      - command: npm run validate
+        state: verified
+        status: passed
+        evidence: The required repository governance-file check passed for 19 files.
+      - command: npm run security:secrets
+        state: verified
+        status: passed
+        evidence: The secret-pattern sanity scan passed.
+      - command: git diff --check
+        state: verified
+        status: passed
+        evidence: The working diff contains no whitespace errors.
+    recent_learnings:
+      - A semantic event recorder cannot replace a versioned service/task/field/outcome model.
+    security:
+      - No credentials, source-document contents containing contact details or external configuration were copied into the repository.
+    privacy:
+      - The roadmap rejects sensitive person-level inference, visited-link inspection, social-profile analysis, password evaluation and raw-event export.
+    accessibility:
+      - Dashboard acceptance criteria require accessible tables, shared filters, non-visual summaries and user-controlled adaptation.
+    risks:
+      - Source expectations span 2014 to 2026 and include historical assumptions that require explicit rejection or modern reinterpretation.

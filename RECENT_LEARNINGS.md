@@ -1,5 +1,9 @@
 # Recent Learnings
 
+## 2026-07-13 — A rich event stream is not yet a behavioural analytics model
+
+The source documentation is organised around publisher-defined transactions, tasks, questions, complexity and outcomes. A recorder that stores semantic interaction events can narrate journeys, but it cannot produce trustworthy funnels, field coverage, disclosure, complexity-adjusted effort or action recommendations until those service concepts have first-class versioned definitions. Dashboard breadth depends on that model; charts cannot substitute for it.
+
 ## 2026-07-12 — Typing speed must exclude prefilled content
 
 The writing analyser's final word count describes the whole field, so dividing it by the current edit interval inflates WPM whenever a visitor edits existing text. Calculate standard gross WPM from printable, non-modifier keystrokes divided by five over active typing time; keep whole-field word counts only for the separately labelled on-device writing analysis, and keep Ctrl/Cmd/Alt shortcuts out of typing volume.
