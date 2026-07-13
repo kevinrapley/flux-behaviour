@@ -175,6 +175,33 @@ test('queries event and entity reports for the exact published model and compari
   assert.match(entityQuery, /transaction_has_success/);
 });
 
+test('entity reports stay within the production D1 compound-select limit', async () => {
+  const db = {
+    prepare(sql) {
+      return {
+        bind() { return this; },
+        async all() {
+          const compoundTerms = (sql.match(/\bUNION(?:\s+ALL)?\b/gi) ?? []).length + 1;
+          if (compoundTerms > 5) throw new Error('D1_ERROR: too many terms in compound SELECT');
+          return { results: [] };
+        }
+      };
+    }
+  };
+
+  const reports = await dashboardEventEntityReports(db, {
+    tenantId: 'researchops',
+    model: { model_key: 'model.researchops', version: 1, key_events: [], outcomes: [] },
+    selectedSessionCount: 0,
+    startAtMs: 1000,
+    endAtMs: 2000,
+    previousStartAtMs: null,
+    previousEndAtMs: null
+  });
+
+  assert.deepEqual(reports.entities.entities, []);
+});
+
 test('attributes a transaction success to a field reached earlier in the same journey', async () => {
   const sqlite = new DatabaseSync(':memory:');
   sqlite.exec(`
