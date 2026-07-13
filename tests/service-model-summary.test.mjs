@@ -113,6 +113,6 @@ test('dashboard refuses an invalid service model at rest before querying coverag
 test('authenticated dashboard response includes the selected-period service-model summary', () => {
   const router = readFileSync('src/product/router.mjs', 'utf8');
 
-  assert.match(router, /dashboardServiceModel\(env, 'researchops', period\.start_at_ms, period\.end_at_ms\)/);
+  assert.match(router, /dashboardServiceModel\(env, 'researchops', period\.start_at_ms, period\.end_at_ms, publishedModel\)/);
   assert.match(router, /service_model: serviceModel/);
 });

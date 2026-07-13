@@ -6,6 +6,8 @@ const periodCopy = document.querySelector('[data-flux-period-copy]');
 const trend = document.querySelector('[data-flux-trend]');
 const realtime = document.querySelector('[data-flux-realtime]');
 const serviceModel = document.querySelector('[data-flux-service-model]');
+const eventReport = document.querySelector('[data-flux-event-report]');
+const entityReport = document.querySelector('[data-flux-entity-report]');
 const health = document.querySelector('[data-flux-health]');
 const interactions = document.querySelector('[data-flux-interactions]');
 const cohorts = document.querySelector('[data-flux-cohorts]');
@@ -95,6 +97,8 @@ function renderDashboard(data) {
   realtime.replaceChildren(renderRealtime(analytics.realtime));
   trend.replaceChildren(renderTrend(analytics.trend ?? []));
   serviceModel.replaceChildren(renderServiceModel(analytics.service_model));
+  eventReport.replaceChildren(renderEventReport(analytics.event_report));
+  entityReport.replaceChildren(renderEntityReport(analytics.entity_report));
   health.replaceChildren(renderHealth(summary));
   interactions.replaceChildren(renderInteractions(analytics.actions ?? []));
   cohorts.replaceChildren(renderCohorts(analytics.cohorts ?? {}));
@@ -371,6 +375,96 @@ function renderServiceModel(data) {
   return wrapper;
 }
 
+function renderEventReport(data) {
+  if (!data) return emptyState('Event report unavailable', 'Publish a valid service model before interpreting event and key-event evidence.');
+  const wrapper = document.createElement('div');
+  wrapper.className = 'flux-event-report';
+  wrapper.append(renderEventTrend(data.trend ?? []));
+  const events = reportDetails('Ranked events', `${numberFormat.format((data.events ?? []).length)} event types`,
+    ['Event', 'Class', 'Interactions', 'Journeys', 'Journey rate', 'Change'],
+    (data.events ?? []).map((row) => [actionLabel(row.action), capitalise(row.event_class), row.event_count, row.session_count, formatPercent(row.sessions_rate), formatChange(row.event_count_change)]));
+  const keyEvents = reportDetails('Configured key events', `${numberFormat.format((data.key_events ?? []).length)} key events with selected-period evidence`,
+    ['Key event', 'Outcome', 'Interactions', 'Journeys', 'Journey rate', 'Change'],
+    (data.key_events ?? []).map((row) => [row.label, `${row.outcome_label} · ${capitalise(row.outcome_type)}`, row.event_count, row.session_count, formatPercent(row.sessions_rate), formatChange(row.event_count_change)]));
+  const elements = reportDetails('Pages, forms and controls', `${numberFormat.format((data.elements ?? []).length)} configured elements with selected-period evidence`,
+    ['Element', 'Type', 'Mapped purpose', 'Interactions', 'Journeys', 'Journey rate', 'Change'],
+    (data.elements ?? []).map((row) => [semanticElementLabel(row.element_key), capitalise(row.role), row.entity_label, row.event_count, row.session_count, formatPercent(row.sessions_rate), formatChange(row.event_count_change)]));
+  wrapper.append(events, keyEvents, elements);
+  return wrapper;
+}
+
+function renderEventTrend(rows) {
+  if (rows.length === 0) return emptyState('No event trend yet', 'Daily interaction and key-event evidence will appear after events are recorded.');
+  const maximum = Math.max(1, ...rows.map((row) => Number(row.event_count) || 0));
+  const chart = document.createElement('div');
+  chart.className = 'flux-event-trend';
+  chart.setAttribute('role', 'img');
+  chart.setAttribute('aria-label', `${numberFormat.format(rows.reduce((sum, row) => sum + Number(row.event_count || 0), 0))} interactions across ${numberFormat.format(rows.length)} reported days.`);
+  for (const row of rows) {
+    const bar = document.createElement('span');
+    bar.className = 'flux-event-trend__bar';
+    bar.style.height = `${Math.max(2, (Number(row.event_count || 0) / maximum) * 100)}%`;
+    bar.title = `${shortDate(row.day)}: ${numberFormat.format(row.event_count)} interactions; ${numberFormat.format(row.key_event_count)} key event${Number(row.key_event_count) === 1 ? '' : 's'}`;
+    chart.append(bar);
+  }
+  const details = reportDetails('Daily event data', `${numberFormat.format(rows.length)} reported days`, ['Date', 'Interactions', 'Key events'], rows.map((row) => [shortDate(row.day), row.event_count, row.key_event_count]));
+  const section = document.createElement('div');
+  section.append(chart, details);
+  return section;
+}
+
+function renderEntityReport(data) {
+  if (!data) return emptyState('Service performance unavailable', 'Publish a valid service model before interpreting semantic entity performance.');
+  const wrapper = document.createElement('div');
+  wrapper.className = 'flux-entity-report';
+  const groups = [
+    ['transaction', 'Transactions'],
+    ['task', 'Tasks'],
+    ['step', 'Steps'],
+    ['question', 'Questions'],
+    ['field', 'Fields']
+  ];
+  for (const [type, label] of groups) {
+    const rows = data.by_type?.[type] ?? [];
+    wrapper.append(reportDetails(label, `${numberFormat.format(rows.length)} configured ${type}${rows.length === 1 ? '' : 's'} with evidence`,
+      ['Service entity', 'Journeys', 'Entry', 'Exit', 'Success', 'Friction', 'Average time', 'Change'],
+      rows.map((row) => [entityLabel(row), row.session_count, row.entry_session_count, row.exit_session_count, formatPercent(row.success_rate), formatPercent(row.friction_rate), formatDuration(row.average_duration_ms), formatChange(row.session_count_change)])));
+  }
+  return wrapper;
+}
+
+function reportDetails(label, description, headings, rows) {
+  const details = document.createElement('details');
+  details.className = 'govuk-details flux-report';
+  const summary = document.createElement('summary');
+  summary.className = 'govuk-details__summary';
+  summary.append(element('span', 'govuk-details__summary-text', label));
+  details.append(summary, element('p', 'govuk-body-s', description));
+  if (rows.length === 0) {
+    details.append(element('p', 'govuk-body-s', 'No evidence was recorded for this selection.'));
+    return details;
+  }
+  const table = document.createElement('table');
+  table.className = 'govuk-table govuk-table--small-text-until-tablet';
+  table.append(tableHead(headings), tableBody(rows));
+  const scroll = document.createElement('div');
+  scroll.className = 'flux-report-table';
+  scroll.append(table);
+  details.append(scroll);
+  return details;
+}
+
+function entityLabel(row) {
+  const context = [];
+  if (row.complexity !== null && row.complexity !== undefined) context.push(`complexity ${formatDecimal(row.complexity)} of 7`);
+  if (row.required !== null && row.required !== undefined) context.push(row.required ? 'required' : 'optional');
+  return context.length ? `${row.label} · ${context.join(' · ')}` : row.label;
+}
+
+function semanticElementLabel(value) {
+  return String(value ?? '').split('.').map(capitalise).join(' › ');
+}
+
 function renderCohorts(data) {
   const wrapper = document.createElement('div');
   wrapper.className = 'flux-cohorts';
@@ -575,6 +669,13 @@ function rateComparison(current, previous) {
   const change = Number(current) - Number(previous);
   if (Math.abs(change) < 0.05) return 'No change from previous period';
   return `${Math.abs(change).toFixed(1)} percentage points ${change > 0 ? 'up' : 'down'}`;
+}
+
+function formatChange(value) {
+  if (value === null || value === undefined) return 'New in this period';
+  const change = Number(value) || 0;
+  if (Math.abs(change) < 0.05) return 'No change';
+  return `${Math.abs(change).toLocaleString('en-GB', { maximumFractionDigits: 1 })}% ${change > 0 ? 'up' : 'down'}`;
 }
 
 function trendSummary(rows) {

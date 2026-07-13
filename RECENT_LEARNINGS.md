@@ -4,6 +4,12 @@
 
 A content-free autocomplete category such as `autocomplete.email` is global, not proof that the visitor is in a sign-in field, so it must not be bound to a transaction-specific model entity without contextual capture. Publisher key events also need event-contract validation: syntactically valid but uncollectable action/element pairs create silent outcome gaps. When a model version changes, exclude retired-version context from current mapping coverage and report it separately from genuinely unmapped events.
 
+## 2026-07-13 — Event report rates need an event-active journey denominator
+
+An occurrence-time event report can include a session that started before the selected period. Dividing its unique-session counts by sessions started in the period can therefore exceed 100%. Calculate the denominator from distinct sessions with events in the same occurrence-time window, and reuse it for event, element and semantic-entity reach. Preserve exact model-version filters before applying current publisher labels.
+
+Generated production markup is not the source of truth. The journey page had a tenant attribute in tracked output but not in its Nunjucks template, so an ordinary build silently removed tenant routing. Fix source/build drift where it is discovered and validate the rebuilt artefact, not just the previously committed output.
+
 ## 2026-07-13 — Realtime freshness needs server acceptance time
 
 Browser occurrence time answers when an interaction claims to have happened; it cannot prove when Flux received it and may be skewed. Store an indexed server acceptance timestamp, use that for realtime windows and freshness, and keep the realtime response aggregate-only so operational visibility does not become a live user surveillance view.

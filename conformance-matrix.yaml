@@ -1,4 +1,11 @@
 records:
+  - id: CONF-022
+    rule: Event and semantic service reports must use exact-version configured meaning and like-for-like aggregate evidence
+    expected_evidence: Ranked events, configured key events, semantic elements and service entities expose event-active journey reach, comparisons, entry/exit, outcomes, friction and time without identifiers or raw events
+    actual_evidence: src/product/event-entity-reports.mjs, migration 0006, dashboard event/entity panels and focused tests implement exact-model event, key-event, page/form/control, transaction, task, step, question and field reports with complete bounded trends and previous-period movement.
+    status: present-with-release-blockers
+    owner: product-lead
+
   - id: CONF-021
     rule: Realtime analytics must report aggregate activity and ingestion freshness without exposing a live user snapshot
     expected_evidence: Server acceptance timestamps, indexed 5/30-minute queries, zero-filled minute buckets, accessible presentation and privacy regression tests exist
