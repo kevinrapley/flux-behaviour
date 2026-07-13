@@ -19,7 +19,8 @@ test('dashboard offers a complete-session-history control for bounded overview j
 
 test('dashboard API aggregates cumulative audience metrics for a selected period', () => {
   const source = readFileSync('src/product/router.mjs', 'utf8');
-  assert.match(source, /dashboardRange\(new URL\(request\.url\)\.searchParams\.get\('range'\)\)/);
+  assert.match(source, /period = requestedPeriod\(search\)/);
+  assert.match(source, /dashboardRange\(search\.get\('range'\), Date\.now\(\), \{ start: search\.get\('start'\), end: search\.get\('end'\) \}\)/);
   assert.match(source, /COUNT\(DISTINCT visitor_id\) AS visitor_count/);
   assert.match(source, /returning_visitor_count/);
   assert.match(source, /GROUP BY day ORDER BY day ASC/);

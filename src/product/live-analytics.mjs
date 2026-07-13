@@ -5,13 +5,16 @@ function number(value) {
 
 const DAY_MS = 86400000;
 const DASHBOARD_RANGES = Object.freeze({
+  '24h': { days: 1, label: 'Last 24 hours' },
   '7d': { days: 7, label: 'Last 7 days' },
   '30d': { days: 30, label: 'Last 30 days' },
   '90d': { days: 90, label: 'Last 90 days' },
+  '1y': { days: 365, label: 'Last year' },
   all: { days: null, label: 'All time' }
 });
 
-export function dashboardRange(value, now = Date.now()) {
+export function dashboardRange(value, now = Date.now(), custom = {}) {
+  if (value === 'custom') return customDashboardRange(custom, now);
   const key = Object.hasOwn(DASHBOARD_RANGES, value) ? value : '30d';
   const selected = DASHBOARD_RANGES[key];
   const endAtMs = now + 1;
@@ -24,6 +27,30 @@ export function dashboardRange(value, now = Date.now()) {
     end_at_ms: endAtMs,
     previous_start_at_ms: previousStartAtMs,
     previous_end_at_ms: selected.days === null ? null : startAtMs
+  };
+}
+
+function customDashboardRange({ start, end }, now) {
+  const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+  if (!datePattern.test(start ?? '') || !datePattern.test(end ?? '')) throw new RangeError('invalid_dashboard_range');
+  const startAtMs = Date.parse(`${start}T00:00:00Z`);
+  const inclusiveEndAtMs = Date.parse(`${end}T00:00:00Z`);
+  if (!Number.isFinite(startAtMs) || !Number.isFinite(inclusiveEndAtMs)) throw new RangeError('invalid_dashboard_range');
+  if (new Date(startAtMs).toISOString().slice(0, 10) !== start || new Date(inclusiveEndAtMs).toISOString().slice(0, 10) !== end) {
+    throw new RangeError('invalid_dashboard_range');
+  }
+  const endAtMs = inclusiveEndAtMs + DAY_MS;
+  const duration = endAtMs - startAtMs;
+  if (!Number.isFinite(endAtMs) || duration <= 0 || startAtMs < 0 || endAtMs > now + DAY_MS) throw new RangeError('invalid_dashboard_range');
+  if (duration > 366 * DAY_MS) throw new RangeError('dashboard_range_too_large');
+  const labelFormat = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+  return {
+    key: 'custom',
+    label: `${labelFormat.format(new Date(startAtMs))} to ${labelFormat.format(new Date(inclusiveEndAtMs))}`,
+    start_at_ms: startAtMs,
+    end_at_ms: endAtMs,
+    previous_start_at_ms: startAtMs - duration,
+    previous_end_at_ms: startAtMs
   };
 }
 

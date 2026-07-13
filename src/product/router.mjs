@@ -17,6 +17,8 @@ import { validateServiceModel } from '../model/service-model.mjs';
 import { buildRealtimeSnapshot } from './realtime-analytics.mjs';
 import { dashboardEventEntityReports } from './event-entity-reports.mjs';
 import { dashboardFunnelFieldReports } from './funnel-field-reports.mjs';
+import { dashboardComparisonReport, isComparisonMode } from './comparison-reports.mjs';
+import { buildAggregateCsv, buildAggregateExport, isAggregateExportReport } from './aggregate-export.mjs';
 
 const HEADERS = { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' };
 
@@ -32,6 +34,7 @@ export async function handleProductRequest(request, env) {
   if (serviceModelRoute && request.method === 'PUT') return publishTenantServiceModel(request, env, serviceModelRoute[1]);
   if (serviceModelRoute && request.method === 'GET') return readTenantServiceModel(request, env, serviceModelRoute[1]);
   if (path.startsWith('/api/dashboard/researchops/session/') && request.method === 'GET') return sessionHistory(request, env, path);
+  if (path === '/api/dashboard/researchops/export.csv' && request.method === 'GET') return aggregateExport(request, env);
   if (path === '/api/dashboard/researchops' && request.method === 'GET') return dashboard(request, env);
   return json({ ok: false, error: 'not_found' }, 404);
 }
@@ -167,7 +170,16 @@ async function dashboard(request, env) {
   const sessionCookie = request.headers.get('cookie')?.match(/(?:^|; )flux_session=([^;]+)/)?.[1]; const [accountId, expires, signature] = sessionCookie?.split('.') ?? [];
   if (!accountId || !signature || Number(expires) <= Date.now() || !(await equal(signature, await hash(`${accountId}.${expires}`, env.FLUX_AUTH_SECRET)))) return json({ ok: false, error: 'unauthorised' }, 401);
   const access = await env.FLUX_DB.prepare("SELECT 1 FROM account_tenants WHERE account_id = ? AND tenant_id = 'researchops'").bind(accountId).first(); if (!access) return json({ ok: false, error: 'forbidden' }, 403);
-  const period = dashboardRange(new URL(request.url).searchParams.get('range'));
+  const search = new URL(request.url).searchParams;
+  const comparisonMode = search.get('compare') ?? 'period';
+  if (comparisonMode !== 'period' && !isComparisonMode(comparisonMode)) return json({ ok: false, error: 'unsupported_comparison_mode' }, 400);
+  let period;
+  try {
+    period = requestedPeriod(search);
+  } catch (error) {
+    if (error instanceof RangeError) return json({ ok: false, error: error.message }, 400);
+    throw error;
+  }
   const overview = await dashboardOverview(env, period.start_at_ms, period.end_at_ms);
   const comparison = period.previous_start_at_ms === null ? null : await dashboardOverview(env, period.previous_start_at_ms, period.previous_end_at_ms);
   const trend = await env.FLUX_DB.prepare("SELECT date(started_at_ms / 1000, 'unixepoch') AS day, COUNT(DISTINCT visitor_id) AS visitors, COUNT(*) AS sessions, COUNT(DISTINCT CASE WHEN is_returning_visitor = 0 THEN visitor_id END) AS new_visitors, COUNT(DISTINCT CASE WHEN is_returning_visitor = 1 THEN visitor_id END) AS returning_visitors FROM sessions WHERE tenant_id = 'researchops' AND started_at_ms >= ? AND started_at_ms < ? GROUP BY day ORDER BY day ASC").bind(period.start_at_ms, period.end_at_ms).all();
@@ -177,11 +189,14 @@ async function dashboard(request, env) {
   const presentedEvents = presentJourneyEvents(events.results ?? []);
   const journeys = groupJourneys(sessions.results, presentedEvents).map((journey) => ({ ...journey, dimension_scores: scoreSessionDimensions(journey.events) }));
   const publishedModel = await dashboardPublishedServiceModel(env, 'researchops');
-  const [cohorts, serviceModel, realtime, reports] = await Promise.all([
+  const [cohorts, serviceModel, realtime, reports, comparisonReport] = await Promise.all([
     dashboardCohorts(env, period.start_at_ms, period.end_at_ms, overview.session_count),
     dashboardServiceModel(env, 'researchops', period.start_at_ms, period.end_at_ms, publishedModel),
     dashboardRealtime(env, 'researchops'),
-    dashboardReports(env, 'researchops', period, overview.session_count, publishedModel)
+    dashboardReports(env, 'researchops', period, overview.session_count, publishedModel),
+    comparisonMode === 'period' ? Promise.resolve(null) : dashboardComparisonReport(env.FLUX_DB, {
+      tenantId: 'researchops', mode: comparisonMode, startAtMs: period.start_at_ms, endAtMs: period.end_at_ms, model: publishedModel
+    })
   ]);
   return json({
     ok: true,
@@ -200,9 +215,79 @@ async function dashboard(request, env) {
       event_report: reports.events,
       entity_report: reports.entities,
       funnel_report: reports.funnels,
-      field_report: reports.fields
+      field_report: reports.fields,
+      comparison_mode: comparisonMode,
+      comparison_report: comparisonReport
     }
   });
+}
+
+async function aggregateExport(request, env) {
+  const accountId = await authenticatedAccountId(request, env);
+  if (!accountId) return json({ ok: false, error: 'unauthorised' }, 401);
+  const access = await env.FLUX_DB.prepare("SELECT 1 FROM account_tenants WHERE account_id = ? AND tenant_id = 'researchops'").bind(accountId).first();
+  if (!access) return json({ ok: false, error: 'forbidden' }, 403);
+  const search = new URL(request.url).searchParams;
+  const report = search.get('report') ?? 'overview';
+  if (!isAggregateExportReport(report)) return json({ ok: false, error: 'unsupported_export_report' }, 400);
+  let period;
+  try {
+    period = requestedPeriod(search);
+  } catch (error) {
+    if (error instanceof RangeError) return json({ ok: false, error: error.message }, 400);
+    throw error;
+  }
+  const compare = search.get('compare') ?? 'period';
+  if (compare !== 'period' && !isComparisonMode(compare)) return json({ ok: false, error: 'unsupported_comparison_mode' }, 400);
+  const model = await dashboardPublishedServiceModel(env, 'researchops');
+  let data;
+  if (report === 'overview') {
+    data = await dashboardOverview(env, period.start_at_ms, period.end_at_ms);
+  } else if (report === 'comparison') {
+    if (compare === 'period') return json({ ok: false, error: 'comparison_dimension_required' }, 400);
+    data = await dashboardComparisonReport(env.FLUX_DB, { tenantId: 'researchops', mode: compare, startAtMs: period.start_at_ms, endAtMs: period.end_at_ms, model });
+  } else {
+    if (!model) return json({ ok: false, error: 'report_unavailable' }, 409);
+    const reports = await dashboardReports(env, 'researchops', period, 0, model);
+    data = exportReportData(report, reports);
+  }
+  const exported = buildAggregateExport({
+    report,
+    data,
+    provenance: {
+      generated_at: new Date().toISOString(),
+      tenant_id: 'researchops',
+      range: period.key,
+      range_start: new Date(period.start_at_ms).toISOString(),
+      range_end: new Date(period.end_at_ms).toISOString(),
+      compare,
+      model_key: model?.model_key ?? '',
+      model_version: model?.version ?? '',
+      event_schema_version: fluxEventSchema.properties.schema_version.const,
+      suppression_note: report === 'comparison' ? 'Groups smaller than 5 journeys are suppressed.' : 'No raw-event rows are included.',
+      caveat: 'Aggregate service evidence; definitions and denominators depend on the selected report and published model. No raw events or entered values.'
+    }
+  });
+  return new Response(buildAggregateCsv(exported), {
+    headers: {
+      'content-type': 'text/csv; charset=utf-8',
+      'content-disposition': `attachment; filename="flux-researchops-${report}-${period.key}.csv"`,
+      'cache-control': 'no-store',
+      'x-content-type-options': 'nosniff'
+    }
+  });
+}
+
+function exportReportData(report, reports) {
+  if (report === 'events' || report === 'key_events' || report === 'elements') return reports.events;
+  if (report === 'entities') return reports.entities;
+  if (report === 'funnels') return reports.funnels;
+  if (report === 'fields') return reports.fields;
+  throw new RangeError('unsupported_export_report');
+}
+
+function requestedPeriod(search) {
+  return dashboardRange(search.get('range'), Date.now(), { start: search.get('start'), end: search.get('end') });
 }
 
 export async function dashboardReports(env, tenantId, period, selectedSessionCount, suppliedModel) {

@@ -1,0 +1,74 @@
+evidence_records:
+  - task_id: flux-behaviour-comparisons-aggregate-export
+    mode: repo-build
+    repository: kevinrapley/flux-behaviour
+    risk_level: high
+    base_branch: main
+    working_branch: feature/comparisons-export
+    files_read:
+      - README.md
+      - AGENTS.md
+      - RECENT_LEARNINGS.md
+      - CONTRIBUTING.md
+      - SECURITY.md
+      - repository-contract.yaml
+      - github-settings.yaml
+      - conformance-matrix.yaml
+      - gap-register.yaml
+      - harm-register.yaml
+      - docs/product/behaviour-model-dashboard-gap-analysis.md
+      - docs/product/production-runtime.md
+    files_changed:
+      - src/product/live-analytics.mjs
+      - src/product/comparison-reports.mjs
+      - src/product/aggregate-export.mjs
+      - src/product/router.mjs
+      - src/dashboard/live-dashboard.mjs
+      - demo/templates/pages/dashboard.njk
+      - demo/styles/demo.scss
+      - tests/live-analytics.test.mjs
+      - tests/comparison-reports.test.mjs
+      - tests/aggregate-export.test.mjs
+      - tests/aggregate-export-route.test.mjs
+      - tests/dashboard-comparison-controls.test.mjs
+      - docs/product/comparisons-and-aggregate-export.md
+    promotion_decisions:
+      - Limit custom inclusive date ranges to 366 days and reject invalid or future dates.
+      - Restrict comparison dimensions to visit maturity, configured outcomes, configured tasks and coarse interaction modes.
+      - Suppress every comparison group below five journeys and describe differences as non-causal service evidence.
+      - Export only allow-listed aggregate report metrics with repeated provenance and a 5,000-row bound.
+      - Neutralise spreadsheet formula prefixes and prohibit raw-event, identifier, narrative and entered-value export.
+    commands_run:
+      - command: npm test
+        state: verified
+        status: passed
+        evidence: All 276 repository tests passed.
+      - command: npx -y node@20 --test tests/comparison-reports.test.mjs tests/aggregate-export.test.mjs tests/aggregate-export-route.test.mjs tests/dashboard-comparison-controls.test.mjs tests/live-analytics.test.mjs tests/session-history-route.test.mjs
+        state: verified
+        status: passed
+        evidence: All 20 comparison, export, range and routing tests passed on the declared Node 20 baseline without node:sqlite.
+      - command: npm run demo:build && npm run validate && npm run security:secrets
+        state: verified
+        status: passed
+        evidence: Generated dashboard assets built; repository governance and secret checks passed.
+      - command: frontend visual verification at 1440x1000 and 390x844
+        state: verified
+        status: passed
+        evidence: Desktop and mobile controls, custom-date disclosure, comparison selector and aggregate-export control stayed within the document with zero horizontal overflow; native labels and control geometry remained usable.
+      - command: Codex review remediation and npm test
+        state: verified
+        status: passed
+        evidence: Corrected the keyboard interaction-mode metadata property and synchronised export URLs after comparison changes; five focused regressions and all 276 repository tests passed after a production-endpoint rebuild.
+    recent_learnings:
+      - Comparison dimensions require both query allow-listing and minimum sample suppression.
+      - Export provenance belongs on every metric row so extracted rows retain their interpretation contract.
+      - Dashboard export links must be recomputed whenever any shared report filter changes.
+    security:
+      - Export and comparison APIs reuse authenticated tenant membership and parameterised bounded queries.
+    privacy:
+      - Comparison groups are aggregate and k-suppressed; CSV reports cannot select raw events or identity/content-bearing fields.
+    accessibility:
+      - Controls use native labelled inputs, selects and links; comparison results use semantic tables with narrow-screen containment.
+    risks:
+      - Descriptive differences may still be over-interpreted until DASH-05 uncertainty treatment is complete.
+      - The target dashboard information architecture remains open under GAP-014.
