@@ -55,9 +55,14 @@ evidence_records:
         state: verified
         status: passed
         evidence: Desktop and mobile controls, custom-date disclosure, comparison selector and aggregate-export control stayed within the document with zero horizontal overflow; native labels and control geometry remained usable.
+      - command: Codex review remediation and npm test
+        state: verified
+        status: passed
+        evidence: Corrected the keyboard interaction-mode metadata property and synchronised export URLs after comparison changes; five focused regressions and all 276 repository tests passed after a production-endpoint rebuild.
     recent_learnings:
       - Comparison dimensions require both query allow-listing and minimum sample suppression.
       - Export provenance belongs on every metric row so extracted rows retain their interpretation contract.
+      - Dashboard export links must be recomputed whenever any shared report filter changes.
     security:
       - Export and comparison APIs reuse authenticated tenant membership and parameterised bounded queries.
     privacy:

@@ -40,6 +40,8 @@ test('queries only the selected bounded comparison dimension', async () => {
 
   assert.equal(calls.length, 1);
   assert.match(calls[0].sql, /compare:interaction_mode/);
+  assert.match(calls[0].sql, /json_extract\(e\.metadata_json, '\$\.pointer_type'\) = 'keyboard'/);
+  assert.doesNotMatch(calls[0].sql, /input_method/);
   assert.deepEqual(calls[0].values, ['researchops', 1000, 2000, 'model.researchops', 2]);
   assert.equal(report.rows[0].completion_rate, 50);
 });

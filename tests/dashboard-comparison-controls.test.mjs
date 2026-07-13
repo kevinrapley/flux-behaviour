@@ -24,6 +24,7 @@ test('dashboard offers bounded standard and custom date controls', () => {
   assert.match(dashboard, /params\.set\('start', customStart\.value\)/);
   assert.match(dashboard, /params\.set\('end', customEnd\.value\)/);
   assert.match(dashboard, /renderComparisonReport\(analytics\.comparison_report, analytics\.comparison_mode\)/);
+  assert.match(dashboard, /compareSelect\?\.addEventListener\('change',[\s\S]*?updateExportLink\(\);[\s\S]*?loadDashboard\(\)/);
   assert.match(dashboard, /\['Group', 'Journeys', 'Interactions per journey', 'Completion', 'Friction'\]/);
   assert.match(dashboard, /exportLink\.href = `\/api\/dashboard\/researchops\/export\.csv\?\$\{params\.toString\(\)\}`/);
   assert.match(styles, /\.flux-dashboard__custom-range/);

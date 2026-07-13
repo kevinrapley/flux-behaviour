@@ -81,6 +81,7 @@ compareSelect?.addEventListener('change', () => {
   const url = new URL(window.location.href);
   url.searchParams.set('compare', compareSelect.value);
   window.history.replaceState({}, '', url);
+  updateExportLink();
   void loadDashboard();
 });
 

@@ -147,7 +147,7 @@ function interactionModeSql() {
       SELECT ? AS tenant_id, ? AS start_at_ms, ? AS end_at_ms, ? AS model_key, ? AS model_version
     ), selected AS (
       SELECT e.session_id, COUNT(*) AS interaction_count,
-        MAX(CASE WHEN json_extract(e.metadata_json, '$.input_method') = 'keyboard' THEN 1 ELSE 0 END) AS keyboard_used,
+        MAX(CASE WHEN json_extract(e.metadata_json, '$.pointer_type') = 'keyboard' THEN 1 ELSE 0 END) AS keyboard_used,
         MAX(CASE WHEN json_extract(e.metadata_json, '$.pointer_type') = 'touch' THEN 1 ELSE 0 END) AS touch_used,
         MAX(CASE WHEN json_extract(e.metadata_json, '$.pointer_type') IN ('mouse', 'pen') THEN 1 ELSE 0 END) AS pointer_used,
         MAX(CASE WHEN esc.outcome_type = 'success' THEN 1 ELSE 0 END) AS completed,
