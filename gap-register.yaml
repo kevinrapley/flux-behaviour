@@ -12,12 +12,12 @@ gaps:
   - id: GAP-014
     title: Dashboard lacks mature analytics report breadth
     severity: high
-    observed_state: The dashboard provides period overview, daily audience trend, aggregate 5/30-minute realtime activity with ingestion freshness, ranked events and key events, semantic page/form/control evidence, transaction/task/step/question/field performance, ordered funnels, dedicated field coverage with safe distributions, configurable privacy-thresholded comparisons, bounded custom ranges, provenance-bearing aggregate CSV, health summaries, cohorts, indicators and journey histories. Broader uncertainty treatment and the target information architecture remain incomplete.
+    observed_state: "The dashboard provides the complete P1 report set in nine URL-backed areas with shared filters: overview, realtime, journeys, tasks/funnels, fields, events, cohorts, model/explainability and data quality/governance. It includes distributions, funnel percentiles, visible samples, k=5 suppression, overview Wilson 95% intervals, bounded comparisons/custom ranges and provenance-bearing aggregate CSV."
     expected_state: The target information architecture and P1 dashboard reports in the source-grounded gap analysis are implemented with shared filters, accessible tables and provenance.
-    risk: Teams can inspect individual journeys but cannot reliably locate systemic friction, compare changes or prioritise service action.
-    action: Complete DASH-05 uncertainty and the DASH-10 information architecture; retain regression evidence for realtime, model reports, comparisons and aggregate export.
+    risk: Intervals remain descriptive and do not correct collection gaps, dependence, selection effects or model error; unreviewed report expansion could weaken the information architecture.
+    action: Retain regression and accessibility evidence for the report navigation, uncertainty contract, realtime, model reports, comparisons and aggregate export. Track behavioural depth and the action layer separately in GAP-015 and GAP-016.
     owner: product-lead
-    status: in-progress
+    status: resolved
 
   - id: GAP-015
     title: Behavioural lifecycle coverage is incomplete

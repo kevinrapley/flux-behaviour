@@ -19,6 +19,7 @@ import { dashboardEventEntityReports } from './event-entity-reports.mjs';
 import { dashboardFunnelFieldReports } from './funnel-field-reports.mjs';
 import { dashboardComparisonReport, isComparisonMode } from './comparison-reports.mjs';
 import { buildAggregateCsv, buildAggregateExport, isAggregateExportReport } from './aggregate-export.mjs';
+import { buildGovernanceReport, buildUncertaintyReport } from './report-uncertainty.mjs';
 
 const HEADERS = { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' };
 
@@ -217,7 +218,13 @@ async function dashboard(request, env) {
       funnel_report: reports.funnels,
       field_report: reports.fields,
       comparison_mode: comparisonMode,
-      comparison_report: comparisonReport
+      comparison_report: comparisonReport,
+      uncertainty: buildUncertaintyReport(overview),
+      governance: buildGovernanceReport({
+        realtime,
+        serviceModel,
+        eventSchemaVersion: fluxEventSchema.properties.schema_version.const
+      })
     }
   });
 }

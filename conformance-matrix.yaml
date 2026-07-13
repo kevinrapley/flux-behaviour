@@ -1,4 +1,11 @@
 records:
+  - id: CONF-025
+    rule: Dashboard report areas and uncertainty must support accessible investigation without overstating precision
+    expected_evidence: Target report areas share URL-backed filters; rates expose samples and bounded intervals; governance keeps unknown collection controls visible
+    actual_evidence: The dashboard template and runtime implement nine native-link report areas, shared filter continuity and heading focus. src/product/report-uncertainty.mjs provides Wilson 95% intervals and an aggregate governance report with explicit collection, retention and model-coverage limitations.
+    status: present-with-release-blockers
+    owner: product-lead
+
   - id: CONF-024
     rule: Dashboard comparisons and exports must be bounded, aggregate, privacy-thresholded and provenance-bearing
     expected_evidence: Safe comparison dimensions suppress groups below five journeys; custom ranges are limited; authenticated CSV exports include query/model/schema provenance and exclude raw events and identifiers

@@ -55,7 +55,21 @@
 	<p class="flux-dashboard__status" data-flux-live-status aria-live="polite">Loading ResearchOps analytics…</p>
 
 	<div data-flux-dashboard-content hidden>
-		<section class="flux-dashboard__panel flux-dashboard__panel--realtime" aria-labelledby="realtime-heading">
+		<nav class="flux-report-navigation" aria-label="Analytics reports" data-flux-report-navigation>
+			<ul class="flux-report-navigation__list">
+				<li><a href="?view=overview" data-flux-view="overview" aria-current="page">Overview</a></li>
+				<li><a href="?view=realtime" data-flux-view="realtime">Realtime</a></li>
+				<li><a href="?view=journeys" data-flux-view="journeys">Journeys</a></li>
+				<li><a href="?view=tasks" data-flux-view="tasks">Tasks and funnels</a></li>
+				<li><a href="?view=fields" data-flux-view="fields">Fields</a></li>
+				<li><a href="?view=events" data-flux-view="events">Events</a></li>
+				<li><a href="?view=cohorts" data-flux-view="cohorts">Cohorts</a></li>
+				<li><a href="?view=model" data-flux-view="model">Model and explainability</a></li>
+				<li><a href="?view=governance" data-flux-view="governance">Data quality and governance</a></li>
+			</ul>
+		</nav>
+
+		<section class="flux-dashboard__panel flux-dashboard__panel--realtime" aria-labelledby="realtime-heading" data-flux-report-area="realtime" hidden>
 			<div class="flux-dashboard__section-heading">
 				<div>
 					<h2 class="govuk-heading-l" id="realtime-heading">Realtime activity</h2>
@@ -65,7 +79,7 @@
 			<div data-flux-realtime></div>
 		</section>
 
-		<section aria-labelledby="overview-heading">
+		<section aria-labelledby="overview-heading" data-flux-report-area="overview">
 			<div class="flux-dashboard__section-heading">
 				<div>
 					<h2 class="govuk-heading-l" id="overview-heading">Audience overview</h2>
@@ -73,9 +87,10 @@
 				</div>
 			</div>
 			<div class="flux-metric-grid" data-flux-overview></div>
+			<div data-flux-uncertainty></div>
 		</section>
 
-		<section class="flux-dashboard__panel" aria-labelledby="comparison-report-heading">
+		<section class="flux-dashboard__panel" aria-labelledby="comparison-report-heading" data-flux-report-area="overview">
 			<div class="flux-dashboard__section-heading">
 				<div>
 					<h2 class="govuk-heading-l" id="comparison-report-heading">Journey comparison</h2>
@@ -85,7 +100,7 @@
 			<div data-flux-comparison-report></div>
 		</section>
 
-		<section class="flux-dashboard__panel flux-dashboard__panel--trend" aria-labelledby="trend-heading">
+		<section class="flux-dashboard__panel flux-dashboard__panel--trend" aria-labelledby="trend-heading" data-flux-report-area="overview">
 			<div class="flux-dashboard__section-heading">
 				<div>
 					<h2 class="govuk-heading-l" id="trend-heading">Audience activity</h2>
@@ -96,7 +111,7 @@
 			<div data-flux-trend></div>
 		</section>
 
-		<section class="flux-dashboard__panel" aria-labelledby="service-model-heading">
+		<section class="flux-dashboard__panel" aria-labelledby="service-model-heading" data-flux-report-area="model" hidden>
 			<div class="flux-dashboard__section-heading">
 				<div>
 					<h2 class="govuk-heading-l" id="service-model-heading">Service model and data quality</h2>
@@ -106,7 +121,7 @@
 			<div data-flux-service-model></div>
 		</section>
 
-		<section class="flux-dashboard__panel" aria-labelledby="event-report-heading">
+		<section class="flux-dashboard__panel" aria-labelledby="event-report-heading" data-flux-report-area="events" hidden>
 			<div class="flux-dashboard__section-heading">
 				<div>
 					<h2 class="govuk-heading-l" id="event-report-heading">Events and key events</h2>
@@ -116,7 +131,7 @@
 			<div data-flux-event-report></div>
 		</section>
 
-		<section class="flux-dashboard__panel" aria-labelledby="entity-report-heading">
+		<section class="flux-dashboard__panel" aria-labelledby="entity-report-heading" data-flux-report-area="tasks" hidden>
 			<div class="flux-dashboard__section-heading">
 				<div>
 					<h2 class="govuk-heading-l" id="entity-report-heading">Service performance</h2>
@@ -126,7 +141,7 @@
 			<div data-flux-entity-report></div>
 		</section>
 
-		<section class="flux-dashboard__panel" aria-labelledby="funnel-report-heading">
+		<section class="flux-dashboard__panel" aria-labelledby="funnel-report-heading" data-flux-report-area="tasks" hidden>
 			<div class="flux-dashboard__section-heading">
 				<div>
 					<h2 class="govuk-heading-l" id="funnel-report-heading">Tasks and funnels</h2>
@@ -136,7 +151,7 @@
 			<div data-flux-funnel-report></div>
 		</section>
 
-		<section class="flux-dashboard__panel" aria-labelledby="field-report-heading">
+		<section class="flux-dashboard__panel" aria-labelledby="field-report-heading" data-flux-report-area="fields" hidden>
 			<div class="flux-dashboard__section-heading">
 				<div>
 					<h2 class="govuk-heading-l" id="field-report-heading">Fields</h2>
@@ -146,7 +161,7 @@
 			<div data-flux-field-report></div>
 		</section>
 
-		<div class="flux-dashboard__split">
+		<div class="flux-dashboard__split" data-flux-report-area="overview">
 			<section class="flux-dashboard__panel" aria-labelledby="health-heading">
 				<h2 class="govuk-heading-l" id="health-heading">Journey health</h2>
 				<p class="govuk-body flux-dashboard__section-copy">Signals that reveal effort, recovery and completion across the selected period.</p>
@@ -159,7 +174,7 @@
 			</section>
 		</div>
 
-		<section class="flux-dashboard__panel flux-dashboard__panel--cohorts" aria-labelledby="cohorts-heading">
+		<section class="flux-dashboard__panel flux-dashboard__panel--cohorts" aria-labelledby="cohorts-heading" data-flux-report-area="cohorts" hidden>
 			<div class="flux-dashboard__section-heading">
 				<div>
 					<h2 class="govuk-heading-l" id="cohorts-heading">Journey cohorts</h2>
@@ -169,7 +184,7 @@
 			<div data-flux-cohorts></div>
 		</section>
 
-		<section class="flux-dashboard__panel" aria-labelledby="signals-heading">
+		<section class="flux-dashboard__panel" aria-labelledby="signals-heading" data-flux-report-area="model" hidden>
 			<div class="flux-dashboard__section-heading">
 				<div>
 					<h2 class="govuk-heading-l" id="signals-heading">Behavioural signals</h2>
@@ -179,7 +194,7 @@
 			<div data-flux-signals></div>
 		</section>
 
-		<section aria-labelledby="journeys-heading">
+		<section aria-labelledby="journeys-heading" data-flux-report-area="journeys" hidden>
 			<div class="flux-dashboard__section-heading">
 				<div>
 					<h2 class="govuk-heading-l" id="journeys-heading">Recent journeys</h2>
@@ -187,6 +202,16 @@
 				</div>
 			</div>
 			<div class="flux-journey-list" data-flux-live-journeys></div>
+		</section>
+
+		<section class="flux-dashboard__panel" aria-labelledby="governance-heading" data-flux-report-area="governance" hidden>
+			<div class="flux-dashboard__section-heading">
+				<div>
+					<h2 class="govuk-heading-l" id="governance-heading">Data quality and governance</h2>
+					<p class="govuk-body flux-dashboard__section-copy">Review freshness, semantic coverage, schema and model versions, export boundaries and controls that are not yet evidenced.</p>
+				</div>
+			</div>
+			<div data-flux-governance></div>
 		</section>
 	</div>
 </div>

@@ -1,0 +1,66 @@
+evidence_records:
+  - task_id: flux-behaviour-dashboard-ia-uncertainty
+    mode: repo-build
+    repository: kevinrapley/flux-behaviour
+    risk_level: high
+    base_branch: main
+    working_branch: feature/lifecycle-dashboard-ia
+    files_read:
+      - README.md
+      - AGENTS.md
+      - RECENT_LEARNINGS.md
+      - CONTRIBUTING.md
+      - SECURITY.md
+      - repository-contract.yaml
+      - github-settings.yaml
+      - conformance-matrix.yaml
+      - gap-register.yaml
+      - harm-register.yaml
+      - docs/product/behaviour-model-dashboard-gap-analysis.md
+      - docs/product/cohort-analytics.md
+      - docs/product/production-runtime.md
+      - docs/product/comparisons-and-aggregate-export.md
+    files_changed:
+      - demo/templates/pages/dashboard.njk
+      - demo/styles/demo.scss
+      - src/dashboard/live-dashboard.mjs
+      - src/product/report-uncertainty.mjs
+      - src/product/router.mjs
+      - tests/report-uncertainty.test.mjs
+      - tests/dashboard-information-architecture.test.mjs
+      - docs/product/dashboard-information-architecture-and-uncertainty.md
+    promotion_decisions:
+      - Separate the long dashboard into nine URL-backed report areas while preserving one shared filter and export control set.
+      - Use native links with current-page semantics, meaningful destination URLs and selected-heading focus within the required dashboard JavaScript runtime.
+      - Show numerator, denominator and Wilson 95% intervals for overview rates; make zero-denominator claims unavailable.
+      - State that intervals do not correct collection gaps, dependence, selection effects or model error and do not establish cause.
+      - Keep unknown acceptance, consent-denominator and retention controls visible in the governance area.
+    commands_run:
+      - command: node --test tests/report-uncertainty.test.mjs tests/dashboard-information-architecture.test.mjs tests/dashboard-comparison-controls.test.mjs
+        state: verified
+        status: passed
+        evidence: Six focused uncertainty, information-architecture and existing filter-control tests passed.
+      - command: npm ci && FLUX_DEMO_COLLECTOR_ENDPOINT=https://flux-behaviour.pages.dev/api/collect npm run demo:build && npm test && npm run validate && npm run security:secrets
+        state: verified
+        status: passed
+        evidence: Installed 60 locked packages with zero reported vulnerabilities, rebuilt production-endpoint assets, passed all 282 repository tests, verified required governance files and passed the secret scan. Review regressions cover URL-link refresh, repeated-session interval disclosure and unavailable zero-denominator model coverage.
+      - command: frontend visual verification at 1440x1000 and 390x844
+        state: verified
+        status: passed
+        evidence: All nine report links were present; the native navigation had a contained horizontal scroll region, the active Overview state was visible, only Overview areas were initially exposed and the document had zero horizontal overflow at desktop and mobile sizes.
+      - command: npx -y node@20 --test tests/report-uncertainty.test.mjs tests/dashboard-information-architecture.test.mjs tests/dashboard-comparison-controls.test.mjs
+        state: verified
+        status: passed
+        evidence: All six focused report-architecture and uncertainty tests passed on the declared Node 20 baseline.
+    recent_learnings:
+      - A panel catalogue needs stable navigation and shared filter continuity to become a usable report architecture.
+      - Confidence intervals quantify one source of uncertainty; they must not be presented as a general data-quality correction.
+    security:
+      - New reports reuse the authenticated dashboard response and add no public endpoint or identifier-bearing data.
+    privacy:
+      - Uncertainty and governance contain aggregate counts, bounded rates, versions and explicit unknowns only.
+    accessibility:
+      - Report areas use native links, aria-current, heading focus and horizontally contained navigation/tables.
+    risks:
+      - Wilson intervals do not correct dependence between repeat sessions, collection gaps, selection effects or model error.
+      - Full browser, keyboard and screen-reader assurance remains a release gate.

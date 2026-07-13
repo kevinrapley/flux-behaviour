@@ -38,9 +38,10 @@ The analysis used the current repository at `140313c` and the following user-pro
 - click, touch, Tab, Enter, autocomplete, focus, pre-input dwell, typing, correction, paste, revisit, help, validation, rage-click, submit and selected authentication milestones;
 - on-device UK English count-only writing analysis;
 - D1-backed collection and authenticated ResearchOps dashboard access;
-- 7-, 30-, 90-day and all-time ranges with previous-period overview comparisons;
+- 24-hour, 7-, 30-, 90-day, one-year, all-time and bounded custom ranges with like-for-like comparisons;
 - visitors, returning visitors, sessions, interactions, daily trends, completion, duration, dwell, correction and friction summaries;
-- action ranking, 20 service-friction indicators, privacy-thresholded journey cohorts and complete per-session narratives.
+- ranked event/key-event and semantic entity reports, configured funnels, privacy-safe field coverage, aggregate CSV, 20 service-friction indicators, privacy-thresholded journey cohorts and complete per-session narratives;
+- nine URL-backed report areas, overview rate intervals and an explicit data-quality/governance area.
 
 ## Gap matrix
 
@@ -65,12 +66,12 @@ Priority uses `P0` for enabling foundations, `P1` for the next complete analytic
 | DASH-02 | P1 | Event and key-event reports | Top eight actions only; no configurable key-event panel or event explorer | Provide ranked event classes/actions, trends, key-event rates and drill-down by configured task/page/control with definitions and accessible tables. |
 | DASH-03 | P1 | Page, task, step, form and control performance | `controls` is calculated but not rendered; no page/task rankings | Add views, unique journeys, entry/exit, outcome, friction and time panels for each configured semantic entity. |
 | DASH-04 | P1 | Flexible comparisons and ranges | 7/30/90/all with automatic previous period only | Add 24-hour, year and custom ranges plus compare-by-period, visit maturity, outcome, task and safe interaction mode. Enforce query and retention limits. |
-| DASH-05 | P1 | Distribution and uncertainty | Mostly counts, rates, averages and medians; no distribution/percentile or confidence treatment | Add min/max only where robust, percentiles, sample sizes, suppression and confidence/uncertainty notes. Avoid averages that conceal multimodal struggle. |
+| DASH-05 | P1 | Distribution and uncertainty | Implemented: funnel median/p90, field distributions, visible samples, k=5 suppression and overview Wilson 95% intervals with collection/model caveats | Retain explicit denominators and uncertainty copy; do not present intervals as correction for collection gaps, dependence, selection effects or model error. |
 | DASH-06 | P1 | Accessible export and report provenance | Chart data table exists; no CSV/export, query definition or data-freshness provenance | Provide screen-reader-first tables and bounded CSV for aggregates, with filters, source, generated time, schema/model version, caveats and suppression notes. No raw-event export. |
 | DASH-07 | P2 | Acquisition/source and campaign context | No source/referrer/campaign metadata | Support consented, allow-listed source categories and campaign IDs only when necessary. Strip query strings and identifiers; default to direct/unknown. |
 | DASH-08 | P2 | Audience/property panels | Only new/returning and heuristic journey cohorts | Add service-defined, non-sensitive journey properties and comparisons with minimum group sizes. Do not recreate demographic profiling or expose visitor IDs. |
 | DASH-09 | P2 | Change-to-outcome action layer | No release, experiment, intervention or annotation model | Let teams annotate releases/interventions, compare before/after evidence and record hypotheses, owners and follow-up decisions. This is the missing bridge from analytics to service action. |
-| DASH-10 | P2 | Dashboard information architecture | One long overview page combines audience, health, cohorts, indicators and journeys | Introduce Overview, Realtime, Journeys, Tasks/funnels, Fields, Events, Cohorts, Model/explainability and Data quality/governance report areas with shared filters. |
+| DASH-10 | P2 | Dashboard information architecture | Implemented: nine URL-backed report areas use shared range, comparison and aggregate-export controls | Preserve native-link fallback, focus management, filter continuity and narrow-screen containment as reports expand. |
 | NLP-01 | P3 | Aggregate natural-language analytics | No intent router, aggregate query service or response policy | Implement only after report APIs exist. Require parameterised aggregate queries, RBAC, k≥5, redaction, prompt/response audit, citations, filters, freshness, caveats, deterministic explainability and refusal tests. |
 | ADAPT-01 | P3 | Responsible recommendations and adaptation | No feedback API; historical sources proposed per-person UI changes from inferred literacy/domain scores | Prefer analyst-facing, reversible recommendations and user-chosen assistance. Any runtime adaptation needs an explicit purpose, consent, accessibility testing, explanation, override, experiment evidence and prohibition on consequential or covert personalisation. |
 

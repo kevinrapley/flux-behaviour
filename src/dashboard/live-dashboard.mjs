@@ -2,6 +2,7 @@ const dashboard = document.querySelector('[data-flux-dashboard]');
 const status = document.querySelector('[data-flux-live-status]');
 const content = document.querySelector('[data-flux-dashboard-content]');
 const overview = document.querySelector('[data-flux-overview]');
+const uncertainty = document.querySelector('[data-flux-uncertainty]');
 const comparisonReport = document.querySelector('[data-flux-comparison-report]');
 const periodCopy = document.querySelector('[data-flux-period-copy]');
 const trend = document.querySelector('[data-flux-trend]');
@@ -16,6 +17,7 @@ const interactions = document.querySelector('[data-flux-interactions]');
 const cohorts = document.querySelector('[data-flux-cohorts]');
 const signals = document.querySelector('[data-flux-signals]');
 const journeys = document.querySelector('[data-flux-live-journeys]');
+const governance = document.querySelector('[data-flux-governance]');
 const refresh = document.querySelector('[data-flux-refresh]');
 const rangeButtons = [...document.querySelectorAll('[data-flux-range]')];
 const customRange = document.querySelector('[data-flux-custom-range]');
@@ -25,6 +27,8 @@ const customApply = document.querySelector('[data-flux-custom-apply]');
 const compareSelect = document.querySelector('[data-flux-compare]');
 const exportReportSelect = document.querySelector('[data-flux-export-report]');
 const exportLink = document.querySelector('[data-flux-export]');
+const viewLinks = [...document.querySelectorAll('[data-flux-view]')];
+const reportAreas = [...document.querySelectorAll('[data-flux-report-area]')];
 const numberFormat = new Intl.NumberFormat('en-GB');
 const dateFormat = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 const dateTimeFormat = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
@@ -46,6 +50,28 @@ const ACTION_LABELS = Object.freeze({
 
 let currentRange = new URL(window.location.href).searchParams.get('range') || '30d';
 if (!rangeButtons.some((button) => button.dataset.fluxRange === currentRange)) currentRange = '30d';
+const reportViews = new Set(viewLinks.map((link) => link.dataset.fluxView));
+let currentView = new URL(window.location.href).searchParams.get('view') || 'overview';
+if (!reportViews.has(currentView)) {
+  currentView = 'overview';
+  const url = new URL(window.location.href);
+  url.searchParams.set('view', currentView);
+  window.history.replaceState({}, '', url);
+}
+
+for (const viewLink of viewLinks) {
+  viewLink.addEventListener('click', (event) => {
+    event.preventDefault();
+    currentView = viewLink.dataset.fluxView;
+    const url = new URL(window.location.href);
+    url.searchParams.set('view', currentView);
+    window.history.replaceState({}, '', url);
+    updateViewControls();
+    const heading = document.querySelector(`[data-flux-report-area="${currentView}"] h2`);
+    heading?.setAttribute('tabindex', '-1');
+    heading?.focus();
+  });
+}
 
 for (const button of rangeButtons) {
   button.addEventListener('click', () => {
@@ -58,6 +84,7 @@ for (const button of rangeButtons) {
     url.searchParams.delete('start');
     url.searchParams.delete('end');
     window.history.replaceState({}, '', url);
+    updateUrlBackedLinks();
     void loadDashboard();
   });
 }
@@ -74,6 +101,7 @@ customApply?.addEventListener('click', () => {
   params.set('start', customStart.value);
   params.set('end', customEnd.value);
   window.history.replaceState({}, '', url);
+  updateUrlBackedLinks();
   void loadDashboard();
 });
 
@@ -81,7 +109,7 @@ compareSelect?.addEventListener('change', () => {
   const url = new URL(window.location.href);
   url.searchParams.set('compare', compareSelect.value);
   window.history.replaceState({}, '', url);
-  updateExportLink();
+  updateUrlBackedLinks();
   void loadDashboard();
 });
 
@@ -89,6 +117,7 @@ exportReportSelect?.addEventListener('change', updateExportLink);
 
 refresh?.addEventListener('click', () => void loadDashboard());
 updateRangeControls();
+updateViewControls();
 void loadDashboard();
 
 async function loadDashboard() {
@@ -126,11 +155,36 @@ function updateRangeControls() {
   }
   compareSelect.value = params.get('compare') ?? 'period';
   updateExportLink();
+  updateViewLinks();
   for (const button of rangeButtons) {
     const active = button.dataset.fluxRange === currentRange;
     button.classList.toggle('flux-dashboard__range-button--active', active);
     button.setAttribute('aria-pressed', String(active));
   }
+}
+
+function updateViewControls() {
+  for (const link of viewLinks) {
+    const active = link.dataset.fluxView === currentView;
+    if (active) link.setAttribute('aria-current', 'page');
+    else link.removeAttribute('aria-current');
+  }
+  for (const area of reportAreas) area.hidden = area.dataset.fluxReportArea !== currentView;
+  updateViewLinks();
+}
+
+function updateViewLinks() {
+  const current = new URL(window.location.href);
+  for (const link of viewLinks) {
+    const target = new URL(current.href);
+    target.searchParams.set('view', link.dataset.fluxView);
+    link.href = `${target.pathname}?${target.searchParams.toString()}`;
+  }
+}
+
+function updateUrlBackedLinks() {
+  updateExportLink();
+  updateViewLinks();
 }
 
 function updateExportLink() {
@@ -148,6 +202,7 @@ function renderDashboard(data) {
   status.textContent = `${analytics.period?.label ?? 'Selected period'} · updated ${new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`;
   periodCopy.textContent = periodDescription(analytics.period, summary);
   overview.replaceChildren(...overviewCards(summary, analytics.comparison));
+  uncertainty.replaceChildren(renderUncertainty(analytics.uncertainty));
   comparisonReport.replaceChildren(renderComparisonReport(analytics.comparison_report, analytics.comparison_mode));
   realtime.replaceChildren(renderRealtime(analytics.realtime));
   trend.replaceChildren(renderTrend(analytics.trend ?? []));
@@ -161,7 +216,58 @@ function renderDashboard(data) {
   cohorts.replaceChildren(renderCohorts(analytics.cohorts ?? {}));
   signals.replaceChildren(renderSignals(analytics.dimension_scores ?? []));
   journeys.replaceChildren(...(data.journeys ?? []).map(journeyCard));
+  governance.replaceChildren(renderGovernance(analytics.governance));
   if ((data.journeys ?? []).length === 0) journeys.replaceChildren(emptyState('No journeys in this period', 'Choose a wider date range or check again after visitors have used ResearchOps.'));
+}
+
+function renderUncertainty(data) {
+  if (!data?.rates?.length) return emptyState('Uncertainty unavailable', 'Rate intervals appear after the selected period contains journeys.');
+  const section = document.createElement('section');
+  section.className = 'flux-uncertainty';
+  section.append(
+    element('h3', 'govuk-heading-m', 'How certain are these rates?'),
+    element('p', 'govuk-body-s flux-safeguard', data.note)
+  );
+  const table = document.createElement('table');
+  table.className = 'govuk-table govuk-table--small-text-until-tablet';
+  table.append(
+    tableHead(['Measure', 'Observed', 'Sample', 'Rate', '95% interval', 'Interpretation']),
+    tableBody(data.rates.map((rate) => [
+      rate.label,
+      rate.numerator,
+      rate.denominator,
+      formatPercent(rate.rate),
+      `${formatPercent(rate.lower)} to ${formatPercent(rate.upper)}`,
+      rate.interpretation
+    ]))
+  );
+  const scroll = document.createElement('div');
+  scroll.className = 'flux-uncertainty__table';
+  scroll.append(table);
+  section.append(scroll);
+  return section;
+}
+
+function renderGovernance(data) {
+  if (!data) return emptyState('Governance report unavailable', 'Data-quality controls could not be loaded for this selection.');
+  const wrapper = document.createElement('div');
+  wrapper.className = 'flux-governance';
+  wrapper.append(element('p', 'govuk-body-s flux-safeguard', data.boundary));
+  const table = document.createElement('table');
+  table.className = 'govuk-table govuk-table--small-text-until-tablet';
+  table.append(
+    tableHead(['Control', 'Status', 'Evidence']),
+    tableBody((data.controls ?? []).map((control) => [control.label, control.status, control.evidence]))
+  );
+  wrapper.append(table);
+  if (data.limitations?.length) {
+    const heading = element('h3', 'govuk-heading-m', 'Known limitations and release gates');
+    const list = document.createElement('ul');
+    list.className = 'govuk-list govuk-list--bullet';
+    for (const limitation of data.limitations) list.append(element('li', '', limitation));
+    wrapper.append(heading, list);
+  }
+  return wrapper;
 }
 
 function renderSignIn() {
