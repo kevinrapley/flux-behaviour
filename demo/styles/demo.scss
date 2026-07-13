@@ -356,6 +356,90 @@
 	margin: 4px 0 0;
 }
 
+.flux-dashboard__panel--realtime {
+	border-left: 5px solid var(--flux-blue);
+}
+
+.flux-realtime__metrics {
+	display: grid;
+	gap: 20px;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.flux-realtime__metric {
+	border-left: 1px solid var(--flux-border);
+	padding-left: 20px;
+}
+
+.flux-realtime__metric:first-child {
+	border-left: 0;
+	padding-left: 0;
+}
+
+.flux-realtime__metric-label,
+.flux-realtime__metric-note {
+	color: var(--flux-muted);
+	font-size: 14px;
+	line-height: 1.35;
+	margin: 0;
+}
+
+.flux-realtime__metric-value {
+	font-size: 36px;
+	font-weight: 700;
+	line-height: 1;
+	margin: 8px 0;
+}
+
+.flux-realtime__freshness {
+	background: var(--flux-surface);
+	border-left: 5px solid var(--flux-muted);
+	margin-top: 24px;
+	padding: 14px 16px;
+}
+
+.flux-realtime__freshness--live {
+	background: #e9f5ee;
+	border-left-color: var(--flux-green);
+}
+
+.flux-realtime__freshness--delayed {
+	background: #fff7bf;
+	border-left-color: #ffdd00;
+}
+
+.flux-realtime__freshness--stale {
+	background: #f6d7d2;
+	border-left-color: var(--flux-red);
+}
+
+.flux-realtime__freshness .govuk-heading-s,
+.flux-realtime__freshness .govuk-body-s {
+	margin-bottom: 0;
+}
+
+.flux-realtime__bars {
+	align-items: end;
+	background: repeating-linear-gradient(to top, #f3f5f6 0, #f3f5f6 1px, transparent 1px, transparent 25%);
+	border-bottom: 2px solid var(--flux-muted);
+	display: flex;
+	gap: 3px;
+	height: 150px;
+	margin-top: 24px;
+	padding: 0 2px;
+}
+
+.flux-realtime__bar {
+	background: var(--flux-blue);
+	flex: 1 1 0;
+	min-width: 2px;
+}
+
+.flux-realtime__data {
+	margin-bottom: 0;
+	margin-top: 16px;
+}
+
 .flux-health-list__row {
 	align-items: start;
 	border-top: 1px solid var(--flux-border);
@@ -756,7 +840,8 @@
 	}
 
 	.flux-metric-grid,
-	.flux-signal-grid {
+	.flux-signal-grid,
+	.flux-realtime__metrics {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 
@@ -800,7 +885,8 @@
 	}
 
 	.flux-metric-grid,
-	.flux-signal-grid {
+	.flux-signal-grid,
+	.flux-realtime__metrics {
 		grid-template-columns: 1fr;
 	}
 

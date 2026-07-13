@@ -41,6 +41,7 @@ const model = {
 
 test('collector freezes the published service hierarchy beside a resolved event', async () => {
   const batches = [];
+  const beforeCollection = Date.now();
   const db = {
     prepare(sql) {
       return {
@@ -61,8 +62,13 @@ test('collector freezes the published service hierarchy beside a resolved event'
     headers: { origin: 'https://researchops.pages.dev', 'content-type': 'application/json' },
     body: JSON.stringify(event)
   }), { FLUX_DB: db });
+  const afterCollection = Date.now();
 
   assert.equal(response.status, 202);
+  const eventStatement = batches[0].find(({ sql }) => sql.startsWith('INSERT INTO events'));
+  assert.match(eventStatement.sql, /occurred_at_ms, accepted_at_ms/);
+  assert.ok(eventStatement.values.at(-1) >= beforeCollection);
+  assert.ok(eventStatement.values.at(-1) <= afterCollection);
   const contextStatement = batches[0].find(({ sql }) => sql.startsWith('INSERT INTO event_service_contexts'));
   assert.ok(contextStatement);
   assert.equal(contextStatement.values[1], 'researchops');
