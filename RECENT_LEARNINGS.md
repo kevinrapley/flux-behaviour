@@ -10,6 +10,8 @@ An occurrence-time event report can include a session that started before the se
 
 Configured success milestones are commonly bound to an enclosing form or step, not the field or question used earlier in the journey. Entity performance must therefore propagate success only across the same session and configured transaction. Separately, an all-time range has no previous period: carry that state explicitly so the dashboard does not describe every non-zero row as new activity.
 
+A transaction funnel must count a later configured step only after every earlier publisher-ordered step was reached in that journey; counting independent step appearances produces a misleading path. Field exposure can be derived from the parent step, but absence of a field event is only non-interaction—not a skip. Reserve “required-field skip attempt” for explicit empty-field validation evidence, and aggregate dwell and value length into fixed buckets rather than exposing values.
+
 Generated production markup is not the source of truth. The journey page had a tenant attribute in tracked output but not in its Nunjucks template, so an ordinary build silently removed tenant routing. Fix source/build drift where it is discovered and validate the rebuilt artefact, not just the previously committed output.
 
 ## 2026-07-13 — Realtime freshness needs server acceptance time

@@ -25,6 +25,10 @@ agent_evidence_registry:
     root_file: Keep this file as the registry and canonical format reference only.
     naming: Use the task_id as the filename, with .yaml extension.
   entries:
+    - task_id: flux-behaviour-funnel-field-reports
+      date: 2026-07-13
+      path: docs/agent-evidence/2026/07/13/flux-behaviour-funnel-field-reports.yaml
+      status: externalised
     - task_id: flux-behaviour-event-entity-reports
       date: 2026-07-13
       path: docs/agent-evidence/2026/07/13/flux-behaviour-event-entity-reports.yaml

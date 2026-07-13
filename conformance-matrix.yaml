@@ -1,4 +1,11 @@
 records:
+  - id: CONF-023
+    rule: Transaction funnels and field reports must use configured order, explicit outcomes and privacy-safe aggregate evidence
+    expected_evidence: Exact-version funnels expose starts, sequential steps, completion, abandonment and recovery with explicit denominators; fields expose required status, coverage, validation, dwell and safe length distributions without values
+    actual_evidence: src/product/funnel-field-reports.mjs, authenticated dashboard panels and focused SQLite-backed tests implement publisher-ordered funnels, 30-minute closed-session abandonment, explicit recovery, neutral non-interaction, required empty-field validation attempts and aggregate dwell/length buckets.
+    status: present-with-release-blockers
+    owner: product-lead
+
   - id: CONF-022
     rule: Event and semantic service reports must use exact-version configured meaning and like-for-like aggregate evidence
     expected_evidence: Ranked events, configured key events, semantic elements and service entities expose event-active journey reach, comparisons, entry/exit, outcomes, friction and time without identifiers or raw events

@@ -1,0 +1,89 @@
+evidence_records:
+  - task_id: flux-behaviour-funnel-field-reports
+    mode: repo-build
+    repository: kevinrapley/flux-behaviour
+    risk_level: high
+    base_branch: feature/event-entity-reports
+    working_branch: feature/funnel-field-reports
+    files_read:
+      - README.md
+      - AGENTS.md
+      - RECENT_LEARNINGS.md
+      - CONTRIBUTING.md
+      - SECURITY.md
+      - repository-contract.yaml
+      - github-settings.yaml
+      - conformance-matrix.yaml
+      - gap-register.yaml
+      - harm-register.yaml
+      - docs/product/behaviour-model-dashboard-gap-analysis.md
+      - docs/product/publisher-service-model.md
+      - docs/product/event-entity-reports.md
+      - docs/product/production-runtime.md
+      - src/product/router.mjs
+      - src/dashboard/live-dashboard.mjs
+      - demo/templates/pages/dashboard.njk
+      - migrations/0001_flux_behaviour.sql
+      - migrations/0003_publisher_service_model.sql
+    files_changed:
+      - src/product/funnel-field-reports.mjs
+      - src/product/router.mjs
+      - src/dashboard/live-dashboard.mjs
+      - demo/templates/pages/dashboard.njk
+      - demo/styles/demo.scss
+      - public/assets/flux/dashboard/live-dashboard.mjs
+      - public/assets/styles/demo.css
+      - public/dashboard/index.html
+      - tests/funnel-field-reports.test.mjs
+      - tests/dashboard-funnel-field-panels.test.mjs
+      - docs/product/funnel-field-reports.md
+      - docs/product/publisher-service-model.md
+      - docs/product/production-runtime.md
+      - RECENT_LEARNINGS.md
+      - agent-evidence.yaml
+      - conformance-matrix.yaml
+      - gap-register.yaml
+      - harm-register.yaml
+    promotion_decisions:
+      - Start a transaction at its first exact-model resolved event and require publisher-ordered step progression.
+      - Count completion only from configured success and abandonment only after 30 minutes of session inactivity without an outcome.
+      - Use journeys with explicit friction as the recovery denominator and require a later recovery or configured success.
+      - Treat parent-step reach as field exposure and absence of a field event as neutral non-interaction rather than a skip.
+      - Count a required skip attempt only from explicit empty-field validation metadata.
+      - Return only aggregate dwell and value-length buckets, never entered values or per-journey field content.
+      - Preserve a distinct no-comparison state for all-time reports.
+    commands_run:
+      - command: node --test tests/event-entity-reports.test.mjs tests/dashboard-event-entity-panels.test.mjs tests/funnel-field-reports.test.mjs tests/dashboard-funnel-field-panels.test.mjs
+        state: verified
+        status: passed
+        evidence: Fifteen event/entity and funnel/field model, real SQLite query, API integration and accessible dashboard tests passed after rebasing on the reviewed event-report branch.
+      - command: npm ci
+        state: verified
+        status: passed
+        evidence: Installed 60 locked packages; npm reported zero vulnerabilities.
+      - command: npm test
+        state: verified
+        status: passed
+        evidence: All 261 repository tests passed after installing the locked worktree dependencies; the preceding dependency-free run failed four imports and is not treated as passing evidence.
+      - command: FLUX_DEMO_COLLECTOR_ENDPOINT=https://flux-behaviour.pages.dev/api/collect npm run demo:build
+        state: verified
+        status: passed
+        evidence: Rebuilt the production dashboard page, JavaScript and CSS assets with the governed collector endpoint.
+      - command: frontend visual verification at 1440x1000 and 390x844
+        state: verified
+        status: passed
+        evidence: Populated and zero-activity funnels, populated and empty field reports, long labels and opened distribution details rendered without page overflow, overlap, placeholder values or console warnings. Funnel and field tables remained contained horizontal regions on mobile.
+    recent_learnings:
+      - Independent step counts are not a funnel; each later step must follow all configured predecessors within the journey.
+      - A missing field interaction after parent-step exposure is not sufficient evidence to claim that a visitor skipped the field.
+      - Fixed aggregate distributions preserve useful dwell and length shape without returning entered values.
+    security:
+      - Reports remain within the authenticated tenant dashboard and every query is tenant, period, model-key and model-version scoped.
+    privacy:
+      - Field evidence contains aggregate counts and fixed buckets only; it never returns values, words, fragments, identifiers or per-journey contents.
+    accessibility:
+      - Funnels and fields use semantic headings, definition lists, native details and data tables with contained horizontal scrolling.
+    risks:
+      - The ResearchOps service model remains an initial inventory, so unconfigured transactions and fields cannot appear.
+      - Formal small-sample suppression and uncertainty treatment remain open under DASH-05.
+      - Configurable comparisons, exports/provenance and the target dashboard information architecture remain open under GAP-014.

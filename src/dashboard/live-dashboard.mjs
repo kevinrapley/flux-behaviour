@@ -8,6 +8,8 @@ const realtime = document.querySelector('[data-flux-realtime]');
 const serviceModel = document.querySelector('[data-flux-service-model]');
 const eventReport = document.querySelector('[data-flux-event-report]');
 const entityReport = document.querySelector('[data-flux-entity-report]');
+const funnelReport = document.querySelector('[data-flux-funnel-report]');
+const fieldReport = document.querySelector('[data-flux-field-report]');
 const health = document.querySelector('[data-flux-health]');
 const interactions = document.querySelector('[data-flux-interactions]');
 const cohorts = document.querySelector('[data-flux-cohorts]');
@@ -99,6 +101,8 @@ function renderDashboard(data) {
   serviceModel.replaceChildren(renderServiceModel(analytics.service_model));
   eventReport.replaceChildren(renderEventReport(analytics.event_report));
   entityReport.replaceChildren(renderEntityReport(analytics.entity_report));
+  funnelReport.replaceChildren(renderFunnelReport(analytics.funnel_report));
+  fieldReport.replaceChildren(renderFieldReport(analytics.field_report));
   health.replaceChildren(renderHealth(summary));
   interactions.replaceChildren(renderInteractions(analytics.actions ?? []));
   cohorts.replaceChildren(renderCohorts(analytics.cohorts ?? {}));
@@ -433,6 +437,113 @@ function renderEntityReport(data) {
   return wrapper;
 }
 
+function renderFunnelReport(data) {
+  if (!data) return emptyState('Funnel report unavailable', 'Publish a valid service model before interpreting transaction progress.');
+  const transactions = data.transactions ?? [];
+  if (transactions.length === 0) return emptyState('No configured transactions', 'Add transactions and ordered steps to the published service model.');
+  const wrapper = document.createElement('div');
+  wrapper.className = 'flux-funnel-report';
+  for (const transaction of transactions) {
+    const article = document.createElement('article');
+    article.className = 'flux-funnel';
+    article.append(element('h3', 'govuk-heading-m flux-funnel__title', transaction.label));
+    const metrics = document.createElement('dl');
+    metrics.className = 'flux-funnel__metrics';
+    for (const [label, value, context] of [
+      ['Started', numberFormat.format(transaction.started_session_count), 'journeys entering this configured transaction'],
+      ['Completion', formatPercent(transaction.completion_rate), `${numberFormat.format(transaction.completed_session_count)} configured successes`],
+      ['Abandonment', formatPercent(transaction.abandonment_rate), `${numberFormat.format(transaction.abandoned_session_count)} closed journeys without an outcome`],
+      ['Recovery', formatPercent(transaction.recovery_rate), `${numberFormat.format(transaction.recovered_session_count)} of ${numberFormat.format(transaction.friction_session_count)} journeys with friction`]
+    ]) metrics.append(funnelMetric(label, value, context));
+    article.append(metrics);
+    if (Number(transaction.started_session_count) === 0) {
+      article.append(element('p', 'govuk-body-s flux-funnel__empty', 'No journey started this configured transaction in the selected period.'));
+    } else {
+      article.append(element('p', 'govuk-body-s flux-funnel__context', `${numberFormat.format(transaction.failed_session_count)} failed · ${numberFormat.format(transaction.in_progress_session_count)} in progress · completion ${formatChangePoints(transaction.completion_rate_change, data.comparison_available)} · median ${formatDuration(transaction.median_completion_ms)} · 90th percentile ${formatDuration(transaction.p90_completion_ms)}.`));
+    }
+    const table = document.createElement('table');
+    table.className = 'govuk-table govuk-table--small-text-until-tablet';
+    table.append(
+      tableHead(['Step', 'Reached journeys', 'Reach', 'Drop-off from previous']),
+      tableBody((transaction.steps ?? []).map((step) => [step.label, step.session_count, formatPercent(step.reach_rate), `${numberFormat.format(step.step_dropoff_count)} · ${formatPercent(step.step_dropoff_rate)}`]))
+    );
+    const scroll = document.createElement('div');
+    scroll.className = 'flux-funnel__steps';
+    scroll.append(table);
+    article.append(scroll);
+    wrapper.append(article);
+  }
+  return wrapper;
+}
+
+function renderFieldReport(data) {
+  if (!data) return emptyState('Field report unavailable', 'Publish a valid service model before interpreting field evidence.');
+  const fields = data.fields ?? [];
+  if (fields.length === 0) return emptyState('No configured fields', 'Add fields beneath questions in the published service model.');
+  const wrapper = document.createElement('div');
+  wrapper.className = 'flux-field-report';
+  const table = document.createElement('table');
+  table.className = 'govuk-table govuk-table--small-text-until-tablet';
+  table.append(
+    tableHead(['Field', 'Status', 'Exposed journeys', 'Interacted', 'Coverage', 'Edited', 'Validation', 'Outcome success', 'Corrections', 'Change']),
+    tableBody(fields.map((field) => [
+      field.complexity === null ? field.label : `${field.label} · complexity ${formatDecimal(field.complexity)} of 7`,
+      field.required ? `Required · ${numberFormat.format(field.required_skip_attempt_session_count)} empty-field validation attempts` : 'Optional',
+      field.exposed_session_count,
+      `${field.interacted_session_count} · ${numberFormat.format(field.non_interaction_session_count)} did not interact`,
+      formatPercent(field.coverage_rate),
+      `${field.edited_session_count} · ${formatPercent(field.edited_completion_rate)}`,
+      `${field.validation_session_count} · ${formatPercent(field.validation_rate)}`,
+      `${field.successful_outcome_session_count} · ${formatPercent(field.successful_outcome_rate)}`,
+      field.correction_count,
+      formatChangePoints(field.coverage_rate_change, data.comparison_available)
+    ]))
+  );
+  const scroll = document.createElement('div');
+  scroll.className = 'flux-field-report__table';
+  scroll.append(table);
+  wrapper.append(scroll);
+  for (const field of fields) wrapper.append(fieldDistributions(field));
+  return wrapper;
+}
+
+function fieldDistributions(field) {
+  const details = document.createElement('details');
+  details.className = 'govuk-details flux-field-distributions';
+  const summary = document.createElement('summary');
+  summary.className = 'govuk-details__summary';
+  summary.append(element('span', 'govuk-details__summary-text', `${field.label} distributions`));
+  const grids = document.createElement('div');
+  grids.className = 'flux-field-distributions__grid';
+  grids.append(
+    distributionTable('Dwell before input distribution', field.dwell_distribution, [['under_1s', 'Under 1 second'], ['from_1_to_5s', '1 to 5 seconds'], ['from_5_to_15s', '5 to 15 seconds'], ['from_15_to_60s', '15 to 60 seconds'], ['over_60s', '60 seconds or more']]),
+    distributionTable('Safe value-length distribution', field.length_distribution, [['empty', 'Empty'], ['from_1_to_20', '1 to 20 characters'], ['from_21_to_100', '21 to 100 characters'], ['from_101_to_500', '101 to 500 characters'], ['over_500', 'More than 500 characters']])
+  );
+  details.append(summary, element('p', 'govuk-body-s', 'These aggregate buckets never contain or reveal entered values.'), grids);
+  return details;
+}
+
+function distributionTable(title, distribution, buckets) {
+  const section = document.createElement('section');
+  section.append(element('h4', 'govuk-heading-s', title));
+  const table = document.createElement('table');
+  table.className = 'govuk-table govuk-table--small-text-until-tablet';
+  table.append(tableHead(['Bucket', 'Journeys']), tableBody(buckets.map(([key, label]) => [label, distribution?.[key] ?? 0])));
+  section.append(table);
+  return section;
+}
+
+function funnelMetric(label, value, context) {
+  const metric = document.createElement('div');
+  metric.className = 'flux-funnel__metric';
+  metric.append(
+    element('dt', 'flux-funnel__metric-label', label),
+    element('dd', 'flux-funnel__metric-value', value),
+    element('dd', 'flux-funnel__metric-context', context)
+  );
+  return metric;
+}
+
 function reportDetails(label, description, headings, rows) {
   const details = document.createElement('details');
   details.className = 'govuk-details flux-report';
@@ -697,6 +808,14 @@ function formatDuration(value) {
   const minutes = Math.floor(seconds / 60);
   const remainder = Math.round(seconds % 60);
   return `${minutes}m ${remainder}s`;
+}
+
+function formatChangePoints(value, comparisonAvailable = true) {
+  if (!comparisonAvailable) return 'no comparison period';
+  if (value === null || value === undefined) return 'new in this period';
+  const change = Number(value) || 0;
+  if (Math.abs(change) < 0.05) return 'no change';
+  return `${Math.abs(change).toLocaleString('en-GB', { maximumFractionDigits: 1 })} percentage points ${change > 0 ? 'up' : 'down'}`;
 }
 
 function formatPercent(value) {
