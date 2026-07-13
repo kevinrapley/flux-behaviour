@@ -43,7 +43,7 @@ evidence_records:
       - command: npm ci && FLUX_DEMO_COLLECTOR_ENDPOINT=https://flux-behaviour.pages.dev/api/collect npm run demo:build && npm test && npm run validate && npm run security:secrets
         state: verified
         status: passed
-        evidence: Installed 60 locked packages with zero reported vulnerabilities, rebuilt production-endpoint assets, passed all 281 repository tests, verified required governance files and passed the secret scan.
+        evidence: Installed 60 locked packages with zero reported vulnerabilities, rebuilt production-endpoint assets, passed all 282 repository tests, verified required governance files and passed the secret scan. Review regressions cover URL-link refresh, repeated-session interval disclosure and unavailable zero-denominator model coverage.
       - command: frontend visual verification at 1440x1000 and 390x844
         state: verified
         status: passed

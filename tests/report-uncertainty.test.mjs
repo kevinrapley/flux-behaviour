@@ -16,7 +16,8 @@ test('calculates bounded Wilson 95% intervals with explicit sample evidence', ()
   assert.equal(report.rates[0].rate, 40);
   assert.equal(report.rates[1].denominator, 20);
   assert.equal(report.rates[1].interpretation, 'Wide interval — use caution');
-  assert.match(report.note, /do not correct collection gaps/);
+  assert.match(report.note, /collection gaps/);
+  assert.match(report.note, /repeated sessions from the same visitor/);
 });
 
 test('omits rate claims without a denominator and clamps inconsistent counts', () => {
@@ -43,4 +44,18 @@ test('builds an aggregate governance report with explicit unknown controls', () 
   assert.match(report.controls[2].evidence, /schema 1\.2\.0/);
   assert.match(report.boundary, /never exposes visitor identifiers/);
   assert.equal(report.limitations.some((item) => item.includes('Consent-choice rates')), true);
+});
+
+test('does not present empty selected-period model coverage as a zero-percent failure', () => {
+  const report = buildGovernanceReport({
+    realtime: {},
+    serviceModel: {
+      model_key: 'model.researchops', version: 2,
+      coverage: { mapping_rate: 0, resolved_event_count: 0, event_count: 0, unmapped_event_count: 0, retired_model_event_count: 0 }
+    },
+    eventSchemaVersion: '1.2.0'
+  });
+  const coverage = report.controls.find((control) => control.key === 'semantic_coverage');
+  assert.equal(coverage.status, 'Unavailable');
+  assert.match(coverage.evidence, /No interactions were recorded/);
 });

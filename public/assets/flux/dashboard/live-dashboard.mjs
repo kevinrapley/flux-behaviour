@@ -84,6 +84,7 @@ for (const button of rangeButtons) {
     url.searchParams.delete('start');
     url.searchParams.delete('end');
     window.history.replaceState({}, '', url);
+    updateUrlBackedLinks();
     void loadDashboard();
   });
 }
@@ -100,6 +101,7 @@ customApply?.addEventListener('click', () => {
   params.set('start', customStart.value);
   params.set('end', customEnd.value);
   window.history.replaceState({}, '', url);
+  updateUrlBackedLinks();
   void loadDashboard();
 });
 
@@ -107,7 +109,7 @@ compareSelect?.addEventListener('change', () => {
   const url = new URL(window.location.href);
   url.searchParams.set('compare', compareSelect.value);
   window.history.replaceState({}, '', url);
-  updateExportLink();
+  updateUrlBackedLinks();
   void loadDashboard();
 });
 
@@ -178,6 +180,11 @@ function updateViewLinks() {
     target.searchParams.set('view', link.dataset.fluxView);
     link.href = `${target.pathname}?${target.searchParams.toString()}`;
   }
+}
+
+function updateUrlBackedLinks() {
+  updateExportLink();
+  updateViewLinks();
 }
 
 function updateExportLink() {

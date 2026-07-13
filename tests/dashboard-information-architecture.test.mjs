@@ -18,6 +18,8 @@ test('dashboard exposes the target report areas with shared URL-backed filters',
   assert.match(dashboard, /url\.searchParams\.set\('view', currentView\)/);
   assert.match(dashboard, /area\.hidden = area\.dataset\.fluxReportArea !== currentView/);
   assert.match(dashboard, /target\.searchParams\.set\('view', link\.dataset\.fluxView\)/);
+  assert.match(dashboard, /history\.replaceState\(\{\}, '', url\);\n\s+updateUrlBackedLinks\(\);/);
+  assert.match(dashboard, /function updateUrlBackedLinks\(\) \{\n\s+updateExportLink\(\);\n\s+updateViewLinks\(\);/);
   assert.match(dashboard, /renderUncertainty\(analytics\.uncertainty\)/);
   assert.match(dashboard, /renderGovernance\(analytics\.governance\)/);
   assert.match(styles, /\.flux-report-navigation/);

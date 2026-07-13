@@ -8,7 +8,7 @@ export function buildUncertaintyReport(overview = {}) {
   ].filter(Boolean);
   return {
     method: 'wilson_95',
-    note: 'Intervals use the Wilson 95% method. They describe sampling uncertainty around the observed journeys; they do not correct collection gaps, selection effects or model error, and they do not establish cause.',
+    note: 'Intervals use the Wilson 95% method. They describe sampling uncertainty around the observed journeys; they assume independent observations and do not correct repeated sessions from the same visitor, collection gaps, selection effects or model error. They do not establish cause.',
     rates
   };
 }
@@ -27,6 +27,7 @@ export function wilsonInterval(numerator, denominator) {
 
 export function buildGovernanceReport({ realtime, serviceModel, eventSchemaVersion }) {
   const coverage = serviceModel?.coverage;
+  const hasCoverageEvidence = whole(coverage?.event_count) > 0;
   return {
     boundary: 'This area reports aggregate collection and model evidence only. It never exposes visitor identifiers, session identifiers, narratives, entered values or raw events.',
     controls: [
@@ -39,8 +40,10 @@ export function buildGovernanceReport({ realtime, serviceModel, eventSchemaVersi
       {
         key: 'semantic_coverage',
         label: 'Published-model coverage',
-        status: coverage ? `${number(coverage.mapping_rate)}% mapped` : 'Unavailable',
-        evidence: coverage ? `${number(coverage.resolved_event_count)} of ${number(coverage.event_count)} current-model interactions mapped; ${number(coverage.unmapped_event_count)} unmapped and ${number(coverage.retired_model_event_count)} attributed to retired versions.` : 'No valid published service model was available.'
+        status: hasCoverageEvidence ? `${number(coverage.mapping_rate)}% mapped` : 'Unavailable',
+        evidence: hasCoverageEvidence
+          ? `${number(coverage.resolved_event_count)} of ${number(coverage.event_count)} current-model interactions mapped; ${number(coverage.unmapped_event_count)} unmapped and ${number(coverage.retired_model_event_count)} attributed to retired versions.`
+          : coverage ? 'No interactions were recorded in the selected period, so published-model coverage cannot be calculated.' : 'No valid published service model was available.'
       },
       {
         key: 'versions',
