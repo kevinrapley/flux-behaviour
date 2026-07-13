@@ -17,7 +17,7 @@ export function createTaskFunnelManager({ root, tenantId, onPublished = () => {}
   let loading = false;
 
   async function load() {
-    if (!root || !tenantId || loading) return;
+    if (!root || !tenantId || loading || editor) return;
     loading = true;
     if (!configuration) root.replaceChildren(message('Loading configuration…'));
     try {

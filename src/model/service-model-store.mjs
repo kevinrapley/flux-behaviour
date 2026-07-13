@@ -1,12 +1,17 @@
-import { resolveServiceContext, validateServiceModel } from './service-model.mjs';
+import { resolveServiceContext, validateServiceModel, validateServiceModelForPublication } from './service-model.mjs';
 
 export async function publishServiceModel(db, accountId, model, now = Date.now()) {
-  const validation = validateServiceModel(model);
-  if (!validation.valid) return { ok: false, error: 'invalid_service_model', details: validation.errors };
+  const structuralValidation = validateServiceModel(model);
+  if (!structuralValidation.valid) return { ok: false, error: 'invalid_service_model', details: structuralValidation.errors };
   const access = await db.prepare('SELECT role FROM account_tenants WHERE account_id = ? AND tenant_id = ?').bind(accountId, model.tenant_id).first();
   if (access?.role !== 'owner') return { ok: false, error: 'forbidden' };
   const existing = await db.prepare('SELECT version FROM service_model_versions WHERE tenant_id = ? AND model_key = ? AND version = ?').bind(model.tenant_id, model.model_key, model.version).first();
   if (existing) return { ok: false, error: 'service_model_version_exists' };
+  const published = await db.prepare("SELECT model_json FROM service_model_versions WHERE tenant_id = ? AND model_key = ? AND status = 'published'").bind(model.tenant_id, model.model_key).first();
+  let previousModel = null;
+  try { previousModel = published?.model_json ? JSON.parse(published.model_json) : null; } catch { previousModel = null; }
+  const validation = validateServiceModelForPublication(model, previousModel);
+  if (!validation.valid) return { ok: false, error: 'invalid_service_model', details: validation.errors };
   const modelJson = canonicalJson(model);
   const manifestHash = await sha256(modelJson);
   const statements = [

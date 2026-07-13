@@ -213,6 +213,21 @@ test('event validation rejects nested authentication scopes', () => {
   assert.ok(result.errors.some((error) => error.code === EVENT_VALIDATION_ERROR_CODES.PRIVACY_POLICY));
 });
 
+test('event validation rejects underscore-separated authentication scopes', () => {
+  const event = JSON.parse(readFileSync('fixtures/events/valid/focus-enter.json', 'utf8'));
+  Object.assign(event, {
+    event_class: 'nav',
+    action: 'control.click',
+    role: 'control',
+    element_key: 'control_navigation_auth_verify',
+  });
+
+  const result = validateEvent(event, schema);
+
+  assert.equal(result.valid, false);
+  assert.ok(result.errors.some((error) => error.code === EVENT_VALIDATION_ERROR_CODES.PRIVACY_POLICY));
+});
+
 test('event validation reserves auth.otp for neutral milestones', () => {
   const event = JSON.parse(readFileSync('fixtures/events/valid/focus-enter.json', 'utf8'));
   Object.assign(event, {

@@ -1,0 +1,147 @@
+task_id: flux-behaviour-tenant-field-manager
+mode: repo-build
+repository: kevinrapley/flux-behaviour
+risk_level: high
+base_branch: main
+working_branch: feature/tenant-field-manager
+files_read:
+  - README.md
+  - AGENTS.md
+  - RECENT_LEARNINGS.md
+  - CONTRIBUTING.md
+  - SECURITY.md
+  - repository-contract.yaml
+  - github-settings.yaml
+  - conformance-matrix.yaml
+  - gap-register.yaml
+  - harm-register.yaml
+  - agent-evidence.yaml
+  - docs/product/production-runtime.md
+  - docs/product/publisher-service-model.md
+  - docs/product/funnel-field-reports.md
+  - docs/product/dashboard-information-architecture-and-uncertainty.md
+  - docs/product/model-dashboard-completion-audit.md
+  - contracts/models/flux-service-model.schema.json
+  - config/models/researchops.v1.json
+  - src/dashboard/task-funnel-manager.mjs
+  - src/dashboard/live-dashboard.mjs
+  - src/model/service-model.mjs
+  - src/model/service-model-store.mjs
+  - src/events/event-privacy-policy.mjs
+  - src/sdk/flux-auto-capture.mjs
+  - src/dashboard/task-funnel-manager.mjs
+  - config/models/researchops.v1.json
+  - migrations/0004_seed_researchops_service_model.sql
+  - demo/templates/pages/dashboard.njk
+files_changed:
+  - src/dashboard/field-configuration.mjs
+  - src/dashboard/field-manager.mjs
+  - src/dashboard/live-dashboard.mjs
+  - src/model/service-model.mjs
+  - src/model/service-model-store.mjs
+  - src/events/event-privacy-policy.mjs
+  - demo/templates/pages/dashboard.njk
+  - demo/styles/demo.scss
+  - public/dashboard/index.html
+  - public/assets/styles/demo.css
+  - public/assets/flux/dashboard/live-dashboard.mjs
+  - public/assets/flux/dashboard/field-configuration.mjs
+  - public/assets/flux/dashboard/field-manager.mjs
+  - public/assets/flux/dashboard/task-funnel-manager.mjs
+  - public/assets/flux/sdk/flux-auto-capture.mjs
+  - public/assets/flux/events/event-privacy-policy.mjs
+  - tests/field-configuration.test.mjs
+  - tests/dashboard-field-manager.test.mjs
+  - tests/event-validation.test.mjs
+  - tests/service-model-store.test.mjs
+  - tests/auto-capture-runtime.test.mjs
+  - tests/browser-consent.test.mjs
+  - tests/dashboard-task-funnel-manager.test.mjs
+  - tests/researchops-service-model.test.mjs
+  - config/models/researchops.v1.json
+  - migrations/0004_seed_researchops_service_model.sql
+  - docs/product/publisher-service-model.md
+  - docs/product/production-runtime.md
+  - docs/product/funnel-field-reports.md
+  - docs/product/model-dashboard-completion-audit.md
+  - RECENT_LEARNINGS.md
+  - agent-evidence.yaml
+  - conformance-matrix.yaml
+  - gap-register.yaml
+  - harm-register.yaml
+promotion_decisions:
+  - Keep field and complexity definitions tenant-owned and generic; Flux supplies the model editor while a connected service supplies its semantic data-flux-key attributes.
+  - Follow the governed hierarchy by declaring 1–7 service complexity on a question or field group rather than inventing field-level complexity.
+  - Publish every create, edit and delete as a complete immutable next model version while retaining stable entity keys on edits.
+  - Require each field to declare required or optional status and an exact unique publisher data-flux-key binding.
+  - Restrict mutation to tenant owners, retain viewer read access and reject concurrent version overwrite through the existing publication route.
+  - Cascade question deletion through child fields, bindings and matching key events without rewriting historical versions.
+commands_run:
+  - command: node --test tests/dashboard-field-manager.test.mjs tests/field-configuration.test.mjs
+    state: verified
+    status: passed
+    evidence: Seventeen field configuration and dashboard-surface tests passed after individual create, edit, binding, deletion, collectable-key, namespace, global-autocomplete, auth-scope, success-binding, unbound-repair, refresh-preservation and responsive-layout RED to GREEN cycles.
+  - command: FLUX_DEMO_COLLECTOR_ENDPOINT=https://flux-behaviour.pages.dev/api/collect npm run demo:build
+    state: verified
+    status: passed
+    evidence: Production-shaped dashboard pages, styles and source-owned browser modules built successfully; only existing GOV.UK Sass deprecation warnings were emitted.
+  - command: npm test
+    state: verified
+    status: passed
+    evidence: All 329 repository tests passed after addressing sixteen Codex review findings across five review passes.
+  - command: npm run validate
+    state: verified
+    status: passed
+    evidence: All 19 governed repository files were present.
+  - command: npm run security:secrets
+    state: verified
+    status: passed
+    evidence: Secret-pattern sanity scan passed.
+  - command: npm audit --audit-level=high
+    state: verified
+    status: passed
+    evidence: npm reported zero vulnerabilities.
+  - command: npm run sbom
+    state: verified
+    status: passed
+    evidence: CycloneDX SBOM generation completed successfully.
+  - command: local production-shaped browser verification at default desktop and 390x844
+    state: verified
+    status: passed
+    evidence: Configuration was collapsed by default; an owner created a complexity-6 question group, added an optional exact-key field and edited the group to complexity 7 across model versions 2 through 4; the mobile surface had no horizontal overflow and browser logs contained no warnings or errors.
+  - command: git diff --check
+    state: verified
+    status: passed
+    evidence: No whitespace errors were found.
+contracts_validated:
+  - contracts/models/flux-service-model.schema.json
+  - authenticated tenant service-model GET and immutable-version PUT routes
+  - publication-only field-binding safety policy with legacy at-rest read compatibility
+  - question-level 1–7 complexity, field required status and exact unique publisher data-flux-key bindings
+gaps_recorded:
+  - GAP-013 updated to record that owner authoring is delivered while the full ResearchOps inventory and comparable complexity-adjusted baselines remain incomplete.
+waivers_recorded: []
+artifacts_created:
+  - src/dashboard/field-configuration.mjs
+  - src/dashboard/field-manager.mjs
+  - tests/field-configuration.test.mjs
+  - tests/dashboard-field-manager.test.mjs
+  - docs/agent-evidence/2026/07/13/flux-behaviour-tenant-field-manager.yaml
+recent_learnings:
+  - A configuration editor must mirror where the governed model owns meaning; complexity belongs to the parent question group, while required status and binding belong to its fields.
+  - Complexity copy must describe service demands and must not become a judgement about the person completing a field.
+  - Stable keys, unique semantic bindings and immutable versions allow field configuration to change without rewriting historical meaning.
+security:
+  - The dashboard hides mutation from viewers and the publication API independently enforces the tenant-owner role.
+  - Existing-version conflicts are rejected rather than overwriting another owner's publication.
+  - Global content-free autocomplete categories are rejected as field-specific bindings, and publisher keys are capped at the collector contract's 120-character limit.
+  - Reserved and nested authentication scopes are rejected so excluded authentication interactions cannot be attributed to ordinary field analytics.
+  - The direct publication API enforces field namespaces and tenant-global autocomplete boundaries; only an exact binding already present in the authorised current model can be retained during legacy transition.
+  - Underscore-delimited authentication scopes are excluded by the same privacy policy as dot, colon and hyphen-delimited scopes before automatic capture or writing analysis begins.
+privacy:
+  - Configuration contains controlled service labels, bounded complexity and semantic keys only; no visitor identity, event payload, entered value or page content is introduced.
+accessibility:
+  - The editor uses semantic articles and headings, labelled native inputs and selects, visible status messages, keyboard-operable buttons and responsive action layouts without mobile horizontal overflow.
+risks:
+  - Owner configuration can still be semantically wrong even when structurally valid; HARM-009 retains human review, exact-key and bounded-complexity mitigations.
+  - The ResearchOps service inventory and comparable complexity-adjusted baselines remain incomplete under GAP-013.

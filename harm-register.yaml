@@ -1,12 +1,12 @@
 harms:
   - id: HARM-009
-    harm: A tenant owner could misconfigure a funnel or success event and cause the dashboard to present incomplete or incorrect service meaning.
+    harm: A tenant owner could misconfigure a funnel, success event, field binding, required status or complexity and cause the dashboard to present incomplete or incorrect service meaning.
     affected_groups:
       - Service teams relying on behavioural analytics
       - People whose journeys inform service changes
     likelihood: medium
     severity: medium
-    mitigation: Restrict mutation to tenant owners; validate every complete model; require exact controlled action and data-flux-key bindings; reject cross-funnel and duplicate bindings; preserve stable keys on label edits; publish immutable versions; reject version conflicts; retain historical event-time context; show funnels without success events as incomplete rather than inferring completion.
+    mitigation: Restrict mutation to tenant owners; validate every complete model; enforce field-binding privacy and collectability at direct API publication as well as in the editor; permit only exact prohibited bindings already present in the authorised current version during legacy transition; require exact controlled action and data-flux-key bindings; constrain service complexity to 1–7 on question groups; distinguish required from optional fields; reject cross-funnel and duplicate bindings; preserve stable keys on label edits; disclose and cascade deleted question bindings and outcomes; preserve open Fields and Tasks edits across analytics refreshes and sibling publication; publish immutable versions; reject version conflicts; retain historical event-time context; show funnels without success events as incomplete rather than inferring completion; and describe complexity as service configuration rather than a judgement of the user.
     residual_risk: low
     owner: product-lead
     escalation_route: Product owner and governance lead

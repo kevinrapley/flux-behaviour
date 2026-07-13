@@ -28,6 +28,7 @@ test('dashboard loads and publishes tenant-owned task and funnel configuration',
   assert.match(manager, /createSuccessEvent/);
   assert.match(manager, /deleteEntity/);
   assert.match(manager, /moveEntity/);
+  assert.match(manager, /if \(!root \|\| !tenantId \|\| loading \|\| editor\) return/);
 });
 
 test('task and funnel configuration remains usable on narrow screens', () => {

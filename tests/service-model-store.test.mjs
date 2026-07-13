@@ -30,7 +30,7 @@ function validModel() {
   };
 }
 
-function recordingDb({ owner = true, existing = false } = {}) {
+function recordingDb({ owner = true, existing = false, publishedModel = null } = {}) {
   const prepared = [];
   const batches = [];
   return {
@@ -46,6 +46,7 @@ function recordingDb({ owner = true, existing = false } = {}) {
         },
         async first() {
           if (sql.includes('account_tenants')) return owner ? { role: 'owner' } : null;
+          if (sql.includes("status = 'published'")) return publishedModel ? { model_json: JSON.stringify(publishedModel) } : null;
           if (sql.includes('service_model_versions')) return existing ? { version: 1 } : null;
           return null;
         }
@@ -105,6 +106,50 @@ test('refuses an invalid publisher model before any database access', async () =
   assert.ok(result.details.some(({ code }) => code === 'invalid_complexity'));
   assert.equal(db.prepared.length, 0);
   assert.equal(db.batches.length, 0);
+});
+
+test('refuses unsafe field bindings at the publication boundary without invalidating legacy reads', async () => {
+  for (const elementKey of ['autocomplete.email', 'field.auth.otp', `field.${'a'.repeat(115)}`]) {
+    const db = recordingDb();
+    const model = validModel();
+    model.bindings.find(({ entity_key }) => entity_key === 'field.objective').element_key = elementKey;
+
+    const result = await publishServiceModel(db, 'account-1', model);
+
+    assert.equal(result.ok, false, elementKey);
+    assert.equal(result.error, 'invalid_service_model');
+    const expectedCode = elementKey.startsWith('autocomplete.') ? 'prohibited_global_binding' : 'prohibited_field_binding';
+    assert.ok(result.details.some(({ code }) => code === expectedCode), elementKey);
+    assert.ok(db.prepared.length > 0);
+    assert.equal(db.batches.length, 0);
+  }
+});
+
+test('refuses tenant-global autocomplete categories on non-field bindings at publication', async () => {
+  const db = recordingDb();
+  const model = validModel();
+  model.bindings.push({ element_key: 'autocomplete.email', entity_key: 'transaction.manage-project' });
+
+  const result = await publishServiceModel(db, 'account-1', model);
+
+  assert.equal(result.ok, false);
+  assert.equal(result.error, 'invalid_service_model');
+  assert.ok(result.details.some(({ code }) => code === 'prohibited_global_binding'));
+  assert.ok(db.prepared.length > 0);
+  assert.equal(db.batches.length, 0);
+});
+
+test('permits an unchanged legacy binding while blocking it from new publication', async () => {
+  const legacy = validModel();
+  legacy.bindings.find(({ entity_key }) => entity_key === 'field.objective').element_key = 'autocomplete.email';
+  const next = structuredClone(legacy);
+  next.version = 2;
+  const db = recordingDb({ publishedModel: legacy });
+
+  const result = await publishServiceModel(db, 'account-1', next);
+
+  assert.deepEqual(result, { ok: true, model_key: 'model.researchops', version: 2 });
+  assert.equal(db.batches.length, 1);
 });
 
 test('resolves a collected semantic key against the currently published model version', async () => {

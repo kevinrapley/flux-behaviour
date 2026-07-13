@@ -114,6 +114,34 @@ export function validateServiceModel(model) {
   return { valid: errors.length === 0, errors };
 }
 
+export function validateServiceModelForPublication(model, previousModel = null) {
+  const validation = validateServiceModel(model);
+  if (!validation.valid) return validation;
+  const entitiesByKey = new Map(model.entities.map((entity) => [entity.key, entity]));
+  const legacyBindings = previousModel?.tenant_id === model.tenant_id && previousModel?.model_key === model.model_key
+    ? new Set((previousModel.bindings ?? []).map(({ element_key, entity_key }) => `${element_key}\u0000${entity_key}`))
+    : new Set();
+  const errors = [];
+  for (const [index, binding] of model.bindings.entries()) {
+    const key = binding.element_key.toLowerCase();
+    const fieldBinding = entitiesByKey.get(binding.entity_key)?.type === 'field';
+    const unchangedLegacyBinding = legacyBindings.has(`${binding.element_key}\u0000${binding.entity_key}`);
+    if (key.startsWith('autocomplete.')) {
+      if (!unchangedLegacyBinding) errors.push({ code: 'prohibited_global_binding', path: `bindings[${index}].element_key` });
+      continue;
+    }
+    const nestedAuthScope = key !== 'auth.otp' && /(^|[._:-])auth(?=[._:-]|$)/.test(key);
+    if (nestedAuthScope && !fieldBinding) {
+      if (!unchangedLegacyBinding) errors.push({ code: 'prohibited_global_binding', path: `bindings[${index}].element_key` });
+      continue;
+    }
+    if (fieldBinding && (key.length > 120 || !key.startsWith('field.') || key === 'auth.otp' || nestedAuthScope)) {
+      if (!unchangedLegacyBinding) errors.push({ code: 'prohibited_field_binding', path: `bindings[${index}].element_key` });
+    }
+  }
+  return { valid: errors.length === 0, errors };
+}
+
 export function resolveServiceContext(model, elementKey, action) {
   if (!validateServiceModel(model).valid) return null;
   const entityKey = model.bindings.find((binding) => binding.element_key === elementKey)?.entity_key;

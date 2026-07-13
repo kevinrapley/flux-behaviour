@@ -7,7 +7,7 @@ const focusState = new WeakMap();
 const fieldVisits = new Map();
 const recentClicks = [];
 const SAFE_ROLES = new Set(['field', 'form', 'control', 'page', 'service', 'environment']);
-const AUTH_SCOPED_KEY = /(^|[.:-])auth(?=[.:-]|$)/i;
+const AUTH_SCOPED_KEY = /(^|[._:-])auth(?=[._:-]|$)/i;
 const CONTROL_SELECTOR = 'a,button,input,select,textarea,[role="button"],[tabindex]:not([tabindex^="-"])';
 const AUTH_PENDING_KEY = 'flux.behaviour.auth_otp_verification_pending';
 const recordedAutocomplete = new WeakMap();
