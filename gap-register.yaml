@@ -12,10 +12,10 @@ gaps:
   - id: GAP-014
     title: Dashboard lacks mature analytics report breadth
     severity: high
-    observed_state: The dashboard provides period overview, daily audience trend, aggregate 5/30-minute realtime activity with ingestion freshness, ranked events and key events, semantic page/form/control evidence, transaction/task/step/question/field performance, ordered funnels, dedicated field coverage with safe distributions, health summaries, cohorts, indicators and journey histories. Configurable comparison, broader uncertainty, export/provenance and target information-architecture reports remain incomplete.
+    observed_state: The dashboard provides period overview, daily audience trend, aggregate 5/30-minute realtime activity with ingestion freshness, ranked events and key events, semantic page/form/control evidence, transaction/task/step/question/field performance, ordered funnels, dedicated field coverage with safe distributions, configurable privacy-thresholded comparisons, bounded custom ranges, provenance-bearing aggregate CSV, health summaries, cohorts, indicators and journey histories. Broader uncertainty treatment and the target information architecture remain incomplete.
     expected_state: The target information architecture and P1 dashboard reports in the source-grounded gap analysis are implemented with shared filters, accessible tables and provenance.
     risk: Teams can inspect individual journeys but cannot reliably locate systemic friction, compare changes or prioritise service action.
-    action: Deliver DASH-02 through DASH-06 and the DASH-10 information architecture after the service model foundation; retain DASH-01 realtime privacy and freshness regression evidence.
+    action: Complete DASH-05 uncertainty and the DASH-10 information architecture; retain regression evidence for realtime, model reports, comparisons and aggregate export.
     owner: product-lead
     status: in-progress
 

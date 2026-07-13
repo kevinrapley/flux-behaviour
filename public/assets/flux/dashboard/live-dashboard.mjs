@@ -2,6 +2,7 @@ const dashboard = document.querySelector('[data-flux-dashboard]');
 const status = document.querySelector('[data-flux-live-status]');
 const content = document.querySelector('[data-flux-dashboard-content]');
 const overview = document.querySelector('[data-flux-overview]');
+const comparisonReport = document.querySelector('[data-flux-comparison-report]');
 const periodCopy = document.querySelector('[data-flux-period-copy]');
 const trend = document.querySelector('[data-flux-trend]');
 const realtime = document.querySelector('[data-flux-realtime]');
@@ -17,6 +18,13 @@ const signals = document.querySelector('[data-flux-signals]');
 const journeys = document.querySelector('[data-flux-live-journeys]');
 const refresh = document.querySelector('[data-flux-refresh]');
 const rangeButtons = [...document.querySelectorAll('[data-flux-range]')];
+const customRange = document.querySelector('[data-flux-custom-range]');
+const customStart = document.querySelector('[data-flux-custom-start]');
+const customEnd = document.querySelector('[data-flux-custom-end]');
+const customApply = document.querySelector('[data-flux-custom-apply]');
+const compareSelect = document.querySelector('[data-flux-compare]');
+const exportReportSelect = document.querySelector('[data-flux-export-report]');
+const exportLink = document.querySelector('[data-flux-export]');
 const numberFormat = new Intl.NumberFormat('en-GB');
 const dateFormat = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 const dateTimeFormat = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
@@ -44,12 +52,39 @@ for (const button of rangeButtons) {
     if (button.dataset.fluxRange === currentRange) return;
     currentRange = button.dataset.fluxRange;
     updateRangeControls();
+    if (currentRange === 'custom') return;
     const url = new URL(window.location.href);
     url.searchParams.set('range', currentRange);
+    url.searchParams.delete('start');
+    url.searchParams.delete('end');
     window.history.replaceState({}, '', url);
     void loadDashboard();
   });
 }
+
+customApply?.addEventListener('click', () => {
+  if (!customStart.value || !customEnd.value) {
+    status.textContent = 'Choose both a start and end date.';
+    customStart.focus();
+    return;
+  }
+  const url = new URL(window.location.href);
+  const params = url.searchParams;
+  params.set('range', 'custom');
+  params.set('start', customStart.value);
+  params.set('end', customEnd.value);
+  window.history.replaceState({}, '', url);
+  void loadDashboard();
+});
+
+compareSelect?.addEventListener('change', () => {
+  const url = new URL(window.location.href);
+  url.searchParams.set('compare', compareSelect.value);
+  window.history.replaceState({}, '', url);
+  void loadDashboard();
+});
+
+exportReportSelect?.addEventListener('change', updateExportLink);
 
 refresh?.addEventListener('click', () => void loadDashboard());
 updateRangeControls();
@@ -58,7 +93,8 @@ void loadDashboard();
 async function loadDashboard() {
   setLoading(true);
   try {
-    const response = await fetch(`/api/dashboard/researchops?range=${encodeURIComponent(currentRange)}`, { credentials: 'include' });
+    const params = new URL(window.location.href).searchParams;
+    const response = await fetch(`/api/dashboard/researchops?${params.toString()}`, { credentials: 'include' });
     if (response.status === 401) {
       renderSignIn();
       return;
@@ -81,11 +117,26 @@ function setLoading(loading) {
 }
 
 function updateRangeControls() {
+  customRange.hidden = currentRange !== 'custom';
+  const params = new URL(window.location.href).searchParams;
+  if (currentRange === 'custom') {
+    customStart.value = params.get('start') ?? '';
+    customEnd.value = params.get('end') ?? '';
+  }
+  compareSelect.value = params.get('compare') ?? 'period';
+  updateExportLink();
   for (const button of rangeButtons) {
     const active = button.dataset.fluxRange === currentRange;
     button.classList.toggle('flux-dashboard__range-button--active', active);
     button.setAttribute('aria-pressed', String(active));
   }
+}
+
+function updateExportLink() {
+  const params = new URL(window.location.href).searchParams;
+  params.set('range', currentRange);
+  params.set('report', exportReportSelect.value);
+  exportLink.href = `/api/dashboard/researchops/export.csv?${params.toString()}`;
 }
 
 function renderDashboard(data) {
@@ -96,6 +147,7 @@ function renderDashboard(data) {
   status.textContent = `${analytics.period?.label ?? 'Selected period'} · updated ${new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`;
   periodCopy.textContent = periodDescription(analytics.period, summary);
   overview.replaceChildren(...overviewCards(summary, analytics.comparison));
+  comparisonReport.replaceChildren(renderComparisonReport(analytics.comparison_report, analytics.comparison_mode));
   realtime.replaceChildren(renderRealtime(analytics.realtime));
   trend.replaceChildren(renderTrend(analytics.trend ?? []));
   serviceModel.replaceChildren(renderServiceModel(analytics.service_model));
@@ -142,6 +194,25 @@ function overviewCards(current, previous) {
     metricCard('Sessions', current.session_count, comparisonText(current.session_count, previous?.session_count), `${formatDecimal(sessionsPerVisitor)} session${sessionsPerVisitor === 1 ? '' : 's'} per visitor`),
     metricCard('Interactions', current.event_count, comparisonText(current.event_count, previous?.event_count), `${formatDecimal(current.events_per_session)} per session`)
   ];
+}
+
+function renderComparisonReport(data, mode) {
+  if (mode === 'period' || !mode) return emptyState('Previous-period comparison', 'Change against the preceding like-for-like period is shown alongside metrics throughout this dashboard.');
+  if (!data) return emptyState('Comparison unavailable', 'Publish a valid service model or choose another comparison dimension.');
+  const wrapper = document.createElement('div');
+  wrapper.className = 'flux-comparison-report';
+  wrapper.append(element('h3', 'govuk-heading-m', data.label), element('p', 'govuk-body-s flux-safeguard', data.caveat));
+  const rows = (data.rows ?? []).map((row) => row.suppressed
+    ? [row.label, `Suppressed — fewer than ${numberFormat.format(data.minimum_group_size)} journeys`, '—', '—', '—']
+    : [row.label, row.session_count, formatDecimal(row.interactions_per_session), formatPercent(row.completion_rate), formatPercent(row.friction_rate)]);
+  const table = document.createElement('table');
+  table.className = 'govuk-table govuk-table--small-text-until-tablet';
+  table.append(tableHead(['Group', 'Journeys', 'Interactions per journey', 'Completion', 'Friction']), tableBody(rows));
+  const scroll = document.createElement('div');
+  scroll.className = 'flux-comparison-report__table';
+  scroll.append(table);
+  wrapper.append(scroll);
+  return wrapper;
 }
 
 function metricCard(label, value, comparison, context) {

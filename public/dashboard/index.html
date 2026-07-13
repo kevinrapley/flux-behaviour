@@ -57,10 +57,43 @@
 		</div>
 		<div class="flux-dashboard__controls" aria-label="Dashboard period">
 			<div class="flux-dashboard__range" role="group" aria-label="Choose reporting period">
+				<button type="button" class="flux-dashboard__range-button" data-flux-range="24h">24 hours</button>
 				<button type="button" class="flux-dashboard__range-button" data-flux-range="7d">7 days</button>
 				<button type="button" class="flux-dashboard__range-button flux-dashboard__range-button--active" data-flux-range="30d" aria-pressed="true">30 days</button>
 				<button type="button" class="flux-dashboard__range-button" data-flux-range="90d">90 days</button>
+				<button type="button" class="flux-dashboard__range-button" data-flux-range="1y">1 year</button>
 				<button type="button" class="flux-dashboard__range-button" data-flux-range="all">All time</button>
+				<button type="button" class="flux-dashboard__range-button" data-flux-range="custom">Custom</button>
+			</div>
+			<div class="flux-dashboard__custom-range" data-flux-custom-range hidden>
+				<label for="flux-custom-start">From <input class="govuk-input govuk-input--width-10" id="flux-custom-start" type="date" data-flux-custom-start></label>
+				<label for="flux-custom-end">To <input class="govuk-input govuk-input--width-10" id="flux-custom-end" type="date" data-flux-custom-end></label>
+				<button type="button" class="govuk-button govuk-button--secondary" data-flux-custom-apply>Apply dates</button>
+			</div>
+			<label class="flux-dashboard__compare" for="flux-dashboard-compare">Compare by
+				<select class="govuk-select" id="flux-dashboard-compare" data-flux-compare>
+					<option value="period">Previous period</option>
+					<option value="visit_maturity">Visit maturity</option>
+					<option value="outcome">Outcome path</option>
+					<option value="task">Configured task</option>
+					<option value="interaction_mode">Interaction mode</option>
+				</select>
+			</label>
+			<div class="flux-dashboard__export">
+				<label for="flux-dashboard-export-report">Export aggregate report
+					<select class="govuk-select" id="flux-dashboard-export-report" data-flux-export-report>
+						<option value="overview">Overview</option>
+						<option value="events">Events</option>
+						<option value="key_events">Key events</option>
+						<option value="elements">Pages, forms and controls</option>
+						<option value="entities">Service entities</option>
+						<option value="funnels">Funnels</option>
+						<option value="fields">Fields</option>
+						<option value="comparison">Selected comparison</option>
+					</select>
+				</label>
+				<a class="govuk-button govuk-button--secondary" data-flux-export href="/api/dashboard/researchops/export.csv?report=overview&amp;range=30d">Download CSV</a>
+				<p class="govuk-body-s">Includes filters, generated time, model and event-schema version, caveats and suppression notes. Never raw events.</p>
 			</div>
 			<button type="button" class="flux-dashboard__refresh" data-flux-refresh>Refresh data</button>
 		</div>
@@ -87,6 +120,16 @@
 				</div>
 			</div>
 			<div class="flux-metric-grid" data-flux-overview></div>
+		</section>
+
+		<section class="flux-dashboard__panel" aria-labelledby="comparison-report-heading">
+			<div class="flux-dashboard__section-heading">
+				<div>
+					<h2 class="govuk-heading-l" id="comparison-report-heading">Journey comparison</h2>
+					<p class="govuk-body flux-dashboard__section-copy">Compare aggregate service evidence by a safe journey dimension. Small groups are suppressed.</p>
+				</div>
+			</div>
+			<div data-flux-comparison-report></div>
 		</section>
 
 		<section class="flux-dashboard__panel flux-dashboard__panel--trend" aria-labelledby="trend-heading">

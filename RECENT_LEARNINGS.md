@@ -176,3 +176,7 @@ The prototype `wrangler.toml` pattern includes environment-specific configuratio
 ## 2026-07-13 — Published-model evidence must be version-scoped
 
 Event-time context deliberately preserves historical model versions. Dashboard queries must therefore filter context rows to the exact published model key and version before labelling evidence with the current model; tenant and period filters alone can mix retired meanings into current reports. Runtime model validation must also enforce the JSON contract's collection bounds and normalise malformed input before walking it, so invalid publisher payloads fail safely instead of creating unbounded work or server errors.
+
+## 2026-07-13 — Comparison and export contracts need the same privacy boundary as the dashboard
+
+Adding a selector or CSV endpoint is not sufficient. Comparison dimensions must be controlled and minimum-size suppressed, custom periods must be bounded, and exports must be an explicit allow-list of aggregate metrics with query, model, schema, suppression and caveat provenance. Raw-event export should remain structurally unavailable rather than merely hidden in the interface.

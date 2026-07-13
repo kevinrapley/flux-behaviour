@@ -1,4 +1,11 @@
 records:
+  - id: CONF-024
+    rule: Dashboard comparisons and exports must be bounded, aggregate, privacy-thresholded and provenance-bearing
+    expected_evidence: Safe comparison dimensions suppress groups below five journeys; custom ranges are limited; authenticated CSV exports include query/model/schema provenance and exclude raw events and identifiers
+    actual_evidence: src/product/comparison-reports.mjs, src/product/aggregate-export.mjs, dashboard controls and focused tests implement four controlled comparison dimensions, 366-day custom range limits and allow-listed aggregate CSV with formula-injection protection and row-level provenance.
+    status: present-with-release-blockers
+    owner: product-lead
+
   - id: CONF-023
     rule: Transaction funnels and field reports must use configured order, explicit outcomes and privacy-safe aggregate evidence
     expected_evidence: Exact-version funnels expose starts, sequential steps, completion, abandonment and recovery with explicit denominators; fields expose required status, coverage, validation, dwell and safe length distributions without values

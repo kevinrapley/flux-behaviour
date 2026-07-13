@@ -60,6 +60,30 @@ test('dashboard range defaults to 30 days and creates a like-for-like comparison
   assert.equal(dashboardRange('all', now).previous_start_at_ms, null);
 });
 
+test('dashboard ranges include 24 hours, one year and a bounded custom date interval', () => {
+  const now = Date.parse('2026-07-13T12:00:00Z');
+  assert.equal(dashboardRange('24h', now).start_at_ms, now - 86400000);
+  assert.equal(dashboardRange('1y', now).start_at_ms, now - (365 * 86400000));
+
+  const custom = dashboardRange('custom', now, { start: '2026-06-01', end: '2026-06-30' });
+  assert.deepEqual(custom, {
+    key: 'custom',
+    label: '1 Jun 2026 to 30 Jun 2026',
+    start_at_ms: Date.parse('2026-06-01T00:00:00Z'),
+    end_at_ms: Date.parse('2026-07-01T00:00:00Z'),
+    previous_start_at_ms: Date.parse('2026-05-02T00:00:00Z'),
+    previous_end_at_ms: Date.parse('2026-06-01T00:00:00Z')
+  });
+});
+
+test('dashboard custom ranges reject invalid, future and overlong intervals', () => {
+  const now = Date.parse('2026-07-13T12:00:00Z');
+  assert.throws(() => dashboardRange('custom', now, { start: '2026-06-30', end: '2026-06-01' }), /invalid_dashboard_range/);
+  assert.throws(() => dashboardRange('custom', now, { start: '2026-02-31', end: '2026-03-01' }), /invalid_dashboard_range/);
+  assert.throws(() => dashboardRange('custom', now, { start: '2025-01-01', end: '2026-06-30' }), /dashboard_range_too_large/);
+  assert.throws(() => dashboardRange('custom', now, { start: '2026-07-14', end: '2026-07-15' }), /invalid_dashboard_range/);
+});
+
 test('overview metrics calculate cumulative visitor, retention and journey-health measures', () => {
   const result = buildOverviewMetrics(
     { visitor_count: 10, new_visitor_count: 7, returning_visitor_count: 4, session_count: 15, average_session_duration_ms: 43210.7 },
