@@ -56,7 +56,19 @@ evidence_records:
       - command: node --test tests/event-entity-reports.test.mjs tests/dashboard-event-entity-panels.test.mjs tests/funnel-field-reports.test.mjs tests/dashboard-funnel-field-panels.test.mjs
         state: verified
         status: passed
-        evidence: Fifteen event/entity and funnel/field model, real SQLite query, API integration and accessible dashboard tests passed after rebasing on the reviewed event-report branch.
+        evidence: Fifteen event/entity and funnel/field model, SQL orchestration, API integration and accessible dashboard tests passed after rebasing on the reviewed event-report branch.
+      - command: npx -y node@20 --test tests/funnel-field-reports.test.mjs tests/dashboard-funnel-field-panels.test.mjs
+        state: verified
+        status: passed
+        evidence: All 7 funnel/field tests passed on the repository's declared Node 20 baseline without importing node:sqlite.
+      - command: temporary Node 24 in-memory SQLite review fixture
+        state: verified
+        status: passed
+        evidence: Real report SQL excluded step 3 after an out-of-order step-2/step-1 sequence, counted a fully ordered journey, excluded success before field interaction, counted later recovery after friction despite an earlier success, and bucketed the latest shortened field length.
+      - command: npm test
+        state: verified
+        status: passed
+        evidence: All 262 repository tests passed after rebasing and Codex review remediation.
       - command: npm ci
         state: verified
         status: passed
@@ -77,6 +89,8 @@ evidence_records:
       - Independent step counts are not a funnel; each later step must follow all configured predecessors within the journey.
       - A missing field interaction after parent-step exposure is not sufficient evidence to claim that a visitor skipped the field.
       - Fixed aggregate distributions preserve useful dwell and length shape without returning entered values.
+      - Sequential funnel state must be recursive; independent prior-step existence checks do not preserve qualification.
+      - Success, recovery and repeat-field distributions require timestamp order rather than session-level existence or maximum values.
     security:
       - Reports remain within the authenticated tenant dashboard and every query is tenant, period, model-key and model-version scoped.
     privacy:

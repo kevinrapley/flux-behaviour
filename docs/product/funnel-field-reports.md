@@ -4,7 +4,7 @@ Flux turns the exact published service model and its frozen event-time context i
 
 ## Transaction funnels
 
-A journey starts a configured transaction when its first model-resolved event for that transaction occurs in the selected period. Steps follow the publisher-declared task and step order. A journey reaches a later step only when it has reached every preceding configured step in order.
+A journey starts a configured transaction when its first model-resolved event for that transaction occurs in the selected period. Steps follow the publisher-declared task and step order. A journey reaches a later step only when it has reached every preceding configured step in order; an out-of-order visit cannot qualify a later step unless the missing sequence is subsequently completed. Session activity used for abandonment comes from the collector's server timestamp rather than the browser occurrence clock.
 
 Each transaction reports:
 
@@ -13,7 +13,7 @@ Each transaction reports:
 - journeys still in progress;
 - abandonment after the session has been inactive for 30 minutes without a configured outcome;
 - journeys with explicit validation, repeated-click, revisit or help friction;
-- recovery when `error.recovered` or a configured success follows that friction;
+- recovery when `error.recovered` or any configured success follows that friction, including a later success after an earlier success in the same transaction;
 - median and 90th-percentile completion time;
 - ordered step reach and drop-off from the preceding step;
 - completion-rate movement against the previous comparable period.
@@ -31,12 +31,12 @@ Each configured field reports:
 - coverage and previous-period movement;
 - journeys with positive edit evidence;
 - explicit validation and required empty-field validation attempts;
-- later configured success in the same journey and transaction;
+- configured success occurring after the field interaction in the same journey and transaction;
 - aggregate Backspace/Delete corrections;
 - pre-input dwell buckets;
 - safe value-length buckets.
 
-The dwell buckets are under 1 second, 1–5, 5–15, 15–60 and 60 seconds or more. Length buckets are empty, 1–20, 21–100, 101–500 and more than 500 characters. Flux never returns entered values, words, fragments or per-journey field contents from these reports.
+The dwell buckets are under 1 second, 1–5, 5–15, 15–60 and 60 seconds or more. Length buckets are empty, 1–20, 21–100, 101–500 and more than 500 characters. When a field is blurred more than once, the dwell and length distribution uses its latest blur rather than the largest transient value. Flux never returns entered values, words, fragments or per-journey field contents from these reports.
 
 ## Interpretation limits
 

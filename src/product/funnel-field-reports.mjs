@@ -114,8 +114,8 @@ export async function dashboardFunnelFieldReports(db, {
   const hasComparison = previousStartAtMs !== null && previousStartAtMs !== undefined;
   const modelValues = [model.model_key, model.version];
   const [summaries, previousSummaries, steps, fields, previousFields] = await Promise.all([
-    query(db, funnelSql('current'), [tenantId, startAtMs, endAtMs, tenantId, startAtMs, endAtMs, ...modelValues, endAtMs - 1800000, endAtMs - 1800000]),
-    hasComparison ? query(db, funnelSql('previous'), [tenantId, previousStartAtMs, previousEndAtMs, tenantId, previousStartAtMs, previousEndAtMs, ...modelValues, previousEndAtMs - 1800000, previousEndAtMs - 1800000]) : Promise.resolve([]),
+    query(db, funnelSql('current'), [tenantId, startAtMs, endAtMs, ...modelValues, tenantId, endAtMs - 1800000, endAtMs - 1800000]),
+    hasComparison ? query(db, funnelSql('previous'), [tenantId, previousStartAtMs, previousEndAtMs, ...modelValues, tenantId, previousEndAtMs - 1800000, previousEndAtMs - 1800000]) : Promise.resolve([]),
     query(db, funnelStepsSql(), [tenantId, ...modelValues, tenantId, startAtMs, endAtMs, ...modelValues]),
     query(db, fieldsSql('current'), [tenantId, ...modelValues, tenantId, startAtMs, endAtMs, ...modelValues]),
     hasComparison ? query(db, fieldsSql('previous'), [tenantId, ...modelValues, tenantId, previousStartAtMs, previousEndAtMs, ...modelValues]) : Promise.resolve([])
@@ -133,25 +133,21 @@ async function query(db, sql, values) {
 
 function funnelSql(period) {
   return `/* report-funnels:${period} */
-    WITH period_session_activity AS (
-      SELECT session_id, MAX(occurred_at_ms) AS last_seen_at_ms
-      FROM events
-      WHERE tenant_id = ? AND occurred_at_ms >= ? AND occurred_at_ms < ?
-      GROUP BY session_id
-    ), transaction_events AS (
+    WITH transaction_events AS (
       SELECT e.session_id, esc.transaction_key, e.occurred_at_ms, e.action, esc.outcome_type
       FROM events e INNER JOIN event_service_contexts esc ON esc.event_id = e.id
       WHERE e.tenant_id = ? AND e.occurred_at_ms >= ? AND e.occurred_at_ms < ?
         AND esc.model_key = ? AND esc.model_version = ? AND esc.transaction_key IS NOT NULL
     ), session_transactions AS (
-      SELECT te.session_id, te.transaction_key, psa.last_seen_at_ms,
+      SELECT te.session_id, te.transaction_key, s.last_seen_at_ms,
         MIN(te.occurred_at_ms) AS started_at_ms,
         MIN(CASE WHEN te.outcome_type = 'success' THEN te.occurred_at_ms END) AS completed_at_ms,
+        MAX(CASE WHEN te.outcome_type = 'success' THEN te.occurred_at_ms END) AS last_success_at_ms,
         MAX(CASE WHEN te.outcome_type = 'failure' THEN 1 ELSE 0 END) AS has_failure,
         MIN(CASE WHEN te.action IN ('error.invalid', 'act.rage', 'field.revisit', 'assist.help') THEN te.occurred_at_ms END) AS friction_at_ms,
         MIN(CASE WHEN te.action = 'error.recovered' THEN te.occurred_at_ms END) AS recovery_at_ms
-      FROM transaction_events te INNER JOIN period_session_activity psa ON psa.session_id = te.session_id
-      GROUP BY te.session_id, te.transaction_key, psa.last_seen_at_ms
+      FROM transaction_events te INNER JOIN sessions s ON s.id = te.session_id AND s.tenant_id = ?
+      GROUP BY te.session_id, te.transaction_key, s.last_seen_at_ms
     ), completion_durations AS (
       SELECT transaction_key, completed_at_ms - started_at_ms AS duration_ms
       FROM session_transactions WHERE completed_at_ms IS NOT NULL
@@ -173,7 +169,7 @@ function funnelSql(period) {
       SUM(CASE WHEN st.last_seen_at_ms <= ? AND st.completed_at_ms IS NULL AND st.has_failure = 0 THEN 1 ELSE 0 END) AS abandoned_session_count,
       SUM(CASE WHEN st.last_seen_at_ms > ? AND st.completed_at_ms IS NULL AND st.has_failure = 0 THEN 1 ELSE 0 END) AS in_progress_session_count,
       SUM(CASE WHEN st.friction_at_ms IS NOT NULL THEN 1 ELSE 0 END) AS friction_session_count,
-      SUM(CASE WHEN st.friction_at_ms IS NOT NULL AND ((st.recovery_at_ms IS NOT NULL AND st.recovery_at_ms > st.friction_at_ms) OR (st.completed_at_ms IS NOT NULL AND st.completed_at_ms > st.friction_at_ms)) THEN 1 ELSE 0 END) AS recovered_session_count,
+      SUM(CASE WHEN st.friction_at_ms IS NOT NULL AND ((st.recovery_at_ms IS NOT NULL AND st.recovery_at_ms > st.friction_at_ms) OR (st.last_success_at_ms IS NOT NULL AND st.last_success_at_ms > st.friction_at_ms)) THEN 1 ELSE 0 END) AS recovered_session_count,
       ds.median_completion_ms, ds.p90_completion_ms
     FROM session_transactions st LEFT JOIN duration_stats ds ON ds.transaction_key = st.transaction_key
     GROUP BY st.transaction_key, ds.median_completion_ms, ds.p90_completion_ms`;
@@ -181,7 +177,7 @@ function funnelSql(period) {
 
 function funnelStepsSql() {
   return `/* report-funnel-steps:current */
-    WITH step_config AS (
+    WITH RECURSIVE step_config AS (
       SELECT txn.entity_key AS transaction_key, step.entity_key AS step_key,
         ROW_NUMBER() OVER (PARTITION BY txn.entity_key ORDER BY task.position, step.position, step.entity_key) AS funnel_position
       FROM service_model_entities step
@@ -190,26 +186,40 @@ function funnelStepsSql() {
       INNER JOIN service_model_entities txn
         ON txn.tenant_id = task.tenant_id AND txn.model_key = task.model_key AND txn.version = task.version AND txn.entity_key = task.parent_key
       WHERE step.tenant_id = ? AND step.model_key = ? AND step.version = ? AND step.entity_type = 'step'
-    ), session_steps AS (
-      SELECT e.session_id, esc.transaction_key, esc.step_key, MIN(e.occurred_at_ms) AS first_reached_at_ms
+    ), step_events AS (
+      SELECT e.session_id, esc.transaction_key, esc.step_key, e.occurred_at_ms, e.id
       FROM events e INNER JOIN event_service_contexts esc ON esc.event_id = e.id
       WHERE e.tenant_id = ? AND e.occurred_at_ms >= ? AND e.occurred_at_ms < ?
         AND esc.model_key = ? AND esc.model_version = ?
         AND esc.transaction_key IS NOT NULL AND esc.step_key IS NOT NULL
-      GROUP BY e.session_id, esc.transaction_key, esc.step_key
+    ), qualified_steps(transaction_key, session_id, funnel_position, step_key, qualified_at_ms, event_id) AS (
+      SELECT sc.transaction_key, se.session_id, sc.funnel_position, sc.step_key, se.occurred_at_ms, se.id
+      FROM step_config sc INNER JOIN step_events se
+        ON se.transaction_key = sc.transaction_key AND se.step_key = sc.step_key
+      WHERE sc.funnel_position = 1 AND NOT EXISTS (
+        SELECT 1 FROM step_events earlier
+        WHERE earlier.session_id = se.session_id AND earlier.transaction_key = se.transaction_key
+          AND earlier.step_key = se.step_key
+          AND (earlier.occurred_at_ms < se.occurred_at_ms OR (earlier.occurred_at_ms = se.occurred_at_ms AND earlier.id < se.id))
+      )
+      UNION ALL
+      SELECT sc.transaction_key, qualified.session_id, sc.funnel_position, sc.step_key, se.occurred_at_ms, se.id
+      FROM qualified_steps qualified
+      INNER JOIN step_config sc
+        ON sc.transaction_key = qualified.transaction_key AND sc.funnel_position = qualified.funnel_position + 1
+      INNER JOIN step_events se
+        ON se.session_id = qualified.session_id AND se.transaction_key = sc.transaction_key AND se.step_key = sc.step_key
+        AND (se.occurred_at_ms > qualified.qualified_at_ms OR (se.occurred_at_ms = qualified.qualified_at_ms AND se.id > qualified.event_id))
+      WHERE NOT EXISTS (
+        SELECT 1 FROM step_events earlier
+        WHERE earlier.session_id = se.session_id AND earlier.transaction_key = se.transaction_key AND earlier.step_key = se.step_key
+          AND (earlier.occurred_at_ms > qualified.qualified_at_ms OR (earlier.occurred_at_ms = qualified.qualified_at_ms AND earlier.id > qualified.event_id))
+          AND (earlier.occurred_at_ms < se.occurred_at_ms OR (earlier.occurred_at_ms = se.occurred_at_ms AND earlier.id < se.id))
+      )
     )
-    SELECT sc.transaction_key, sc.step_key,
-      COUNT(DISTINCT CASE WHEN NOT EXISTS (
-        SELECT 1 FROM step_config prior
-        WHERE prior.transaction_key = sc.transaction_key AND prior.funnel_position < sc.funnel_position
-          AND NOT EXISTS (
-            SELECT 1 FROM session_steps reached
-            WHERE reached.session_id = ss.session_id AND reached.transaction_key = prior.transaction_key
-              AND reached.step_key = prior.step_key AND reached.first_reached_at_ms <= ss.first_reached_at_ms
-          )
-      ) THEN ss.session_id END) AS session_count
-    FROM step_config sc LEFT JOIN session_steps ss
-      ON ss.transaction_key = sc.transaction_key AND ss.step_key = sc.step_key
+    SELECT sc.transaction_key, sc.step_key, COUNT(DISTINCT qualified.session_id) AS session_count
+    FROM step_config sc LEFT JOIN qualified_steps qualified
+      ON qualified.transaction_key = sc.transaction_key AND qualified.step_key = sc.step_key
     GROUP BY sc.transaction_key, sc.step_key, sc.funnel_position`;
 }
 
@@ -229,22 +239,30 @@ function fieldsSql(period) {
         ON txn.tenant_id = task.tenant_id AND txn.model_key = task.model_key AND txn.version = task.version AND txn.entity_key = task.parent_key
       WHERE f.tenant_id = ? AND f.model_key = ? AND f.version = ? AND f.entity_type = 'field'
     ), contextual_events AS (
-      SELECT e.session_id, e.action, e.metadata_json, esc.transaction_key, esc.step_key, esc.field_key, esc.outcome_type
+      SELECT e.id, e.session_id, e.occurred_at_ms, e.action, e.metadata_json, esc.transaction_key, esc.step_key, esc.field_key, esc.outcome_type
       FROM events e INNER JOIN event_service_contexts esc ON esc.event_id = e.id
       WHERE e.tenant_id = ? AND e.occurred_at_ms >= ? AND e.occurred_at_ms < ?
         AND esc.model_key = ? AND esc.model_version = ?
     ), step_sessions AS (
       SELECT DISTINCT step_key, session_id FROM contextual_events WHERE step_key IS NOT NULL
     ), transaction_successes AS (
-      SELECT DISTINCT transaction_key, session_id FROM contextual_events WHERE outcome_type = 'success'
+      SELECT transaction_key, session_id, MAX(occurred_at_ms) AS success_at_ms
+      FROM contextual_events WHERE outcome_type = 'success' GROUP BY transaction_key, session_id
+    ), latest_field_blurs AS (
+      SELECT field_key, session_id, dwell_ms, value_length FROM (
+        SELECT field_key, session_id,
+          CAST(json_extract(metadata_json, '$.dwell_before_input_ms') AS INTEGER) AS dwell_ms,
+          CAST(json_extract(metadata_json, '$.value_length') AS INTEGER) AS value_length,
+          ROW_NUMBER() OVER (PARTITION BY field_key, session_id ORDER BY occurred_at_ms DESC, id DESC) AS blur_rank
+        FROM contextual_events WHERE field_key IS NOT NULL AND action = 'field.blur'
+      ) WHERE blur_rank = 1
     ), field_sessions AS (
       SELECT field_key, session_id,
+        MIN(occurred_at_ms) AS first_interacted_at_ms,
         MAX(CASE WHEN action = 'field.blur' AND (COALESCE(CAST(json_extract(metadata_json, '$.key_press_count') AS INTEGER), 0) > 0 OR COALESCE(CAST(json_extract(metadata_json, '$.edit_count') AS INTEGER), 0) > 0 OR COALESCE(CAST(json_extract(metadata_json, '$.paste_count') AS INTEGER), 0) > 0) THEN 1 ELSE 0 END) AS edited,
         MAX(CASE WHEN action = 'error.invalid' THEN 1 ELSE 0 END) AS validation,
         MAX(CASE WHEN action = 'error.invalid' AND json_extract(metadata_json, '$.reason') = 'empty_field' THEN 1 ELSE 0 END) AS required_skip_attempt,
-        SUM(CASE WHEN action = 'field.blur' THEN COALESCE(CAST(json_extract(metadata_json, '$.backspace_count') AS INTEGER), 0) ELSE 0 END) AS correction_count,
-        MAX(CASE WHEN action = 'field.blur' THEN CAST(json_extract(metadata_json, '$.dwell_before_input_ms') AS INTEGER) END) AS dwell_ms,
-        MAX(CASE WHEN action = 'field.blur' THEN CAST(json_extract(metadata_json, '$.value_length') AS INTEGER) END) AS value_length
+        SUM(CASE WHEN action = 'field.blur' THEN COALESCE(CAST(json_extract(metadata_json, '$.backspace_count') AS INTEGER), 0) ELSE 0 END) AS correction_count
       FROM contextual_events WHERE field_key IS NOT NULL GROUP BY field_key, session_id
     )
     SELECT fc.field_key, fc.label, fc.required, fc.complexity,
@@ -253,21 +271,22 @@ function fieldsSql(period) {
       COALESCE(SUM(fs.edited), 0) AS edited_session_count,
       COALESCE(SUM(fs.validation), 0) AS validation_session_count,
       COALESCE(SUM(CASE WHEN fc.required = 1 THEN fs.required_skip_attempt ELSE 0 END), 0) AS required_skip_attempt_session_count,
-      COUNT(DISTINCT CASE WHEN ts.session_id IS NOT NULL AND fs.session_id IS NOT NULL THEN fs.session_id END) AS successful_outcome_session_count,
+      COUNT(DISTINCT CASE WHEN ts.success_at_ms > fs.first_interacted_at_ms THEN fs.session_id END) AS successful_outcome_session_count,
       COALESCE(SUM(fs.correction_count), 0) AS correction_count,
-      COALESCE(SUM(CASE WHEN fs.dwell_ms < 1000 THEN 1 ELSE 0 END), 0) AS dwell_under_1s,
-      COALESCE(SUM(CASE WHEN fs.dwell_ms >= 1000 AND fs.dwell_ms < 5000 THEN 1 ELSE 0 END), 0) AS dwell_1_5s,
-      COALESCE(SUM(CASE WHEN fs.dwell_ms >= 5000 AND fs.dwell_ms < 15000 THEN 1 ELSE 0 END), 0) AS dwell_5_15s,
-      COALESCE(SUM(CASE WHEN fs.dwell_ms >= 15000 AND fs.dwell_ms < 60000 THEN 1 ELSE 0 END), 0) AS dwell_15_60s,
-      COALESCE(SUM(CASE WHEN fs.dwell_ms >= 60000 THEN 1 ELSE 0 END), 0) AS dwell_over_60s,
-      COALESCE(SUM(CASE WHEN fs.value_length = 0 THEN 1 ELSE 0 END), 0) AS length_empty,
-      COALESCE(SUM(CASE WHEN fs.value_length BETWEEN 1 AND 20 THEN 1 ELSE 0 END), 0) AS length_1_20,
-      COALESCE(SUM(CASE WHEN fs.value_length BETWEEN 21 AND 100 THEN 1 ELSE 0 END), 0) AS length_21_100,
-      COALESCE(SUM(CASE WHEN fs.value_length BETWEEN 101 AND 500 THEN 1 ELSE 0 END), 0) AS length_101_500,
-      COALESCE(SUM(CASE WHEN fs.value_length > 500 THEN 1 ELSE 0 END), 0) AS length_over_500
+      COALESCE(SUM(CASE WHEN latest.dwell_ms < 1000 THEN 1 ELSE 0 END), 0) AS dwell_under_1s,
+      COALESCE(SUM(CASE WHEN latest.dwell_ms >= 1000 AND latest.dwell_ms < 5000 THEN 1 ELSE 0 END), 0) AS dwell_1_5s,
+      COALESCE(SUM(CASE WHEN latest.dwell_ms >= 5000 AND latest.dwell_ms < 15000 THEN 1 ELSE 0 END), 0) AS dwell_5_15s,
+      COALESCE(SUM(CASE WHEN latest.dwell_ms >= 15000 AND latest.dwell_ms < 60000 THEN 1 ELSE 0 END), 0) AS dwell_15_60s,
+      COALESCE(SUM(CASE WHEN latest.dwell_ms >= 60000 THEN 1 ELSE 0 END), 0) AS dwell_over_60s,
+      COALESCE(SUM(CASE WHEN latest.value_length = 0 THEN 1 ELSE 0 END), 0) AS length_empty,
+      COALESCE(SUM(CASE WHEN latest.value_length BETWEEN 1 AND 20 THEN 1 ELSE 0 END), 0) AS length_1_20,
+      COALESCE(SUM(CASE WHEN latest.value_length BETWEEN 21 AND 100 THEN 1 ELSE 0 END), 0) AS length_21_100,
+      COALESCE(SUM(CASE WHEN latest.value_length BETWEEN 101 AND 500 THEN 1 ELSE 0 END), 0) AS length_101_500,
+      COALESCE(SUM(CASE WHEN latest.value_length > 500 THEN 1 ELSE 0 END), 0) AS length_over_500
     FROM field_config fc
     LEFT JOIN step_sessions ss ON ss.step_key = fc.step_key
     LEFT JOIN field_sessions fs ON fs.field_key = fc.field_key AND fs.session_id = ss.session_id
+    LEFT JOIN latest_field_blurs latest ON latest.field_key = fc.field_key AND latest.session_id = ss.session_id
     LEFT JOIN transaction_successes ts ON ts.transaction_key = fc.transaction_key AND ts.session_id = ss.session_id
     GROUP BY fc.field_key, fc.label, fc.required, fc.complexity`;
 }

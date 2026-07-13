@@ -1,7 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { DatabaseSync } from 'node:sqlite';
 
 import { buildFieldReport, buildFunnelReport, dashboardFunnelFieldReports } from '../src/product/funnel-field-reports.mjs';
 
@@ -124,57 +123,16 @@ test('queries exact-version funnels and field coverage for current and previous 
   assert.ok(calls.every(({ values }) => values.includes('model.example') && values.includes(4)));
   assert.ok(calls.some(({ sql, values }) => sql.includes('report-funnels:current') && values.includes(2000 - 1800000)));
   const funnelQuery = calls.find(({ sql }) => sql.includes('report-funnels:current'));
-  assert.match(funnelQuery.sql, /period_session_activity/);
-  assert.doesNotMatch(funnelQuery.sql, /INNER JOIN sessions/);
-  assert.deepEqual(funnelQuery.values.slice(0, 6), ['researchops', 1000, 2000, 'researchops', 1000, 2000]);
+  assert.match(funnelQuery.sql, /INNER JOIN sessions/);
+  assert.match(funnelQuery.sql, /last_success_at_ms/);
+  assert.deepEqual(funnelQuery.values.slice(0, 6), ['researchops', 1000, 2000, 'model.example', 4, 'researchops']);
+  const stepQuery = calls.find(({ sql }) => sql.includes('report-funnel-steps:current'));
+  assert.match(stepQuery.sql, /WITH RECURSIVE/);
+  assert.match(stepQuery.sql, /qualified_steps/);
+  const fieldQuery = calls.find(({ sql }) => sql.includes('report-fields:current'));
+  assert.match(fieldQuery.sql, /success_at_ms > fs\.first_interacted_at_ms/);
+  assert.match(fieldQuery.sql, /ROW_NUMBER\(\) OVER \(PARTITION BY field_key, session_id ORDER BY occurred_at_ms DESC, id DESC\)/);
   assert.deepEqual(calls.find(({ sql }) => sql.includes('report-funnel-steps:current')).values, ['researchops', 'model.example', 4, 'researchops', 1000, 2000, 'model.example', 4]);
-});
-
-test('executes funnel and field reports against SQLite with ordered progress and safe field buckets', async () => {
-  const sqlite = new DatabaseSync(':memory:');
-  sqlite.exec(`
-    CREATE TABLE sessions (id TEXT PRIMARY KEY, last_seen_at_ms INTEGER);
-    CREATE TABLE events (id TEXT PRIMARY KEY, tenant_id TEXT, session_id TEXT, occurred_at_ms INTEGER, action TEXT, metadata_json TEXT);
-    CREATE TABLE event_service_contexts (event_id TEXT PRIMARY KEY, model_key TEXT, model_version INTEGER, transaction_key TEXT, step_key TEXT, field_key TEXT, outcome_type TEXT);
-    CREATE TABLE service_model_entities (tenant_id TEXT, model_key TEXT, version INTEGER, entity_key TEXT, entity_type TEXT, label TEXT, parent_key TEXT, position INTEGER, complexity INTEGER, required INTEGER);
-    INSERT INTO service_model_entities VALUES ('researchops', 'model.example', 4, 'service.example', 'service', 'Example', NULL, 1, NULL, NULL);
-    INSERT INTO service_model_entities VALUES ('researchops', 'model.example', 4, 'transaction.apply', 'transaction', 'Apply', 'service.example', 1, NULL, NULL);
-    INSERT INTO service_model_entities VALUES ('researchops', 'model.example', 4, 'task.details', 'task', 'Provide details', 'transaction.apply', 1, NULL, NULL);
-    INSERT INTO service_model_entities VALUES ('researchops', 'model.example', 4, 'step.start', 'step', 'Start application', 'task.details', 1, NULL, NULL);
-    INSERT INTO service_model_entities VALUES ('researchops', 'model.example', 4, 'question.objective', 'question', 'Objective', 'step.start', 1, 5, NULL);
-    INSERT INTO service_model_entities VALUES ('researchops', 'model.example', 4, 'field.objective', 'field', 'Objective editor', 'question.objective', 1, NULL, 1);
-    INSERT INTO sessions VALUES ('session-1', 1300);
-    INSERT INTO events VALUES ('field-event', 'researchops', 'session-1', 1100, 'field.blur', '{"key_press_count":20,"edit_count":1,"backspace_count":3,"dwell_before_input_ms":2400,"value_length":42}');
-    INSERT INTO events VALUES ('success-event', 'researchops', 'session-1', 1200, 'flow.submit', NULL);
-    INSERT INTO event_service_contexts VALUES ('field-event', 'model.example', 4, 'transaction.apply', 'step.start', 'field.objective', NULL);
-    INSERT INTO event_service_contexts VALUES ('success-event', 'model.example', 4, 'transaction.apply', 'step.start', NULL, 'success');
-  `);
-  const db = {
-    prepare(sql) {
-      let values = [];
-      return {
-        bind(...nextValues) { values = nextValues; return this; },
-        async all() { return { results: sqlite.prepare(sql).all(...values) }; }
-      };
-    }
-  };
-  const reports = await dashboardFunnelFieldReports(db, {
-    tenantId: 'researchops',
-    model: { ...model, model_key: 'model.example', version: 4 },
-    startAtMs: 1000,
-    endAtMs: 2000,
-    previousStartAtMs: null,
-    previousEndAtMs: null
-  });
-
-  assert.equal(reports.funnels.transactions[0].completion_rate, 100);
-  assert.equal(reports.funnels.transactions[0].steps[0].session_count, 1);
-  assert.equal(reports.fields.fields[0].coverage_rate, 100);
-  assert.equal(reports.fields.fields[0].successful_outcome_rate, 100);
-  assert.equal(reports.fields.fields[0].correction_count, 3);
-  assert.equal(reports.fields.fields[0].dwell_distribution.from_1_to_5s, 1);
-  assert.equal(reports.fields.fields[0].length_distribution.from_21_to_100, 1);
-  sqlite.close();
 });
 
 test('builds privacy-safe field coverage, validation, dwell and length distributions', () => {
