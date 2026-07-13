@@ -228,3 +228,20 @@ test('requires bounded semantic tenant and model keys', () => {
   assert.ok(result.errors.some(({ code }) => code === 'invalid_tenant_id'));
   assert.ok(result.errors.some(({ code }) => code === 'invalid_model_key'));
 });
+
+test('keeps outcome and key-event identifiers within the JSON contract bounds', () => {
+  const model = validModel();
+  model.outcomes[0].key = `outcome.${'x'.repeat(121)}`;
+  model.key_events[0].key = 'x';
+  model.key_events[0].action = `action.${'x'.repeat(121)}`;
+  model.key_events[0].element_key = `form.${'x'.repeat(161)}`;
+
+  const result = validateServiceModel(model);
+  const codes = result.errors.map(({ code }) => code);
+
+  assert.equal(result.valid, false);
+  assert.ok(codes.includes('invalid_outcome_key'));
+  assert.ok(codes.includes('invalid_key_event_key'));
+  assert.ok(codes.includes('invalid_key_event_action'));
+  assert.ok(codes.includes('invalid_element_key'));
+});

@@ -1,0 +1,119 @@
+evidence_records:
+  - task_id: flux-behaviour-publisher-service-model
+    mode: repo-build
+    repository: kevinrapley/flux-behaviour
+    risk_level: high
+    base_branch: feature/behaviour-model-gap-analysis
+    working_branch: feature/publisher-service-model
+    files_read:
+      - README.md
+      - AGENTS.md
+      - RECENT_LEARNINGS.md
+      - CONTRIBUTING.md
+      - SECURITY.md
+      - repository-contract.yaml
+      - github-settings.yaml
+      - conformance-matrix.yaml
+      - gap-register.yaml
+      - harm-register.yaml
+      - docs/product/behaviour-model-dashboard-gap-analysis.md
+      - docs/product/production-runtime.md
+      - docs/instrumentation/tag-integration.md
+      - src/product/router.mjs
+      - src/product/journey-cohorts.mjs
+      - src/dashboard/live-dashboard.mjs
+      - demo/templates/pages/dashboard.njk
+    files_changed:
+      - contracts/models/flux-service-model.schema.json
+      - config/models/researchops.v1.json
+      - migrations/0003_publisher_service_model.sql
+      - migrations/0004_seed_researchops_service_model.sql
+      - scripts/generate-service-model-seed.mjs
+      - src/model/service-model.mjs
+      - src/model/service-model-store.mjs
+      - src/model/service-model-summary.mjs
+      - src/product/router.mjs
+      - src/product/journey-cohorts.mjs
+      - src/dashboard/live-dashboard.mjs
+      - demo/templates/pages/dashboard.njk
+      - demo/styles/demo.scss
+      - tests/service-model.test.mjs
+      - tests/service-model-contract.test.mjs
+      - tests/service-model-migration.test.mjs
+      - tests/service-model-store.test.mjs
+      - tests/service-model-route.test.mjs
+      - tests/service-model-collection.test.mjs
+      - tests/service-model-summary.test.mjs
+      - tests/researchops-service-model.test.mjs
+      - tests/dashboard-service-model-panel.test.mjs
+      - tests/dashboard-cohort-query.test.mjs
+      - tests/journey-cohorts.test.mjs
+      - docs/product/publisher-service-model.md
+      - docs/product/production-runtime.md
+      - docs/instrumentation/tag-integration.md
+      - RECENT_LEARNINGS.md
+      - agent-evidence.yaml
+      - conformance-matrix.yaml
+      - gap-register.yaml
+      - harm-register.yaml
+    promotion_decisions:
+      - Require a complete service hierarchy, outcomes and key events before publication instead of allowing generic-submit completion inference.
+      - Freeze the exact published model version and resolved hierarchy beside each accepted event.
+      - Seed the initial ResearchOps model deterministically from governed JSON rather than embedding analytics logic in ResearchOps.
+      - Keep funnels and field-coverage reports open in GAP-013 instead of overstating this implementation slice.
+    commands_run:
+      - command: node --test tests/service-model*.test.mjs tests/researchops-service-model.test.mjs tests/dashboard-service-model-panel.test.mjs
+        state: verified
+        status: passed
+        evidence: All 35 focused service-model tests passed before the completion-proxy and responsive-table additions.
+      - command: npm test
+        state: verified
+        status: passed
+        evidence: All 236 repository tests passed after configured-outcome completion, contract-bound identifier checks and exact service-model routing replaced generic submit inference.
+      - command: npx wrangler d1 migrations apply flux-behaviour --local --persist-to /tmp/flux-service-model.uzKvZR --config wrangler.toml
+        state: verified
+        status: passed
+        evidence: Migrations 0001 through 0004 applied successfully to a fresh local D1 persistence directory.
+      - command: npx wrangler d1 execute flux-behaviour --local --persist-to /tmp/flux-service-model.uzKvZR --config wrangler.toml --command SELECT-counts
+        state: verified
+        status: passed
+        evidence: Fresh D1 contained 38 entities, 43 bindings, 8 outcomes, 15 key events and one published model.
+      - command: npm run demo:build
+        state: verified
+        status: passed
+        evidence: Dashboard source, styles and generated assets rebuilt successfully.
+      - command: frontend visual verification at 1440x900 and 390x844
+        state: verified
+        status: passed
+        evidence: Populated and error states rendered; key-event disclosure opened; two outcome rows rendered without sentinel values; mobile page width remained 390px while the 560px table scrolled inside a 360px region.
+      - command: npm run validate
+        state: verified
+        status: passed
+        evidence: Repository governance file check passed for 19 files.
+      - command: npm run security:secrets
+        state: verified
+        status: passed
+        evidence: Secret pattern sanity scan passed.
+      - command: git diff --check
+        state: verified
+        status: passed
+        evidence: No whitespace errors were reported.
+      - command: ruby YAML safe-load for governed records
+        state: verified
+        status: passed
+        evidence: Agent evidence, conformance, gap and harm YAML records parsed successfully.
+    recent_learnings:
+      - Completion is a configured transaction outcome, not a generic form submission.
+      - Wide aggregate tables need a contained scroll region at mobile breakpoints.
+    security:
+      - Publication is owner-only, tenant-scoped, immutable by version and protected by authenticated dashboard sessions.
+      - Model keys and labels are bounded; unknown properties, URLs, email-like labels and ambiguous event matches are rejected.
+    privacy:
+      - The service model contains service configuration only and never visitor identity, page content or entered values.
+      - Event-time context stores controlled hierarchy and outcome keys only; no raw-event export was added.
+    accessibility:
+      - The model and outcome evidence uses semantic headings, details and tables.
+      - Desktop and mobile rendered states were checked; the wide outcome table scrolls within its region without causing page-level horizontal overflow.
+    risks:
+      - The initial ResearchOps model is incomplete until every required transaction and field is inventoried.
+      - Funnel, field-coverage and broader report APIs remain governed gaps and release blockers.

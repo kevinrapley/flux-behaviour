@@ -141,3 +141,13 @@ test('publisher route reports a conflict instead of overwriting an existing vers
   assert.equal(response.status, 409);
   assert.deepEqual(await response.json(), { ok: false, error: 'service_model_version_exists' });
 });
+
+test('service-model routes reject extra path segments instead of treating them as a tenant identifier', async () => {
+  const response = await handleProductRequest(
+    new Request('https://flux-behaviour.pages.dev/api/service-model/researchops/private'),
+    { FLUX_DB: {}, FLUX_AUTH_SECRET: 'test-secret' }
+  );
+
+  assert.equal(response.status, 404);
+  assert.deepEqual(await response.json(), { ok: false, error: 'not_found' });
+});

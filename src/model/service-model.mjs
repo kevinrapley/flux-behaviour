@@ -33,7 +33,7 @@ export function validateServiceModel(model) {
     const path = `entities[${index}]`;
     for (const key of Object.keys(entity ?? {})) if (!ENTITY_PROPERTIES.has(key)) addError('unknown_property', `${path}.${key}`);
     if (!ENTITY_TYPES.has(entity?.type)) addError('invalid_entity_type', `${path}.type`);
-    if (typeof entity?.key !== 'string' || entity.key.length > 120 || !SEMANTIC_KEY.test(entity.key)) addError('invalid_entity_key', `${path}.key`);
+    if (!semanticKey(entity?.key, 120)) addError('invalid_entity_key', `${path}.key`);
     if (typeof entity?.label !== 'string' || entity.label.trim().length === 0 || entity.label.length > 120) addError('invalid_label', `${path}.label`);
     if (typeof entity?.label === 'string' && (entity.label.includes('@') || /https?:|[\r\n]/i.test(entity.label))) addError('unsafe_label', `${path}.label`);
     if (!Number.isInteger(entity?.position) || entity.position < 1 || entity.position > 10000) addError('invalid_position', `${path}.position`);
@@ -58,7 +58,7 @@ export function validateServiceModel(model) {
   for (const [index, binding] of (model?.bindings ?? []).entries()) {
     const path = `bindings[${index}]`;
     for (const key of Object.keys(binding ?? {})) if (!BINDING_PROPERTIES.has(key)) addError('unknown_property', `${path}.${key}`);
-    if (typeof binding?.element_key !== 'string' || binding.element_key.length > 160 || !SEMANTIC_KEY.test(binding.element_key)) {
+    if (!semanticKey(binding?.element_key, 160)) {
       addError('invalid_element_key', `${path}.element_key`);
     }
     if (boundElementKeys.has(binding?.element_key)) addError('duplicate_element_binding', `${path}.element_key`);
@@ -69,7 +69,7 @@ export function validateServiceModel(model) {
   for (const [index, outcome] of (model?.outcomes ?? []).entries()) {
     const path = `outcomes[${index}]`;
     for (const key of Object.keys(outcome ?? {})) if (!OUTCOME_PROPERTIES.has(key)) addError('unknown_property', `${path}.${key}`);
-    if (typeof outcome?.key !== 'string' || !SEMANTIC_KEY.test(outcome.key)) addError('invalid_outcome_key', `${path}.key`);
+    if (!semanticKey(outcome?.key, 120)) addError('invalid_outcome_key', `${path}.key`);
     if (outcomesByKey.has(outcome?.key)) addError('duplicate_outcome_key', `${path}.key`);
     else outcomesByKey.set(outcome?.key, outcome);
     if (!safeLabel(outcome?.label)) addError('invalid_label', `${path}.label`);
@@ -81,12 +81,12 @@ export function validateServiceModel(model) {
   for (const [index, keyEvent] of (model?.key_events ?? []).entries()) {
     const path = `key_events[${index}]`;
     for (const key of Object.keys(keyEvent ?? {})) if (!KEY_EVENT_PROPERTIES.has(key)) addError('unknown_property', `${path}.${key}`);
-    if (typeof keyEvent?.key !== 'string' || !SEMANTIC_KEY.test(keyEvent.key)) addError('invalid_key_event_key', `${path}.key`);
+    if (!semanticKey(keyEvent?.key, 120)) addError('invalid_key_event_key', `${path}.key`);
     if (keyEventKeys.has(keyEvent?.key)) addError('duplicate_key_event_key', `${path}.key`);
     else keyEventKeys.add(keyEvent?.key);
     if (!safeLabel(keyEvent?.label)) addError('invalid_label', `${path}.label`);
-    if (typeof keyEvent?.action !== 'string' || !SEMANTIC_KEY.test(keyEvent.action)) addError('invalid_key_event_action', `${path}.action`);
-    if (typeof keyEvent?.element_key !== 'string' || !SEMANTIC_KEY.test(keyEvent.element_key)) addError('invalid_element_key', `${path}.element_key`);
+    if (!semanticKey(keyEvent?.action, 120)) addError('invalid_key_event_action', `${path}.action`);
+    if (!semanticKey(keyEvent?.element_key, 160)) addError('invalid_element_key', `${path}.element_key`);
     if (!boundElementKeys.has(keyEvent?.element_key)) addError('unresolved_key_event_binding', `${path}.element_key`);
     const matchKey = `${keyEvent?.action}\u0000${keyEvent?.element_key}`;
     if (keyEventMatches.has(matchKey)) addError('duplicate_key_event_match', path);

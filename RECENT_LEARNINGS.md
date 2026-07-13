@@ -1,5 +1,9 @@
 # Recent Learnings
 
+## 2026-07-13 — Completion is a configured outcome, not a submit event
+
+A submit records an interaction, not whether the service achieved its purpose. Bind an exact action and semantic element to a publisher-declared transaction outcome, freeze that model version beside the event, and calculate completion only from configured success outcomes. This prevents failed, progress-only and unrelated submissions from becoming false success evidence.
+
 ## 2026-07-13 — Public source registers must not contain private Drive access material
 
 Use descriptive source labels in public roadmap and evidence files. Keep Google document IDs, file IDs, resource keys and other link-access material in the product owner's private provenance record unless publication is explicitly approved.

@@ -39,7 +39,7 @@ harms:
       - Users under stress
     likelihood: medium
     severity: high
-    mitigation: Lead with cumulative service-level evidence, keep pseudonymous journey detail behind an intentional drill-down, hide visitor identifiers, use neutral values for unsupported indicators, and retain plain-English copy that frames every score as service-improvement evidence rather than a user classification.
+    mitigation: Lead with cumulative service-level evidence, derive completion only from publisher-configured success outcomes rather than generic submits, keep pseudonymous journey detail behind an intentional drill-down, hide visitor identifiers, use neutral values for unsupported indicators, and retain plain-English copy that frames every score as service-improvement evidence rather than a user classification.
     residual_risk: medium
     owner: governance-lead
     escalation_route: Product owner and ethics reviewer

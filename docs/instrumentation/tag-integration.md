@@ -52,6 +52,8 @@ Contract version 1.2.0 adds richer interaction metadata and autocomplete milesto
 
 The hosted auto-capture module also owns the 30-minute inactivity boundary, final-destination Tab context, Enter/Return activation, browser-autocomplete signals, purpose-led structural fallbacks and the on-device UK-English analyser. Ordinary autofill emits only the semantic field key. Excluded sensitive autofill emits only an allow-listed category (`email`, `password`, `one-time-code`, `telephone`, `payment` or `other`) with no value, length or identity. Publishers provide the hosted include and controlled `data-flux-*` attributes; they do not copy the analytics engine, dictionary or narrative logic into their service repositories.
 
+Those controlled semantic keys are bound centrally in Flux's publisher service model. Services do not embed hierarchy, complexity, outcome interpretation or analytics queries in their own repositories. An interaction becomes a key event only when its exact action and semantic element match a published Flux configuration; a generic form submit is never assumed to be success.
+
 Every event is built against the published event contract (`contracts/events/flux-event.schema.json`) and validated locally before transport:
 
 - fields outside the optional metadata allowlist are stripped before validation, so typed values, free text and identifiers cannot leave the page

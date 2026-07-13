@@ -2,12 +2,12 @@ gaps:
   - id: GAP-013
     title: Publisher-declared service model is missing
     severity: high
-    observed_state: Flux stores semantic event keys but has no versioned definitions for transactions, tasks, steps, questions, fields, required status, complexity or configured outcomes.
+    observed_state: Flux now publishes and persists a validated versioned service hierarchy with required status, question and transaction complexity, semantic bindings, configured outcomes and key events; event-time model context and selected-period mapping/outcome evidence are implemented. Funnel and field-coverage reports are not yet implemented.
     expected_state: Tenant owners can publish a validated, versioned, non-identifying service model that events resolve against and aggregate reports use consistently.
     risk: Funnels, field coverage, complexity-adjusted effort and outcome analysis remain unreliable or impossible.
     action: Deliver MODEL-01 through MODEL-05 from docs/product/behaviour-model-dashboard-gap-analysis.md before expanding inference.
     owner: product-lead
-    status: open
+    status: in-progress
 
   - id: GAP-014
     title: Dashboard lacks mature analytics report breadth

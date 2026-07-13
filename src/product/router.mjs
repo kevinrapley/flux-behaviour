@@ -25,25 +25,24 @@ export async function handleProductRequest(request, env) {
   if (path === '/api/collect' && request.method === 'POST') return collect(request, env);
   if (path === '/api/auth/google/start' && request.method === 'GET') return startGoogleSignIn(request, env);
   if (path === '/api/auth/google/callback' && request.method === 'GET') return completeGoogleSignIn(request, env);
-  if (path.startsWith('/api/service-model/') && request.method === 'PUT') return publishTenantServiceModel(request, env, path);
-  if (path.startsWith('/api/service-model/') && request.method === 'GET') return readTenantServiceModel(request, env, path);
+  const serviceModelRoute = path.match(/^\/api\/service-model\/([a-z][a-z0-9._-]{2,119})$/);
+  if (serviceModelRoute && request.method === 'PUT') return publishTenantServiceModel(request, env, serviceModelRoute[1]);
+  if (serviceModelRoute && request.method === 'GET') return readTenantServiceModel(request, env, serviceModelRoute[1]);
   if (path.startsWith('/api/dashboard/researchops/session/') && request.method === 'GET') return sessionHistory(request, env, path);
   if (path === '/api/dashboard/researchops' && request.method === 'GET') return dashboard(request, env);
   return json({ ok: false, error: 'not_found' }, 404);
 }
 
-async function readTenantServiceModel(request, env, path) {
+async function readTenantServiceModel(request, env, tenantId) {
   const accountId = await authenticatedAccountId(request, env);
   if (!accountId) return json({ ok: false, error: 'unauthorised' }, 401);
-  const tenantId = decodeURIComponent(path.slice('/api/service-model/'.length));
   const result = await readPublishedServiceModel(env.FLUX_DB, accountId, tenantId);
   return json(result, result.ok ? 200 : result.error === 'forbidden' ? 403 : result.error === 'service_model_not_found' ? 404 : 500);
 }
 
-async function publishTenantServiceModel(request, env, path) {
+async function publishTenantServiceModel(request, env, tenantId) {
   const accountId = await authenticatedAccountId(request, env);
   if (!accountId) return json({ ok: false, error: 'unauthorised' }, 401);
-  const tenantId = decodeURIComponent(path.slice('/api/service-model/'.length));
   const model = await safeJson(request);
   if (!model || model.tenant_id !== tenantId) return json({ ok: false, error: 'invalid_service_model' }, 400);
   const result = await publishServiceModel(env.FLUX_DB, accountId, model);
