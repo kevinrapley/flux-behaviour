@@ -100,7 +100,7 @@ gaps:
   - id: GAP-004
     title: Cloudflare Worker adapter lacks production deployment controls
     severity: high
-    observed_state: Wrangler Pages configuration and the D1 storage binding exist, and the collector enforces origin, preflight, method, header, request-size and schema boundaries. Production rate limiting, retention/deletion policy, incident controls and operational monitoring are not evidenced.
+    observed_state: Wrangler Pages configuration and the D1 storage binding exist, the collector enforces origin, preflight, method, header, request-size and schema boundaries, and generated seed migrations exclude remote-D1-incompatible SQL transaction control. Production rate limiting, retention/deletion policy, incident controls and operational monitoring are not evidenced.
     expected_state: Deployment controls, request limits, CORS policy and retention decisions are reviewed before any public route is exposed.
     risk: A collector boundary could be exposed before operational safeguards are complete.
     action: Review the live Cloudflare deployment posture and implement production rate limiting, retention/deletion, incident and operational-monitoring controls before general availability.

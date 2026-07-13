@@ -194,3 +194,7 @@ Event-time context deliberately preserves historical model versions. Dashboard q
 ## 2026-07-13 — Comparison and export contracts need the same privacy boundary as the dashboard
 
 Adding a selector or CSV endpoint is not sufficient. Comparison dimensions must be controlled and minimum-size suppressed, custom periods must be bounded, and exports must be an explicit allow-list of aggregate metrics with query, model, schema, suppression and caveat provenance. Raw-event export should remain structurally unavailable rather than merely hidden in the interface.
+
+## 2026-07-13 — D1 migration rehearsal must match remote transaction constraints
+
+Local D1 accepted explicit `BEGIN TRANSACTION` and `COMMIT` statements that remote D1 rejected. Generated seed migrations must rely on Wrangler's migration-level atomicity, and regression checks must reject explicit SQL transaction control before a production migration is attempted.

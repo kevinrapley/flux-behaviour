@@ -44,3 +44,9 @@ test('checked-in ResearchOps seed migration is generated exactly from the govern
     rmSync(directory, { recursive: true, force: true });
   }
 });
+
+test('generated D1 seed migrations do not contain explicit SQL transactions', () => {
+  const migration = readFileSync('migrations/0004_seed_researchops_service_model.sql', 'utf8');
+
+  assert.doesNotMatch(migration, /\b(?:BEGIN(?:\s+TRANSACTION)?|COMMIT|SAVEPOINT)\b/i);
+});
