@@ -1,0 +1,99 @@
+evidence_records:
+  - task_id: flux-behaviour-event-entity-reports
+    mode: repo-build
+    repository: kevinrapley/flux-behaviour
+    risk_level: high
+    base_branch: feature/realtime-dashboard
+    working_branch: feature/event-entity-reports
+    files_read:
+      - README.md
+      - AGENTS.md
+      - RECENT_LEARNINGS.md
+      - CONTRIBUTING.md
+      - SECURITY.md
+      - repository-contract.yaml
+      - github-settings.yaml
+      - conformance-matrix.yaml
+      - gap-register.yaml
+      - harm-register.yaml
+      - docs/product/behaviour-model-dashboard-gap-analysis.md
+      - docs/product/publisher-service-model.md
+      - docs/product/production-runtime.md
+      - src/product/router.mjs
+      - src/dashboard/live-dashboard.mjs
+      - demo/templates/pages/dashboard.njk
+      - demo/templates/pages/journey.njk
+      - migrations/0001_flux_behaviour.sql
+      - migrations/0003_publisher_service_model.sql
+    files_changed:
+      - migrations/0006_event_entity_reports.sql
+      - src/product/event-entity-reports.mjs
+      - src/product/router.mjs
+      - src/dashboard/live-dashboard.mjs
+      - demo/templates/pages/dashboard.njk
+      - demo/styles/demo.scss
+      - public/assets/flux/dashboard/live-dashboard.mjs
+      - public/assets/styles/demo.css
+      - public/dashboard/index.html
+      - tests/event-entity-reports.test.mjs
+      - tests/event-entity-report-migration.test.mjs
+      - tests/dashboard-event-entity-panels.test.mjs
+      - tests/service-model-summary.test.mjs
+      - docs/product/event-entity-reports.md
+      - docs/product/production-runtime.md
+      - RECENT_LEARNINGS.md
+      - agent-evidence.yaml
+      - conformance-matrix.yaml
+      - gap-register.yaml
+      - harm-register.yaml
+    promotion_decisions:
+      - Attribute configured evidence only to the exact currently published model key and version.
+      - Use event-active journeys in the selected occurrence-time window as the report-rate denominator.
+      - Roll frozen event context through service ancestors rather than reinterpreting publisher markup in the dashboard.
+      - Keep entity elapsed time explicitly distinct from dwell and leave distributions and uncertainty open under DASH-05.
+      - Attribute configured success to reached entities through the same journey and transaction, not only when the success event is bound directly to that entity.
+      - Preserve an explicit no-comparison state for all-time reports rather than treating an absent previous period as zero activity.
+    commands_run:
+      - command: node --test tests/event-entity-reports.test.mjs tests/event-entity-report-migration.test.mjs tests/dashboard-event-entity-panels.test.mjs
+        state: verified
+        status: passed
+        evidence: Focused report model, SQL orchestration, migration, API integration and accessible panel tests passed.
+      - command: npm ci
+        state: verified
+        status: passed
+        evidence: Installed 60 locked packages; npm reported zero vulnerabilities.
+      - command: npm run demo:build
+        state: verified
+        status: passed
+        evidence: Rebuilt dashboard source, styles and generated assets successfully.
+      - command: npm test
+        state: verified
+        status: passed
+        evidence: All 253 repository tests passed, including a real SQLite downstream-success attribution test and all-time comparison semantics.
+      - command: SQLite integration with migrations 0001 through 0005, ResearchOps model and one contextual event
+        state: verified
+        status: passed
+        evidence: Real report SQL returned the expected event, configured key event, mapped element and transaction evidence.
+      - command: npx wrangler d1 migrations apply flux-behaviour --local --persist-to fresh-report-directory --config wrangler.toml
+        state: verified
+        status: passed
+        evidence: Migrations 0001 through 0006 applied to a fresh local D1 database and event_service_contexts_by_model_period_lookup was queried successfully.
+      - command: frontend visual verification at 1440x1000 and 390x844
+        state: verified
+        status: passed
+        evidence: Populated and empty event/entity reports rendered; details interactions worked; mobile page width stayed 390px while 900px report tables scrolled inside 360px regions; no sentinel values, overlaps or console warnings were found.
+    recent_learnings:
+      - Event occurrence reports need an event-active journey denominator rather than sessions that started in the period.
+      - Generated journey output had the production tenant attribute while its template source did not; the source was corrected so a normal build preserves tenant routing.
+      - A lower-level field or question needs transaction-scoped outcome attribution because the configured success milestone is commonly bound to its enclosing form or step.
+    security:
+      - Reports remain behind the authenticated tenant dashboard route and all queries are tenant, period, model-key and model-version scoped.
+      - The reporting index contains controlled model keys and event IDs only.
+    privacy:
+      - Responses contain aggregate counts, controlled service labels and bounded timings; no visitor/session identifiers, entered values, narratives or raw-event export are added.
+    accessibility:
+      - Event trends have a plain-language image summary and complete semantic data table.
+      - All report categories use native details controls and semantic tables with contained horizontal scrolling on mobile.
+    risks:
+      - Dedicated field coverage, funnels, distributions, uncertainty and export provenance remain release-blocking work.
+      - Small samples are visible as sample sizes but formal suppression and confidence treatment is not yet implemented.

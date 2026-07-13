@@ -15,6 +15,7 @@ import { publishServiceModel, readPublishedServiceModel, resolvePublishedService
 import { summariseServiceModel } from '../model/service-model-summary.mjs';
 import { validateServiceModel } from '../model/service-model.mjs';
 import { buildRealtimeSnapshot } from './realtime-analytics.mjs';
+import { dashboardEventEntityReports } from './event-entity-reports.mjs';
 
 const HEADERS = { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' };
 
@@ -174,10 +175,12 @@ async function dashboard(request, env) {
   const events = await env.FLUX_DB.prepare("SELECT session_id, event_class, action, role, element_key, metadata_json, narrative, occurred_at_ms FROM (SELECT e.session_id, e.event_class, e.action, e.role, e.element_key, e.metadata_json, e.narrative, e.occurred_at_ms FROM events e WHERE e.tenant_id = 'researchops' AND e.session_id IN (SELECT id FROM sessions WHERE tenant_id = 'researchops' AND started_at_ms >= ? AND started_at_ms < ? ORDER BY started_at_ms DESC LIMIT 12) ORDER BY e.occurred_at_ms DESC LIMIT 500) ORDER BY occurred_at_ms ASC").bind(period.start_at_ms, period.end_at_ms).all();
   const presentedEvents = presentJourneyEvents(events.results ?? []);
   const journeys = groupJourneys(sessions.results, presentedEvents).map((journey) => ({ ...journey, dimension_scores: scoreSessionDimensions(journey.events) }));
-  const [cohorts, serviceModel, realtime] = await Promise.all([
+  const publishedModel = await dashboardPublishedServiceModel(env, 'researchops');
+  const [cohorts, serviceModel, realtime, reports] = await Promise.all([
     dashboardCohorts(env, period.start_at_ms, period.end_at_ms, overview.session_count),
-    dashboardServiceModel(env, 'researchops', period.start_at_ms, period.end_at_ms),
-    dashboardRealtime(env, 'researchops')
+    dashboardServiceModel(env, 'researchops', period.start_at_ms, period.end_at_ms, publishedModel),
+    dashboardRealtime(env, 'researchops'),
+    dashboardReports(env, 'researchops', period, overview.session_count, publishedModel)
   ]);
   return json({
     ok: true,
@@ -192,9 +195,37 @@ async function dashboard(request, env) {
       actions: actions.results ?? [],
       cohorts,
       realtime,
-      service_model: serviceModel
+      service_model: serviceModel,
+      event_report: reports.events,
+      entity_report: reports.entities
     }
   });
+}
+
+export async function dashboardReports(env, tenantId, period, selectedSessionCount, suppliedModel) {
+  const model = suppliedModel ?? await dashboardPublishedServiceModel(env, tenantId);
+  if (!model) return { events: null, entities: null };
+  return dashboardEventEntityReports(env.FLUX_DB, {
+    tenantId,
+    model,
+    selectedSessionCount,
+    startAtMs: period.start_at_ms,
+    endAtMs: period.end_at_ms,
+    previousStartAtMs: period.previous_start_at_ms,
+    previousEndAtMs: period.previous_end_at_ms
+  });
+}
+
+async function dashboardPublishedServiceModel(env, tenantId) {
+  const published = await env.FLUX_DB.prepare("SELECT model_json FROM service_model_versions WHERE tenant_id = ? AND status = 'published'").bind(tenantId).first();
+  if (!published?.model_json) return null;
+  let model;
+  try {
+    model = JSON.parse(published.model_json);
+  } catch {
+    return null;
+  }
+  return validateServiceModel(model).valid ? model : null;
 }
 
 export async function dashboardRealtime(env, tenantId, now = Date.now()) {
@@ -234,16 +265,9 @@ export async function dashboardCohorts(env, startAtMs, endAtMs, selectedSessionC
   };
 }
 
-export async function dashboardServiceModel(env, tenantId, startAtMs, endAtMs) {
-  const published = await env.FLUX_DB.prepare("SELECT model_json FROM service_model_versions WHERE tenant_id = ? AND status = 'published'").bind(tenantId).first();
-  if (!published?.model_json) return null;
-  let model;
-  try {
-    model = JSON.parse(published.model_json);
-  } catch {
-    return null;
-  }
-  if (!validateServiceModel(model).valid) return null;
+export async function dashboardServiceModel(env, tenantId, startAtMs, endAtMs, suppliedModel) {
+  const model = suppliedModel ?? await dashboardPublishedServiceModel(env, tenantId);
+  if (!model) return null;
   const [coverage, keyEvents] = await Promise.all([
     env.FLUX_DB.prepare(`SELECT
       SUM(CASE WHEN esc.event_id IS NULL OR (esc.model_key = ? AND esc.model_version = ?) THEN 1 ELSE 0 END) AS event_count,
