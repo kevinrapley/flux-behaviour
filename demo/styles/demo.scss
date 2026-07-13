@@ -491,6 +491,76 @@
 	min-width: 900px;
 }
 
+.flux-funnel {
+	border-top: 1px solid var(--flux-border);
+	padding: 24px 0 8px;
+}
+
+.flux-funnel:first-child {
+	border-top: 0;
+	padding-top: 0;
+}
+
+.flux-funnel__metrics {
+	display: grid;
+	gap: 12px;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	margin: 0 0 16px;
+}
+
+.flux-funnel__metric {
+	background: var(--flux-surface);
+	padding: 14px;
+}
+
+.flux-funnel__metric-label,
+.flux-funnel__metric-context {
+	color: var(--flux-muted);
+	font-size: 14px;
+	line-height: 1.3;
+	margin: 0;
+}
+
+.flux-funnel__metric-value {
+	font-size: 28px;
+	font-weight: 700;
+	line-height: 1.1;
+	margin: 4px 0 6px;
+}
+
+.flux-funnel__steps {
+	max-width: 100%;
+	overflow-x: auto;
+	-webkit-overflow-scrolling: touch;
+}
+
+.flux-field-report__table {
+	max-width: 100%;
+	overflow-x: auto;
+	-webkit-overflow-scrolling: touch;
+}
+
+.flux-funnel__steps .govuk-table {
+	min-width: 620px;
+}
+
+.flux-field-report__table .govuk-table {
+	min-width: 1200px;
+}
+
+.flux-field-distributions__grid {
+	display: grid;
+	gap: 24px;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 700px) {
+	.flux-funnel__metrics,
+	.flux-field-distributions__grid {
+		grid-template-columns: 1fr;
+	}
+}
+
 .flux-event-trend {
 	display: flex;
 	align-items: flex-end;

@@ -45,4 +45,4 @@ The dashboard reports the published version, configured entity/binding/outcome/k
 
 Publisher key events must also be possible under the event contract: action keys are capped at 80 characters, element keys at 120, and the reserved `auth.otp` element accepts only the requested, succeeded and failed OTP lifecycle actions. The initial ResearchOps model deliberately leaves global email autocomplete unbound because that content-free category can occur in more than one transaction. It also omits stakeholder-submit success until ResearchOps exposes a neutral post-success milestone that remains observable when the form contains a sensitive email field.
 
-Funnels, field coverage and broader entity reports remain tracked in GAP-013 and GAP-014.
+Exact-version entity, ordered transaction-funnel and privacy-safe field-coverage reports are implemented. Completing the ResearchOps publisher model, configurable comparisons, uncertainty, exports and the target dashboard information architecture remain tracked in GAP-013 and GAP-014.

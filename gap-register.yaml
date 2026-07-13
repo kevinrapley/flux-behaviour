@@ -2,9 +2,9 @@ gaps:
   - id: GAP-013
     title: Publisher-declared service model is missing
     severity: high
-    observed_state: Flux now publishes and persists a validated versioned service hierarchy with required status, question and transaction complexity, semantic bindings, configured outcomes and key events; event-time model context, selected-period mapping/outcome evidence and transaction/task/step/question/field performance are implemented. Funnels and dedicated field-coverage reports are not yet implemented.
+    observed_state: Flux now publishes and persists a validated versioned service hierarchy with required status, question and transaction complexity, semantic bindings, configured outcomes and key events; event-time model context, selected-period mapping/outcome evidence, entity performance, publisher-ordered funnels and dedicated privacy-safe field coverage are implemented. The ResearchOps model remains an initial rather than complete service inventory.
     expected_state: Tenant owners can publish a validated, versioned, non-identifying service model that events resolve against and aggregate reports use consistently.
-    risk: Funnels, field coverage, complexity-adjusted effort and outcome analysis remain unreliable or impossible.
+    risk: Unmodelled ResearchOps transactions and fields remain absent from otherwise configured reporting, and complexity-adjusted interpretation remains incomplete.
     action: Deliver MODEL-01 through MODEL-05 from docs/product/behaviour-model-dashboard-gap-analysis.md before expanding inference.
     owner: product-lead
     status: in-progress
@@ -12,7 +12,7 @@ gaps:
   - id: GAP-014
     title: Dashboard lacks mature analytics report breadth
     severity: high
-    observed_state: The dashboard provides period overview, daily audience trend, aggregate 5/30-minute realtime activity with ingestion freshness, ranked events and key events, semantic page/form/control evidence, transaction/task/step/question/field performance, health summaries, cohorts, indicators and journey histories. Dedicated field, funnel, custom-comparison, distribution/uncertainty, export and target information-architecture reports remain incomplete.
+    observed_state: The dashboard provides period overview, daily audience trend, aggregate 5/30-minute realtime activity with ingestion freshness, ranked events and key events, semantic page/form/control evidence, transaction/task/step/question/field performance, ordered funnels, dedicated field coverage with safe distributions, health summaries, cohorts, indicators and journey histories. Configurable comparison, broader uncertainty, export/provenance and target information-architecture reports remain incomplete.
     expected_state: The target information architecture and P1 dashboard reports in the source-grounded gap analysis are implemented with shared filters, accessible tables and provenance.
     risk: Teams can inspect individual journeys but cannot reliably locate systemic friction, compare changes or prioritise service action.
     action: Deliver DASH-02 through DASH-06 and the DASH-10 information architecture after the service model foundation; retain DASH-01 realtime privacy and freshness regression evidence.

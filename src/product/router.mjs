@@ -16,6 +16,7 @@ import { summariseServiceModel } from '../model/service-model-summary.mjs';
 import { validateServiceModel } from '../model/service-model.mjs';
 import { buildRealtimeSnapshot } from './realtime-analytics.mjs';
 import { dashboardEventEntityReports } from './event-entity-reports.mjs';
+import { dashboardFunnelFieldReports } from './funnel-field-reports.mjs';
 
 const HEADERS = { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' };
 
@@ -197,23 +198,29 @@ async function dashboard(request, env) {
       realtime,
       service_model: serviceModel,
       event_report: reports.events,
-      entity_report: reports.entities
+      entity_report: reports.entities,
+      funnel_report: reports.funnels,
+      field_report: reports.fields
     }
   });
 }
 
 export async function dashboardReports(env, tenantId, period, selectedSessionCount, suppliedModel) {
   const model = suppliedModel ?? await dashboardPublishedServiceModel(env, tenantId);
-  if (!model) return { events: null, entities: null };
-  return dashboardEventEntityReports(env.FLUX_DB, {
+  if (!model) return { events: null, entities: null, funnels: null, fields: null };
+  const parameters = {
     tenantId,
     model,
-    selectedSessionCount,
     startAtMs: period.start_at_ms,
     endAtMs: period.end_at_ms,
     previousStartAtMs: period.previous_start_at_ms,
     previousEndAtMs: period.previous_end_at_ms
-  });
+  };
+  const [eventEntity, funnelField] = await Promise.all([
+    dashboardEventEntityReports(env.FLUX_DB, { ...parameters, selectedSessionCount }),
+    dashboardFunnelFieldReports(env.FLUX_DB, parameters)
+  ]);
+  return { ...eventEntity, ...funnelField };
 }
 
 async function dashboardPublishedServiceModel(env, tenantId) {
