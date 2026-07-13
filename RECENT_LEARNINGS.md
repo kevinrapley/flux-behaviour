@@ -1,5 +1,9 @@
 # Recent Learnings
 
+## 2026-07-13 — A report catalogue needs navigation and an uncertainty contract
+
+Adding panels to one long page does not create a usable analytics information architecture. Give each report family a stable URL-backed area and preserve shared filters across native links. Point rates also need their numerator, denominator and a bounded interval, but statistical intervals must not be described as correcting missing collection, repeated observations, selection effects or model error. Keep those limitations—and controls with no denominator—visible in the governance area.
+
 ## 2026-07-13 — Global categories and retired model context need explicit boundaries
 
 A content-free autocomplete category such as `autocomplete.email` is global, not proof that the visitor is in a sign-in field, so it must not be bound to a transaction-specific model entity without contextual capture. Publisher key events also need event-contract validation: syntactically valid but uncollectable action/element pairs create silent outcome gaps. When a model version changes, exclude retired-version context from current mapping coverage and report it separately from genuinely unmapped events.
