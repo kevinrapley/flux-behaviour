@@ -19,7 +19,7 @@ Live means the latest accepted interaction is at most two minutes old. Delayed m
 
 Migration `0005_event_ingestion_time.sql` adds indexed `accepted_at_ms` server time. The collector writes it from its own clock when an event is accepted. This is distinct from `occurred_at_ms`, which describes the browser-reported interaction time and is unsuitable for measuring pipeline freshness.
 
-Existing rows are backfilled from occurrence time so the column is queryable after migration. That historical fallback is not evidence of actual server latency; freshness becomes authoritative only for events accepted after this migration.
+Existing rows remain null because browser occurrence time must never be presented as server acceptance evidence. Realtime freshness becomes available only for events accepted after this migration. Both the aggregate count and minute series begin at the first rendered minute bucket, and a quiet 30-minute window reports no data rather than treating an older historical event as an ingestion failure. Session activity uses a dedicated tenant-and-server-activity index.
 
 ## Privacy boundary
 

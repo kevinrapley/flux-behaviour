@@ -199,11 +199,12 @@ async function dashboard(request, env) {
 
 export async function dashboardRealtime(env, tenantId, now = Date.now()) {
   const fiveMinutesAgo = now - (5 * 60000);
-  const thirtyMinutesAgo = now - (30 * 60000);
+  const currentMinute = Math.floor(now / 60000) * 60000;
+  const thirtyMinutesAgo = currentMinute - (29 * 60000);
   const [sessions, events, latest, minutes] = await Promise.all([
     env.FLUX_DB.prepare('SELECT COUNT(DISTINCT CASE WHEN last_seen_at_ms >= ? THEN id END) AS active_sessions_5m, COUNT(DISTINCT id) AS active_sessions_30m FROM sessions WHERE tenant_id = ? AND last_seen_at_ms >= ? AND last_seen_at_ms <= ?').bind(fiveMinutesAgo, tenantId, thirtyMinutesAgo, now).first(),
     env.FLUX_DB.prepare('SELECT COUNT(CASE WHEN accepted_at_ms >= ? THEN 1 END) AS interactions_5m, COUNT(*) AS interactions_30m FROM events WHERE tenant_id = ? AND accepted_at_ms >= ? AND accepted_at_ms <= ?').bind(fiveMinutesAgo, tenantId, thirtyMinutesAgo, now).first(),
-    env.FLUX_DB.prepare('SELECT MAX(accepted_at_ms) AS latest_accepted_at_ms FROM events WHERE tenant_id = ? AND accepted_at_ms <= ?').bind(tenantId, now).first(),
+    env.FLUX_DB.prepare('SELECT MAX(accepted_at_ms) AS latest_accepted_at_ms FROM events WHERE tenant_id = ? AND accepted_at_ms >= ? AND accepted_at_ms <= ?').bind(tenantId, thirtyMinutesAgo, now).first(),
     env.FLUX_DB.prepare('SELECT CAST(accepted_at_ms / 60000 AS INTEGER) * 60000 AS minute_start_ms, COUNT(*) AS interaction_count FROM events WHERE tenant_id = ? AND accepted_at_ms >= ? AND accepted_at_ms <= ? GROUP BY minute_start_ms ORDER BY minute_start_ms ASC').bind(tenantId, thirtyMinutesAgo, now).all()
   ]);
   return buildRealtimeSnapshot({ sessions, events: { ...events, ...latest }, minutes: minutes.results ?? [] }, now);

@@ -47,8 +47,23 @@ evidence_records:
     promotion_decisions:
       - Measure ingestion freshness from server acceptance time rather than browser occurrence time.
       - Expose aggregate 5/30-minute activity and zero-filled minute buckets without identity, geography or live journey snapshots.
-      - Keep older backfilled occurrence times explicitly non-authoritative for historical ingestion latency.
+      - Leave pre-migration acceptance time null rather than copying untrusted browser occurrence time.
+      - Align aggregate counts and the series to the first rendered minute bucket.
+      - Limit freshness to the realtime window so quiet periods report no data.
+      - Index tenant session activity for bounded active-session queries.
     commands_run:
+      - command: node --test tests/realtime-analytics.test.mjs tests/realtime-route.test.mjs tests/realtime-migration.test.mjs tests/dashboard-realtime-panel.test.mjs
+        state: verified
+        status: passed
+        evidence: All 7 focused review-remediation tests passed, including quiet-window no-data, aligned series bounds, null historical acceptance and session-activity indexing.
+      - command: npm test
+        state: verified
+        status: passed
+        evidence: All 247 repository tests passed after rebasing on the remediated publisher model and addressing Codex review.
+      - command: npx wrangler d1 migrations apply flux-behaviour --local --persist-to fresh-review-directory --config wrangler.toml
+        state: verified
+        status: passed
+        evidence: Migrations 0001 through 0005 applied successfully to a fresh local D1 database.
       - command: npm ci
         state: verified
         status: passed
