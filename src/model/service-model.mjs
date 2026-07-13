@@ -25,8 +25,8 @@ export function validateServiceModel(model) {
   if (!Number.isInteger(model?.version) || model.version < 1) addError('invalid_version', 'version');
   if (!Array.isArray(model?.entities) || model.entities.length === 0) addError('missing_entities', 'entities');
   if (!Array.isArray(model?.bindings)) addError('invalid_bindings', 'bindings');
-  if (!Array.isArray(model?.outcomes) || model.outcomes.length === 0) addError('missing_outcomes', 'outcomes');
-  if (!Array.isArray(model?.key_events) || model.key_events.length === 0) addError('missing_key_events', 'key_events');
+  if (!Array.isArray(model?.outcomes)) addError('invalid_outcomes', 'outcomes');
+  if (!Array.isArray(model?.key_events)) addError('invalid_key_events', 'key_events');
   if (Array.isArray(model?.entities) && model.entities.length > 5000) addError('too_many_entities', 'entities');
   if (Array.isArray(model?.bindings) && model.bindings.length > 10000) addError('too_many_bindings', 'bindings');
   if (Array.isArray(model?.outcomes) && model.outcomes.length > 1000) addError('too_many_outcomes', 'outcomes');

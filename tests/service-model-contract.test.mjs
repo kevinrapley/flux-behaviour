@@ -28,3 +28,10 @@ test('publisher service model contract fixes hierarchy, complexity and privacy-s
   assert.deepEqual(schema.properties.outcomes.items.properties.type.enum, ['success', 'failure', 'progress', 'abandonment']);
   assert.deepEqual(schema.properties.key_events.items.required, ['key', 'label', 'action', 'element_key', 'outcome_key']);
 });
+
+test('publisher service model permits a tenant owner to begin with no configured funnels', () => {
+  const schema = JSON.parse(readFileSync('contracts/models/flux-service-model.schema.json', 'utf8'));
+
+  assert.equal(schema.properties.outcomes.minItems, undefined);
+  assert.equal(schema.properties.key_events.minItems, undefined);
+});

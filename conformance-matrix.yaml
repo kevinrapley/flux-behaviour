@@ -1,4 +1,11 @@
 records:
+  - id: CONF-028
+    rule: Tasks and funnels must be tenant-owner configuration rather than product-hardcoded service definitions
+    expected_evidence: An authenticated owner can create, edit, reorder and delete funnels, tasks, exact-key steps and success events; every save publishes an immutable validated next version and viewers remain read-only
+    actual_evidence: src/dashboard/task-funnel-configuration.mjs, src/dashboard/task-funnel-manager.mjs, the Tasks and funnels dashboard surface, the generic service-model API and focused tests implement owner-managed versioned configuration with stable keys, cascade deletion and conflict rejection.
+    status: present-with-release-blockers
+    owner: product-lead
+
   - id: CONF-027
     rule: Model and dashboard completion claims must be reconciled requirement by requirement against current repository and release evidence
     expected_evidence: All 25 source-grounded roadmap rows have one explicit state, authoritative evidence and a residual gap/release boundary; stale implementation claims are corrected

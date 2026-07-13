@@ -109,7 +109,7 @@ test('authorised tenant account can read the currently published service model',
   );
 
   assert.equal(response.status, 200);
-  assert.deepEqual(await response.json(), { ok: true, model, manifest_hash: 'sha256-value' });
+  assert.deepEqual(await response.json(), { ok: true, model, manifest_hash: 'sha256-value', role: 'viewer' });
 });
 
 test('publisher route returns forbidden for a tenant viewer', async () => {

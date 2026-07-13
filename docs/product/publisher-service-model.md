@@ -14,6 +14,8 @@ Flux resolves consented interaction events against a publisher-declared model so
 - transaction outcomes classified as success, failure, progress or abandonment;
 - action-and-element-specific key events that resolve to those outcomes.
 
+A service-only model with no transactions, outcomes or key events is valid while a new owner configures the tenant. Generic submits still never become completion evidence merely because no success event has been configured.
+
 Labels and keys are bounded and content-safe. The runtime validator enforces the same collection limits as the JSON contract: 5,000 entities, 10,000 bindings, 1,000 outcomes and 2,000 key events. It rejects malformed collection items, URLs, email-like labels, multiline text, unknown properties, unresolved hierarchy references, duplicate bindings, ambiguous key-event matches and key events whose configured outcome belongs to another transaction. It contains service configuration only—never visitor identifiers, entered values or page content.
 
 ## Publication and immutability
@@ -21,6 +23,19 @@ Labels and keys are bounded and content-safe. The runtime validator enforces the
 Tenant owners publish a model with `PUT /api/service-model/:tenant`. Authenticated tenant members can read the published version with `GET /api/service-model/:tenant`.
 
 Publication validates the complete model, calculates a canonical SHA-256 manifest hash, retires the previous published version and atomically stores the new immutable version. Existing version numbers cannot be overwritten. An invalid model at rest is not used by the dashboard or collector.
+
+## Owner configuration workflow
+
+The **Tasks and funnels** dashboard area provides the authenticated authoring workflow. Tenant owners can:
+
+- create, rename, reorder and delete funnels;
+- create, rename, reorder and delete tasks within a funnel;
+- create, rename, reorder and delete steps, each bound to an exact publisher `data-flux-key`;
+- create, edit and delete success events from an exact Flux action and `data-flux-key` pair.
+
+Labels can change without changing stable entity, outcome or key-event keys. Deleting a funnel removes its dependent tasks, steps, bindings and outcomes from the next model version; deleting a task or step removes only its dependent hierarchy and event bindings. Viewers see the published structure but cannot edit it, and the publication API repeats the owner check rather than relying on hidden controls. A version conflict is rejected instead of overwriting another owner's publication.
+
+Every saved action publishes the complete next model version. Newly accepted events use that version; historical event context remains attached to the version that was active at collection time. The editor is tenant-generic: ResearchOps supplies the current tenant model and semantic attributes, while Flux owns authoring, validation, versioning and interpretation.
 
 ## Event-time resolution
 

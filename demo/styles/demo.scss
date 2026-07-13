@@ -625,6 +625,122 @@
 	min-width: 900px;
 }
 
+.flux-model-manager__disclosure {
+	margin-bottom: 0;
+}
+
+.flux-model-manager__disclosure .govuk-details__text {
+	padding-bottom: 0;
+}
+
+.flux-model-manager__actions {
+	align-items: center;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.flux-model-manager__actions .govuk-button {
+	margin-bottom: 0;
+}
+
+.flux-model-manager__actions--item {
+	justify-content: end;
+}
+
+.flux-model-manager__version,
+.flux-model-manager__key {
+	color: var(--flux-muted);
+}
+
+.flux-model-manager__key {
+	font-family: monospace;
+	margin: 4px 0 0;
+	overflow-wrap: anywhere;
+}
+
+.flux-model-manager__form {
+	background: var(--flux-surface);
+	border-left: 5px solid var(--flux-blue);
+	margin: 20px 0;
+	padding: 20px;
+}
+
+.flux-model-manager__form .govuk-form-group:last-of-type {
+	margin-bottom: 20px;
+}
+
+.flux-model-manager__funnels {
+	margin-top: 24px;
+}
+
+.flux-model-manager__funnel {
+	border-top: 4px solid var(--flux-blue-dark);
+	margin-top: 28px;
+	padding-top: 20px;
+}
+
+.flux-model-manager__item-heading,
+.flux-model-manager__subheading,
+.flux-model-manager__success,
+.flux-model-manager__step {
+	align-items: start;
+	display: flex;
+	gap: 16px;
+	justify-content: space-between;
+}
+
+.flux-model-manager__item-heading .govuk-heading-m,
+.flux-model-manager__item-heading .govuk-heading-s,
+.flux-model-manager__subheading .govuk-heading-s {
+	margin-bottom: 0;
+}
+
+.flux-model-manager__subheading {
+	align-items: center;
+	border-top: 1px solid var(--flux-border);
+	margin-top: 18px;
+	padding-top: 16px;
+}
+
+.flux-model-manager__task {
+	background: var(--flux-surface);
+	border-left: 4px solid var(--flux-blue);
+	margin-top: 14px;
+	padding: 16px;
+}
+
+.flux-model-manager__success,
+.flux-model-manager__step {
+	border-bottom: 1px solid var(--flux-border);
+	padding: 12px 0;
+}
+
+.flux-model-manager__steps {
+	margin-bottom: 12px;
+}
+
+.flux-model-manager__warning,
+.flux-model-manager__error,
+.flux-model-manager__success-message {
+	border-left: 5px solid #ffdd00;
+	padding: 12px 15px;
+}
+
+.flux-model-manager__error {
+	border-left-color: var(--flux-red);
+}
+
+.flux-model-manager__success-message {
+	background: #e9f5ee;
+	border-left-color: var(--flux-green);
+}
+
+.flux-model-manager__empty {
+	background: var(--flux-surface);
+	padding: 20px;
+}
+
 .flux-funnel {
 	border-top: 1px solid var(--flux-border);
 	padding: 24px 0 8px;
@@ -689,6 +805,17 @@
 }
 
 @media (max-width: 700px) {
+	.flux-model-manager__item-heading,
+	.flux-model-manager__subheading,
+	.flux-model-manager__success,
+	.flux-model-manager__step {
+		flex-direction: column;
+	}
+
+	.flux-model-manager__actions {
+		justify-content: start;
+	}
+
 	.flux-funnel__metrics,
 	.flux-field-distributions__grid {
 		grid-template-columns: 1fr;
