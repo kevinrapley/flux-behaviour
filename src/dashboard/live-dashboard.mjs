@@ -784,7 +784,7 @@ function renderLifecycle(data) {
   const recency = data.recency ?? {};
   const frequency = data.frequency ?? {};
   for (const [label, value, note] of [
-    ['Typical return interval', recency.available ? formatDuration(recency.median_interval_ms) : 'Suppressed', recency.available ? `90th percentile ${formatDuration(recency.p90_interval_ms)} · ${numberFormat.format(recency.returning_journey_count)} repeat journeys` : `${numberFormat.format(recency.suppressed_journey_count ?? 0)} repeat journeys; at least 5 are required`],
+    ['Typical return interval', recency.available ? formatLifecycleInterval(recency.median_interval_ms) : 'Suppressed', recency.available ? `90th percentile ${formatLifecycleInterval(recency.p90_interval_ms)} · ${numberFormat.format(recency.returning_journey_count)} repeat journeys` : `${numberFormat.format(recency.suppressed_journey_count ?? 0)} repeat journeys; at least 5 are required`],
     ['Journeys per visitor', frequency.available ? formatDecimal(frequency.average_journeys) : 'Suppressed', frequency.available ? `${numberFormat.format(frequency.repeat_visitor_count)} of ${numberFormat.format(frequency.visitor_count)} visitors had more than one journey in the selected period` : `${numberFormat.format(frequency.visitor_count ?? 0)} visitors; at least 5 are required`]
   ]) {
     const row = document.createElement('div');
@@ -1024,6 +1024,18 @@ function formatDuration(value) {
   const minutes = Math.floor(seconds / 60);
   const remainder = Math.round(seconds % 60);
   return `${minutes}m ${remainder}s`;
+}
+
+function formatLifecycleInterval(value) {
+  const milliseconds = Math.max(0, Number(value) || 0);
+  if (milliseconds < 86400000) return formatDuration(milliseconds);
+  let days = Math.floor(milliseconds / 86400000);
+  let hours = Math.round((milliseconds % 86400000) / 3600000);
+  if (hours === 24) {
+    days += 1;
+    hours = 0;
+  }
+  return `${numberFormat.format(days)} day${days === 1 ? '' : 's'}${hours ? ` ${numberFormat.format(hours)}h` : ''}`;
 }
 
 function formatChangePoints(value, comparisonAvailable = true) {
