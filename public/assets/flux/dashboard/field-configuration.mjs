@@ -65,7 +65,8 @@ export function updateField(model, fieldKey, { label, elementKey, required }) {
       if (keyEvent.element_key === previousElementKey) keyEvent.element_key = semanticElementKey;
     }
   } else {
-    next.bindings.push({ element_key: semanticElementKey, entity_key: fieldKey });
+    if (targetBinding) targetBinding.entity_key = fieldKey;
+    else next.bindings.push({ element_key: semanticElementKey, entity_key: fieldKey });
   }
   return next;
 }

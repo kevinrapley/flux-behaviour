@@ -1,7 +1,7 @@
-import { resolveServiceContext, validateServiceModel } from './service-model.mjs';
+import { resolveServiceContext, validateServiceModel, validateServiceModelForPublication } from './service-model.mjs';
 
 export async function publishServiceModel(db, accountId, model, now = Date.now()) {
-  const validation = validateServiceModel(model);
+  const validation = validateServiceModelForPublication(model);
   if (!validation.valid) return { ok: false, error: 'invalid_service_model', details: validation.errors };
   const access = await db.prepare('SELECT role FROM account_tenants WHERE account_id = ? AND tenant_id = ?').bind(accountId, model.tenant_id).first();
   if (access?.role !== 'owner') return { ok: false, error: 'forbidden' };

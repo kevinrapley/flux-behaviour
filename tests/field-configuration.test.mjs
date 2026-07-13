@@ -284,3 +284,27 @@ test('field edits can claim a same-transaction success binding without changing 
   assert.equal(next.entities.find(({ key }) => key === 'field.confirmation').label, 'Request confirmation');
   assert.deepEqual(validateServiceModel(next), { valid: true, errors: [] });
 });
+
+test('an unbound field edit retargets a same-transaction success binding', async () => {
+  const { createQuestionGroup, updateField } = await import('../src/dashboard/field-configuration.mjs');
+  let current = createQuestionGroup(modelWithStep(), {
+    stepKey: 'step.enter-details', label: 'Contact details', complexity: 4
+  });
+  current.entities.push({
+    key: 'field.confirmation', type: 'field', label: 'Confirmation',
+    parent_key: 'question.contact-details', position: 1, required: true
+  });
+  current.bindings.push({
+    element_key: 'field.support.confirmation', entity_key: 'transaction.apply-for-support'
+  });
+
+  const next = updateField(current, 'field.confirmation', {
+    label: 'Request confirmation', elementKey: 'field.support.confirmation', required: true
+  });
+
+  assert.equal(next.bindings.filter(({ element_key }) => element_key === 'field.support.confirmation').length, 1);
+  assert.deepEqual(next.bindings.find(({ element_key }) => element_key === 'field.support.confirmation'), {
+    element_key: 'field.support.confirmation', entity_key: 'field.confirmation'
+  });
+  assert.deepEqual(validateServiceModel(next), { valid: true, errors: [] });
+});

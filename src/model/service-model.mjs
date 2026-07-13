@@ -114,6 +114,21 @@ export function validateServiceModel(model) {
   return { valid: errors.length === 0, errors };
 }
 
+export function validateServiceModelForPublication(model) {
+  const validation = validateServiceModel(model);
+  if (!validation.valid) return validation;
+  const entitiesByKey = new Map(model.entities.map((entity) => [entity.key, entity]));
+  const errors = [];
+  for (const [index, binding] of model.bindings.entries()) {
+    if (entitiesByKey.get(binding.entity_key)?.type !== 'field') continue;
+    const key = binding.element_key.toLowerCase();
+    if (key.length > 120 || key.startsWith('autocomplete.') || key === 'auth.otp' || /(^|[.:-])auth(?=[.:-]|$)/.test(key)) {
+      errors.push({ code: 'prohibited_field_binding', path: `bindings[${index}].element_key` });
+    }
+  }
+  return { valid: errors.length === 0, errors };
+}
+
 export function resolveServiceContext(model, elementKey, action) {
   if (!validateServiceModel(model).valid) return null;
   const entityKey = model.bindings.find((binding) => binding.element_key === elementKey)?.entity_key;

@@ -12,7 +12,7 @@ export function createFieldManager({ root, tenantId, onPublished = () => {} }) {
   let loading = false;
 
   async function load() {
-    if (!root || !tenantId || loading) return;
+    if (!root || !tenantId || loading || editor) return;
     loading = true;
     if (!configuration) root.replaceChildren(message('Loading field configuration…'));
     try {
@@ -202,10 +202,31 @@ export function createFieldManager({ root, tenantId, onPublished = () => {} }) {
   }
 
   function confirmDelete(item) {
-    const copy = item.type === 'question'
+    let copy = item.type === 'question'
       ? `Delete ${item.label} and every field in this group from the next model version?`
       : `Delete ${item.label} from the next model version?`;
+    const dependent = dependentOutcomes(item);
+    if (dependent.total > 0) {
+      copy += ` This also deletes ${dependent.total} configured outcome${dependent.total === 1 ? '' : 's'}`;
+      if (dependent.success > 0) copy += `, including ${dependent.success} configured success event${dependent.success === 1 ? '' : 's'}`;
+      copy += '.';
+    }
     if (globalThis.confirm(copy)) void publish(() => deleteFieldEntity(configuration.model, item.key));
+  }
+
+  function dependentOutcomes(item) {
+    const entityKeys = new Set([item.key]);
+    if (item.type === 'question') {
+      for (const field of children(item.key, 'field')) entityKeys.add(field.key);
+    }
+    const elementKeys = new Set(configuration.model.bindings
+      .filter(({ entity_key }) => entityKeys.has(entity_key))
+      .map(({ element_key }) => element_key));
+    const outcomeKeys = new Set(configuration.model.key_events
+      .filter(({ element_key }) => elementKeys.has(element_key))
+      .map(({ outcome_key }) => outcome_key));
+    const outcomes = configuration.model.outcomes.filter(({ key }) => outcomeKeys.has(key));
+    return { total: outcomes.length, success: outcomes.filter(({ type }) => type === 'success').length };
   }
 
   function openEditor(nextEditor) {

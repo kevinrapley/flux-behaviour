@@ -107,6 +107,22 @@ test('refuses an invalid publisher model before any database access', async () =
   assert.equal(db.batches.length, 0);
 });
 
+test('refuses unsafe field bindings at the publication boundary without invalidating legacy reads', async () => {
+  for (const elementKey of ['autocomplete.email', 'field.auth.otp', `field.${'a'.repeat(115)}`]) {
+    const db = recordingDb();
+    const model = validModel();
+    model.bindings.find(({ entity_key }) => entity_key === 'field.objective').element_key = elementKey;
+
+    const result = await publishServiceModel(db, 'account-1', model);
+
+    assert.equal(result.ok, false, elementKey);
+    assert.equal(result.error, 'invalid_service_model');
+    assert.ok(result.details.some(({ code }) => code === 'prohibited_field_binding'), elementKey);
+    assert.equal(db.prepared.length, 0);
+    assert.equal(db.batches.length, 0);
+  }
+});
+
 test('resolves a collected semantic key against the currently published model version', async () => {
   const model = validModel();
   const db = {

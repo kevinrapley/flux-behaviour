@@ -26,6 +26,8 @@ test('dashboard loads and publishes tenant-owned field configuration', () => {
   assert.match(manager, /createField/);
   assert.match(manager, /updateField/);
   assert.match(manager, /deleteFieldEntity/);
+  assert.match(manager, /if \(!root \|\| !tenantId \|\| loading \|\| editor\) return/);
+  assert.match(manager, /configured success event/);
 });
 
 test('field configuration contains hierarchy and actions on narrow screens', () => {

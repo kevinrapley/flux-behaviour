@@ -25,11 +25,15 @@ files_read:
   - config/models/researchops.v1.json
   - src/dashboard/task-funnel-manager.mjs
   - src/dashboard/live-dashboard.mjs
+  - src/model/service-model.mjs
+  - src/model/service-model-store.mjs
   - demo/templates/pages/dashboard.njk
 files_changed:
   - src/dashboard/field-configuration.mjs
   - src/dashboard/field-manager.mjs
   - src/dashboard/live-dashboard.mjs
+  - src/model/service-model.mjs
+  - src/model/service-model-store.mjs
   - demo/templates/pages/dashboard.njk
   - demo/styles/demo.scss
   - public/dashboard/index.html
@@ -59,7 +63,7 @@ commands_run:
   - command: node --test tests/dashboard-field-manager.test.mjs tests/field-configuration.test.mjs
     state: verified
     status: passed
-    evidence: Fifteen field configuration and dashboard-surface tests passed after individual create, edit, binding, deletion, collectable-key, global-autocomplete, auth-scope, success-binding and responsive-layout RED to GREEN cycles.
+    evidence: Sixteen field configuration and dashboard-surface tests passed after individual create, edit, binding, deletion, collectable-key, global-autocomplete, auth-scope, success-binding, unbound-repair, refresh-preservation and responsive-layout RED to GREEN cycles.
   - command: FLUX_DEMO_COLLECTOR_ENDPOINT=https://flux-behaviour.pages.dev/api/collect npm run demo:build
     state: verified
     status: passed
@@ -67,7 +71,7 @@ commands_run:
   - command: npm test
     state: verified
     status: passed
-    evidence: All 322 repository tests passed after addressing six Codex review findings across two review passes.
+    evidence: All 324 repository tests passed after addressing ten Codex review findings across three review passes.
   - command: npm run validate
     state: verified
     status: passed
@@ -95,6 +99,7 @@ commands_run:
 contracts_validated:
   - contracts/models/flux-service-model.schema.json
   - authenticated tenant service-model GET and immutable-version PUT routes
+  - publication-only field-binding safety policy with legacy at-rest read compatibility
   - question-level 1–7 complexity, field required status and exact unique publisher data-flux-key bindings
 gaps_recorded:
   - GAP-013 updated to record that owner authoring is delivered while the full ResearchOps inventory and comparable complexity-adjusted baselines remain incomplete.
@@ -114,6 +119,7 @@ security:
   - Existing-version conflicts are rejected rather than overwriting another owner's publication.
   - Global content-free autocomplete categories are rejected as field-specific bindings, and publisher keys are capped at the collector contract's 120-character limit.
   - Reserved and nested authentication scopes are rejected so excluded authentication interactions cannot be attributed to ordinary field analytics.
+  - The direct publication API enforces the same field-binding boundary as the dashboard without retroactively invalidating a stored legacy model.
 privacy:
   - Configuration contains controlled service labels, bounded complexity and semantic keys only; no visitor identity, event payload, entered value or page content is introduced.
 accessibility:
