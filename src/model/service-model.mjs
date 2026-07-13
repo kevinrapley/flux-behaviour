@@ -27,9 +27,18 @@ export function validateServiceModel(model) {
   if (!Array.isArray(model?.bindings)) addError('invalid_bindings', 'bindings');
   if (!Array.isArray(model?.outcomes) || model.outcomes.length === 0) addError('missing_outcomes', 'outcomes');
   if (!Array.isArray(model?.key_events) || model.key_events.length === 0) addError('missing_key_events', 'key_events');
+  if (Array.isArray(model?.entities) && model.entities.length > 5000) addError('too_many_entities', 'entities');
+  if (Array.isArray(model?.bindings) && model.bindings.length > 10000) addError('too_many_bindings', 'bindings');
+  if (Array.isArray(model?.outcomes) && model.outcomes.length > 1000) addError('too_many_outcomes', 'outcomes');
+  if (Array.isArray(model?.key_events) && model.key_events.length > 2000) addError('too_many_key_events', 'key_events');
+
+  const entities = Array.isArray(model?.entities) ? model.entities.slice(0, 5000) : [];
+  const bindings = Array.isArray(model?.bindings) ? model.bindings.slice(0, 10000) : [];
+  const outcomes = Array.isArray(model?.outcomes) ? model.outcomes.slice(0, 1000) : [];
+  const keyEvents = Array.isArray(model?.key_events) ? model.key_events.slice(0, 2000) : [];
 
   const entitiesByKey = new Map();
-  for (const [index, entity] of (model?.entities ?? []).entries()) {
+  for (const [index, entity] of entities.entries()) {
     const path = `entities[${index}]`;
     for (const key of Object.keys(entity ?? {})) if (!ENTITY_PROPERTIES.has(key)) addError('unknown_property', `${path}.${key}`);
     if (!ENTITY_TYPES.has(entity?.type)) addError('invalid_entity_type', `${path}.type`);
@@ -47,26 +56,30 @@ export function validateServiceModel(model) {
     if (entity?.type !== 'field' && entity?.required !== undefined) addError('misplaced_required_status', `${path}.required`);
     if (entity?.type === 'service' && entity.parent_key !== undefined) addError('service_parent_forbidden', `${path}.parent_key`);
   }
-  if ((model?.entities ?? []).filter(({ type }) => type === 'service').length !== 1) addError('invalid_service_root_count', 'entities');
-  for (const [index, entity] of (model?.entities ?? []).entries()) {
+  if (entities.filter((entity) => entity?.type === 'service').length !== 1) addError('invalid_service_root_count', 'entities');
+  for (const [index, entity] of entities.entries()) {
     const expectedParentType = PARENT_TYPE[entity?.type];
     if (expectedParentType && entitiesByKey.get(entity.parent_key)?.type !== expectedParentType) {
       addError('invalid_parent_type', `entities[${index}].parent_key`);
     }
   }
   const boundElementKeys = new Set();
-  for (const [index, binding] of (model?.bindings ?? []).entries()) {
+  const bindingEntityKeys = new Map();
+  for (const [index, binding] of bindings.entries()) {
     const path = `bindings[${index}]`;
     for (const key of Object.keys(binding ?? {})) if (!BINDING_PROPERTIES.has(key)) addError('unknown_property', `${path}.${key}`);
     if (!semanticKey(binding?.element_key, 160)) {
       addError('invalid_element_key', `${path}.element_key`);
     }
     if (boundElementKeys.has(binding?.element_key)) addError('duplicate_element_binding', `${path}.element_key`);
-    else boundElementKeys.add(binding?.element_key);
+    else {
+      boundElementKeys.add(binding?.element_key);
+      bindingEntityKeys.set(binding?.element_key, binding?.entity_key);
+    }
     if (!entitiesByKey.has(binding?.entity_key)) addError('unresolved_binding', `${path}.entity_key`);
   }
   const outcomesByKey = new Map();
-  for (const [index, outcome] of (model?.outcomes ?? []).entries()) {
+  for (const [index, outcome] of outcomes.entries()) {
     const path = `outcomes[${index}]`;
     for (const key of Object.keys(outcome ?? {})) if (!OUTCOME_PROPERTIES.has(key)) addError('unknown_property', `${path}.${key}`);
     if (!semanticKey(outcome?.key, 120)) addError('invalid_outcome_key', `${path}.key`);
@@ -78,7 +91,7 @@ export function validateServiceModel(model) {
   }
   const keyEventKeys = new Set();
   const keyEventMatches = new Set();
-  for (const [index, keyEvent] of (model?.key_events ?? []).entries()) {
+  for (const [index, keyEvent] of keyEvents.entries()) {
     const path = `key_events[${index}]`;
     for (const key of Object.keys(keyEvent ?? {})) if (!KEY_EVENT_PROPERTIES.has(key)) addError('unknown_property', `${path}.${key}`);
     if (!semanticKey(keyEvent?.key, 120)) addError('invalid_key_event_key', `${path}.key`);
@@ -92,6 +105,10 @@ export function validateServiceModel(model) {
     if (keyEventMatches.has(matchKey)) addError('duplicate_key_event_match', path);
     else keyEventMatches.add(matchKey);
     if (!outcomesByKey.has(keyEvent?.outcome_key)) addError('unresolved_key_event_outcome', `${path}.outcome_key`);
+    const outcome = outcomesByKey.get(keyEvent?.outcome_key);
+    const boundEntity = entitiesByKey.get(bindingEntityKeys.get(keyEvent?.element_key));
+    const boundTransaction = ancestorOfType(boundEntity, 'transaction', entitiesByKey);
+    if (outcome && boundTransaction?.key !== outcome.transaction_key) addError('key_event_outcome_transaction_mismatch', `${path}.outcome_key`);
   }
   return { valid: errors.length === 0, errors };
 }

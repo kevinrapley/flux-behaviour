@@ -22,4 +22,5 @@ test('D1 migration stores immutable model versions, normalised entities, binding
   assert.match(migration, /key_event_key TEXT/);
   assert.match(migration, /outcome_key TEXT/);
   assert.match(migration, /outcome_type TEXT CHECK \(outcome_type IN \('success', 'failure', 'progress', 'abandonment'\)\)/);
+  assert.match(migration, /CREATE INDEX IF NOT EXISTS events_by_tenant_period\s+ON events\(tenant_id, occurred_at_ms\)/);
 });

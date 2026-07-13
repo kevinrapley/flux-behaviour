@@ -61,7 +61,21 @@ evidence_records:
       - Freeze the exact published model version and resolved hierarchy beside each accepted event.
       - Seed the initial ResearchOps model deterministically from governed JSON rather than embedding analytics logic in ResearchOps.
       - Keep funnels and field-coverage reports open in GAP-013 instead of overstating this implementation slice.
+      - Scope dashboard evidence to the exact published model key and version so retired semantic context cannot be relabelled as current evidence.
+      - Enforce the JSON contract collection ceilings in runtime validation and reject cross-transaction key-event outcomes.
     commands_run:
+      - command: node --test tests/service-model.test.mjs tests/service-model-migration.test.mjs tests/service-model-summary.test.mjs
+        state: verified
+        status: passed
+        evidence: All 23 focused review-remediation tests passed, covering malformed collections, runtime collection limits, transaction-consistent outcomes, the tenant-period index and version-scoped dashboard evidence.
+      - command: npm test
+        state: verified
+        status: passed
+        evidence: All 239 repository tests passed after the Codex review remediations.
+      - command: npx wrangler d1 migrations apply flux-behaviour --local --persist-to fresh-review-directory --config wrangler.toml
+        state: verified
+        status: passed
+        evidence: Migrations 0001 through 0004 applied successfully to a fresh local D1 database and the events_by_tenant_period index was queried successfully.
       - command: node --test tests/service-model*.test.mjs tests/researchops-service-model.test.mjs tests/dashboard-service-model-panel.test.mjs
         state: verified
         status: passed
@@ -105,6 +119,8 @@ evidence_records:
     recent_learnings:
       - Completion is a configured transaction outcome, not a generic form submission.
       - Wide aggregate tables need a contained scroll region at mobile breakpoints.
+      - Historical event context must be filtered by model key and version before current publisher labels are applied.
+      - Contract collection limits must also be enforced by the runtime validator before iteration or storage.
     security:
       - Publication is owner-only, tenant-scoped, immutable by version and protected by authenticated dashboard sessions.
       - Model keys and labels are bounded; unknown properties, URLs, email-like labels and ambiguous event matches are rejected.

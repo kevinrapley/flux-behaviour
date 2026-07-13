@@ -14,7 +14,7 @@ Flux resolves consented interaction events against a publisher-declared model so
 - transaction outcomes classified as success, failure, progress or abandonment;
 - action-and-element-specific key events that resolve to those outcomes.
 
-Labels and keys are bounded and content-safe. The contract rejects URLs, email-like labels, multiline text, unknown properties, unresolved hierarchy references, duplicate bindings and ambiguous key-event matches. It contains service configuration only—never visitor identifiers, entered values or page content.
+Labels and keys are bounded and content-safe. The runtime validator enforces the same collection limits as the JSON contract: 5,000 entities, 10,000 bindings, 1,000 outcomes and 2,000 key events. It rejects malformed collection items, URLs, email-like labels, multiline text, unknown properties, unresolved hierarchy references, duplicate bindings, ambiguous key-event matches and key events whose configured outcome belongs to another transaction. It contains service configuration only—never visitor identifiers, entered values or page content.
 
 ## Publication and immutability
 
@@ -41,6 +41,6 @@ The first version covers account access, project navigation, project information
 
 ## Dashboard evidence
 
-The dashboard reports the published version, configured entity/binding/outcome/key-event counts, semantic mapping coverage and transaction complexity. Its accessible key-event table reports selected-period event and session counts using publisher labels and configured outcome types. The table scrolls within its region on narrow screens.
+The dashboard reports the published version, configured entity/binding/outcome/key-event counts, semantic mapping coverage and transaction complexity. Mapping and key-event evidence is filtered to that exact published model key and version, so historical rows from retired versions cannot be attributed to the current model. Its accessible key-event table reports selected-period event and session counts using publisher labels and configured outcome types. The selected-period event lookup is supported by a tenant-and-time index, and the table scrolls within its region on narrow screens.
 
 Funnels, field coverage and broader entity reports remain tracked in GAP-013 and GAP-014.

@@ -93,3 +93,6 @@ CREATE INDEX IF NOT EXISTS service_model_entities_by_parent
 
 CREATE INDEX IF NOT EXISTS event_service_contexts_by_transaction
   ON event_service_contexts(tenant_id, transaction_key, model_version);
+
+CREATE INDEX IF NOT EXISTS events_by_tenant_period
+  ON events(tenant_id, occurred_at_ms);

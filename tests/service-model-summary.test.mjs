@@ -61,7 +61,7 @@ test('dashboard service-model query reports mapping coverage for the selected pe
       { key: 'service.researchops', type: 'service', label: 'ResearchOps', position: 1 },
       { key: 'transaction.home', type: 'transaction', label: 'Open home', parent_key: 'service.researchops', position: 1 }
     ],
-    bindings: [{ element_key: 'page.home', entity_key: 'service.researchops' }],
+    bindings: [{ element_key: 'page.home', entity_key: 'transaction.home' }],
     outcomes: [{ key: 'outcome.home-opened', label: 'Home opened', transaction_key: 'transaction.home', type: 'progress' }],
     key_events: [{ key: 'key-event.home-opened', label: 'Home opened', action: 'page.loaded', element_key: 'page.home', outcome_key: 'outcome.home-opened' }]
   };
@@ -69,7 +69,8 @@ test('dashboard service-model query reports mapping coverage for the selected pe
     prepare(sql) {
       return {
         bind(...values) {
-          if (sql.includes('event_service_contexts')) assert.deepEqual(values, ['researchops', 1000, 2000]);
+          if (sql.includes('LEFT JOIN event_service_contexts')) assert.deepEqual(values, ['model.researchops', 1, 'researchops', 1000, 2000]);
+          if (sql.includes('GROUP BY esc.key_event_key')) assert.deepEqual(values, ['researchops', 1000, 2000, 'model.researchops', 1]);
           return this;
         },
         async first() {

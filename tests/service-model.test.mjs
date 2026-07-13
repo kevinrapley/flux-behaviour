@@ -245,3 +245,44 @@ test('keeps outcome and key-event identifiers within the JSON contract bounds', 
   assert.ok(codes.includes('invalid_key_event_action'));
   assert.ok(codes.includes('invalid_element_key'));
 });
+
+test('rejects malformed model collections without throwing', () => {
+  const wrongShape = validModel();
+  wrongShape.entities = {};
+  assert.doesNotThrow(() => validateServiceModel(wrongShape));
+  assert.equal(validateServiceModel(wrongShape).valid, false);
+
+  const nullItems = validModel();
+  nullItems.entities.push(null);
+  nullItems.bindings.push(null);
+  nullItems.outcomes.push(null);
+  nullItems.key_events.push(null);
+  assert.doesNotThrow(() => validateServiceModel(nullItems));
+  assert.equal(validateServiceModel(nullItems).valid, false);
+});
+
+test('enforces JSON contract collection limits before publication', () => {
+  const model = validModel();
+  model.entities = new Array(5001);
+  model.bindings = new Array(10001);
+  model.outcomes = new Array(1001);
+  model.key_events = new Array(2001);
+
+  const codes = validateServiceModel(model).errors.map(({ code }) => code);
+
+  assert.ok(codes.includes('too_many_entities'));
+  assert.ok(codes.includes('too_many_bindings'));
+  assert.ok(codes.includes('too_many_outcomes'));
+  assert.ok(codes.includes('too_many_key_events'));
+});
+
+test('requires a key event and its outcome to belong to the same transaction', () => {
+  const model = validModel();
+  model.entities.push({ key: 'transaction.other', type: 'transaction', label: 'Other journey', parent_key: 'service.researchops', position: 2 });
+  model.outcomes[0].transaction_key = 'transaction.other';
+
+  const result = validateServiceModel(model);
+
+  assert.equal(result.valid, false);
+  assert.ok(result.errors.some(({ code }) => code === 'key_event_outcome_transaction_mismatch'));
+});

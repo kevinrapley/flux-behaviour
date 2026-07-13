@@ -2,7 +2,7 @@ records:
   - id: CONF-020
     rule: Analytics outcomes must resolve from a versioned publisher service model rather than generic submit inference
     expected_evidence: A privacy-safe model contract, immutable D1 publication, event-time context, configured ResearchOps seed, aggregate dashboard evidence and regression tests exist
-    actual_evidence: contracts/models/flux-service-model.schema.json, migrations 0003 and 0004, src/model, collector integration and dashboard tests implement the service hierarchy, complexity, required status, outcomes and unambiguous key events; completion metrics require configured success outcomes.
+    actual_evidence: contracts/models/flux-service-model.schema.json, migrations 0003 and 0004, src/model, collector integration and dashboard tests implement the service hierarchy, bounded runtime validation, transaction-consistent outcomes and unambiguous key events; completion metrics require configured success outcomes, and dashboard evidence is scoped to the exact published model version.
     status: present-with-release-blockers
     owner: product-lead
 

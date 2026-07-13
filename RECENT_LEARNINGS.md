@@ -153,3 +153,6 @@ The prototype `wrangler.toml` pattern includes environment-specific configuratio
 ## 2026-05-27 — Prototype source is lineage, not production code
 
 `kevinrapley/flux-behavioural-analytics` is useful source material, but runtime files must be promoted through reviewed PRs.
+## 2026-07-13 — Published-model evidence must be version-scoped
+
+Event-time context deliberately preserves historical model versions. Dashboard queries must therefore filter context rows to the exact published model key and version before labelling evidence with the current model; tenant and period filters alone can mix retired meanings into current reports. Runtime model validation must also enforce the JSON contract's collection bounds and normalise malformed input before walking it, so invalid publisher payloads fail safely instead of creating unbounded work or server errors.
