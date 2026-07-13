@@ -74,7 +74,6 @@
   ],
   "bindings": [
     { "element_key": "page.account.sign-in", "entity_key": "task.sign-in" },
-    { "element_key": "autocomplete.one-time-code", "entity_key": "field.sign-in-code" },
     { "element_key": "auth.otp", "entity_key": "step.verify-account" },
 
     { "element_key": "link.navigation.projects", "entity_key": "step.open-projects" },

@@ -337,6 +337,15 @@ test('does not analyse an untouched prefilled value', async () => {
   assert.equal(events.some((args) => args[2] === 'field.writing-analysis'), false);
 });
 
+test('excludes underscore-scoped authentication fields before capture or analysis', () => {
+  const { context } = harness(async () => { throw new Error('must not analyse authentication content'); });
+  const authField = field('must never be inspected');
+  authField.dataset.fluxKey = 'field_auth_code';
+  context.authField = authField;
+
+  assert.equal(vm.runInContext('isExcludedSensitiveInput(authField)', context), true);
+});
+
 test('records sensitive browser autocomplete by fixed field category without content or length', () => {
   const { context, events } = harness(async () => ({}));
   const email = emailField();

@@ -6,7 +6,7 @@ import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
-import { validateServiceModel } from '../src/model/service-model.mjs';
+import { validateServiceModel, validateServiceModelForPublication } from '../src/model/service-model.mjs';
 
 test('initial ResearchOps model covers its primary authentication, project, objective and Sourcebook journeys', () => {
   const model = JSON.parse(readFileSync('config/models/researchops.v1.json', 'utf8'));
@@ -14,6 +14,7 @@ test('initial ResearchOps model covers its primary authentication, project, obje
   const bindings = new Set(model.bindings.map(({ element_key }) => element_key));
 
   assert.deepEqual(validation, { valid: true, errors: [] });
+  assert.deepEqual(validateServiceModelForPublication(model), { valid: true, errors: [] });
   assert.equal(model.tenant_id, 'researchops');
   for (const key of [
     'page.account.sign-in',
