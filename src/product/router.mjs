@@ -20,6 +20,7 @@ import { dashboardFunnelFieldReports } from './funnel-field-reports.mjs';
 import { dashboardComparisonReport, isComparisonMode } from './comparison-reports.mjs';
 import { buildAggregateCsv, buildAggregateExport, isAggregateExportReport } from './aggregate-export.mjs';
 import { buildGovernanceReport, buildUncertaintyReport } from './report-uncertainty.mjs';
+import { dashboardLifecycleAnalytics } from './lifecycle-analytics.mjs';
 
 const HEADERS = { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' };
 
@@ -190,8 +191,9 @@ async function dashboard(request, env) {
   const presentedEvents = presentJourneyEvents(events.results ?? []);
   const journeys = groupJourneys(sessions.results, presentedEvents).map((journey) => ({ ...journey, dimension_scores: scoreSessionDimensions(journey.events) }));
   const publishedModel = await dashboardPublishedServiceModel(env, 'researchops');
-  const [cohorts, serviceModel, realtime, reports, comparisonReport] = await Promise.all([
+  const [cohorts, lifecycle, serviceModel, realtime, reports, comparisonReport] = await Promise.all([
     dashboardCohorts(env, period.start_at_ms, period.end_at_ms, overview.session_count),
+    dashboardLifecycleAnalytics(env.FLUX_DB, { tenantId: 'researchops', period }),
     dashboardServiceModel(env, 'researchops', period.start_at_ms, period.end_at_ms, publishedModel),
     dashboardRealtime(env, 'researchops'),
     dashboardReports(env, 'researchops', period, overview.session_count, publishedModel),
@@ -211,6 +213,7 @@ async function dashboard(request, env) {
       trend: trend.results ?? [],
       actions: actions.results ?? [],
       cohorts,
+      lifecycle,
       realtime,
       service_model: serviceModel,
       event_report: reports.events,

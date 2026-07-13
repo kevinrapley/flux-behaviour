@@ -94,7 +94,7 @@ harms:
       - Users from small or marginalised groups
     likelihood: medium
     severity: high
-    mitigation: Describe cohorts and comparison groups as journey patterns rather than people, suppress every named group below five journeys, expose no visitor identifier, limit dimensions to controlled service evidence, treat neutral evidence as no dominant pattern, prohibit protected-characteristic and education or personality inference, and require human-led service investigation with uncertainty and fairness review.
+    mitigation: Describe cohorts and comparison groups as journey patterns rather than people, suppress every named group and repeat-interval bucket below five journeys, expose no visitor identifier, show lifecycle samples and denominators, describe celeration as service-level movement with alternative explanations, limit dimensions to controlled service evidence, treat neutral evidence as no dominant pattern, prohibit learning, ability, protected-characteristic and education or personality inference, and require human-led service investigation with uncertainty and fairness review.
     residual_risk: medium
     owner: governance-lead
     escalation_route: Product owner, data protection lead and ethics reviewer

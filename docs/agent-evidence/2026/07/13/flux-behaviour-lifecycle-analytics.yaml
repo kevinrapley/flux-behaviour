@@ -1,0 +1,60 @@
+evidence_records:
+  - task_id: flux-behaviour-lifecycle-analytics
+    mode: repo-build
+    repository: kevinrapley/flux-behaviour
+    risk_level: high
+    base_branch: main
+    working_branch: feature/lifecycle-analytics
+    files_read:
+      - README.md
+      - AGENTS.md
+      - RECENT_LEARNINGS.md
+      - CONTRIBUTING.md
+      - SECURITY.md
+      - repository-contract.yaml
+      - github-settings.yaml
+      - conformance-matrix.yaml
+      - gap-register.yaml
+      - harm-register.yaml
+      - docs/product/behaviour-model-dashboard-gap-analysis.md
+      - docs/product/cohort-analytics.md
+      - docs/product/behaviour-signal-map.md
+    files_changed:
+      - src/product/lifecycle-analytics.mjs
+      - src/product/router.mjs
+      - src/dashboard/live-dashboard.mjs
+      - demo/styles/demo.scss
+      - tests/lifecycle-analytics.test.mjs
+      - docs/product/lifecycle-analytics.md
+      - docs/product/cohort-analytics.md
+      - docs/product/behaviour-model-dashboard-gap-analysis.md
+    promotion_decisions:
+      - Implement MODEL-12 from existing consented session and event evidence without widening browser capture.
+      - Keep visitor identifiers inside the aggregate query and return only samples, distributions, rates and movement.
+      - Require five journeys for named maturity groups and recency evidence, suppressing small interval buckets.
+      - Describe celeration as service-level movement with alternative explanations, never individual learning or ability.
+    commands_run:
+      - command: node --test tests/lifecycle-analytics.test.mjs tests/dashboard-information-architecture.test.mjs tests/dashboard-cohort-query.test.mjs
+        state: verified
+        status: passed
+        evidence: Six focused lifecycle, cohort-query and report-navigation tests passed.
+      - command: FLUX_DEMO_COLLECTOR_ENDPOINT=https://flux-behaviour.pages.dev/api/collect npm run demo:build && npm test && npm run validate && npm run security:secrets
+        state: verified
+        status: passed
+        evidence: Rebuilt production-endpoint assets, passed all 285 repository tests, verified required governance files and passed the secret scan.
+      - command: Chrome visual and DOM verification at 1440x1000 and emulated 390x844
+        state: verified
+        status: passed
+        evidence: Cohorts was the only visible report area, lifecycle copy and both expandable tables rendered, no internal identifiers or sentinel values appeared, and document scroll width equalled client width at both sizes. Visual inspection found and fixed grid containers overriding the hidden report state.
+    recent_learnings:
+      - Repeat-visit movement needs time-ordered history, privacy thresholds and neutral interpretation together.
+      - A CSS display rule can override the native hidden attribute; report-area visibility needs a scoped regression rule.
+    security:
+      - The authenticated dashboard remains the only consumer and no new public route is introduced.
+    privacy:
+      - The API returns no visitor or session identifiers; lifecycle groups and interval buckets use k=5 controls.
+    accessibility:
+      - Lifecycle evidence uses existing semantic headings, definition lists and horizontally contained report tables.
+    risks:
+      - Descriptive changes do not correct collection, audience, task, accessibility or service-change effects.
+      - Retention, DPIA, corpus/fairness and full accessibility evidence remain release blockers.

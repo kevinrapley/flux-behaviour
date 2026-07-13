@@ -22,10 +22,10 @@ gaps:
   - id: GAP-015
     title: Behavioural lifecycle coverage is incomplete
     severity: medium
-    observed_state: Capture covers core navigation, fields, writing, help disclosure, validation and submit metadata, but not configured recovery, idle/visibility, help dialogue, search/refinement, repeatability, recency, celeration or safe environment context.
+    observed_state: Capture covers core navigation, fields, writing, help disclosure, validation and submit metadata. MODEL-12 now reports aggregate repeat intervals, selected-period frequency, privacy-suppressed maturity movement and like-for-like validation/help/revisit movement. Idle/visibility, richer help, search/refinement, safe environment context and correction context remain incomplete.
     expected_state: The P2 behavioural lifecycles are captured as consented bounded metadata with alternative interpretations and aggregate reporting.
     risk: Flux can overemphasise isolated interactions while missing whether people recover, learn, return or face repeated service problems.
-    action: Deliver MODEL-06 through MODEL-13, including aggregate optional-field and data-disclosure calibration in MODEL-07, with privacy, accessibility and golden-corpus evidence.
+    action: Retain MODEL-12 regression and interpretation controls; deliver the remaining MODEL-07 through MODEL-11 and MODEL-13 capture/report contracts with privacy, accessibility and golden-corpus evidence.
     owner: product-lead
     status: open
 

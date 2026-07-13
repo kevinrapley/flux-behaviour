@@ -1,5 +1,11 @@
 # Recent Learnings
 
+## 2026-07-13 — Repeat visits are service evidence, not proof of learning
+
+Recency and celeration can be calculated without widening capture: order consented sessions within the tenant, aggregate prior-visit intervals, and compare journey-level validation, help and revisit rates across like-for-like periods. Keep visitor identifiers inside the query, suppress named lifecycle groups and small interval buckets, expose samples and denominators, and state that audience, task, collection, accessibility or service changes may explain movement. A falling friction rate does not establish that an individual learned or improved.
+
+Dashboard report visibility also needs a CSS-level guard. Grid or flex `display` rules can override the native `hidden` presentation, leaving an inactive report visible even when JavaScript sets its property correctly. Scope an explicit `[data-flux-report-area][hidden]` rule and verify the actual visible report set at desktop and mobile sizes.
+
 ## 2026-07-13 — A report catalogue needs navigation and an uncertainty contract
 
 Adding panels to one long page does not create a usable analytics information architecture. Give each report family a stable URL-backed area and preserve shared filters across native links. Point rates also need their numerator, denominator and a bounded interval, but statistical intervals must not be described as correcting missing collection, repeated observations, selection effects or model error. Keep those limitations—and controls with no denominator—visible in the governance area.

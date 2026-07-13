@@ -22,8 +22,10 @@ test('dashboard exposes the target report areas with shared URL-backed filters',
   assert.match(dashboard, /function updateUrlBackedLinks\(\) \{\n\s+updateExportLink\(\);\n\s+updateViewLinks\(\);/);
   assert.match(dashboard, /renderUncertainty\(analytics\.uncertainty\)/);
   assert.match(dashboard, /renderGovernance\(analytics\.governance\)/);
+  assert.match(dashboard, /renderLifecycle\(lifecycle\)/);
   assert.match(styles, /\.flux-report-navigation/);
   assert.match(styles, /overflow-x: auto/);
+  assert.match(styles, /\[data-flux-report-area\]\[hidden\][\s\S]*display: none !important/);
 });
 
 test('dashboard API publishes uncertainty and governance reports', () => {
