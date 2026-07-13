@@ -237,3 +237,50 @@ test('rejects global autocomplete categories as field-specific bindings', async 
     elementKey: 'autocomplete.email', required: true
   }), /global_autocomplete_key/);
 });
+
+test('rejects reserved and nested authentication scopes as field bindings', async () => {
+  const { createField, createQuestionGroup } = await import('../src/dashboard/field-configuration.mjs');
+  const current = createQuestionGroup(modelWithStep(), {
+    stepKey: 'step.enter-details', label: 'Contact details', complexity: 4
+  });
+
+  for (const elementKey of ['auth.otp', 'field.auth.otp', 'field:auth:code', 'field-auth-code']) {
+    assert.throws(() => createField(current, {
+      questionKey: 'question.contact-details', label: 'Authentication field',
+      elementKey, required: true
+    }), /auth_scoped_key/);
+  }
+});
+
+test('field edits can claim a same-transaction success binding without changing the field key', async () => {
+  const { createField, createQuestionGroup, updateField } = await import('../src/dashboard/field-configuration.mjs');
+  let current = createQuestionGroup(modelWithStep(), {
+    stepKey: 'step.enter-details', label: 'Contact details', complexity: 4
+  });
+  current = createField(current, {
+    questionKey: 'question.contact-details', label: 'Confirmation',
+    elementKey: 'field.support.old-confirmation', required: true
+  });
+  current.bindings.push({
+    element_key: 'field.support.confirmation', entity_key: 'transaction.apply-for-support'
+  });
+  current.outcomes.push({
+    key: 'outcome.support-requested', type: 'success', label: 'Support requested',
+    transaction_key: 'transaction.apply-for-support'
+  });
+  current.key_events.push({
+    key: 'event.support-requested', label: 'Support requested', action: 'flow.submit',
+    element_key: 'field.support.confirmation', outcome_key: 'outcome.support-requested'
+  });
+
+  const next = updateField(current, 'field.confirmation', {
+    label: 'Request confirmation', elementKey: 'field.support.confirmation', required: true
+  });
+
+  assert.equal(next.bindings.some(({ element_key }) => element_key === 'field.support.old-confirmation'), false);
+  assert.deepEqual(next.bindings.find(({ element_key }) => element_key === 'field.support.confirmation'), {
+    element_key: 'field.support.confirmation', entity_key: 'field.confirmation'
+  });
+  assert.equal(next.entities.find(({ key }) => key === 'field.confirmation').label, 'Request confirmation');
+  assert.deepEqual(validateServiceModel(next), { valid: true, errors: [] });
+});

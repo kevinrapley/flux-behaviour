@@ -59,7 +59,7 @@ commands_run:
   - command: node --test tests/dashboard-field-manager.test.mjs tests/field-configuration.test.mjs
     state: verified
     status: passed
-    evidence: Thirteen field configuration and dashboard-surface tests passed after individual create, edit, binding, deletion, collectable-key, global-autocomplete, success-binding and responsive-layout RED to GREEN cycles.
+    evidence: Fifteen field configuration and dashboard-surface tests passed after individual create, edit, binding, deletion, collectable-key, global-autocomplete, auth-scope, success-binding and responsive-layout RED to GREEN cycles.
   - command: FLUX_DEMO_COLLECTOR_ENDPOINT=https://flux-behaviour.pages.dev/api/collect npm run demo:build
     state: verified
     status: passed
@@ -67,7 +67,7 @@ commands_run:
   - command: npm test
     state: verified
     status: passed
-    evidence: All 320 repository tests passed after addressing the four Codex review findings.
+    evidence: All 322 repository tests passed after addressing six Codex review findings across two review passes.
   - command: npm run validate
     state: verified
     status: passed
@@ -113,6 +113,7 @@ security:
   - The dashboard hides mutation from viewers and the publication API independently enforces the tenant-owner role.
   - Existing-version conflicts are rejected rather than overwriting another owner's publication.
   - Global content-free autocomplete categories are rejected as field-specific bindings, and publisher keys are capped at the collector contract's 120-character limit.
+  - Reserved and nested authentication scopes are rejected so excluded authentication interactions cannot be attributed to ordinary field analytics.
 privacy:
   - Configuration contains controlled service labels, bounded complexity and semantic keys only; no visitor identity, event payload, entered value or page content is introduced.
 accessibility:

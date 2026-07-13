@@ -27,13 +27,7 @@ export function createField(model, { questionKey, label, elementKey, required })
   const fieldLabel = requiredLabel(label);
   const semanticElementKey = requiredElementKey(elementKey);
   const existingBinding = next.bindings.find((binding) => binding.element_key === semanticElementKey);
-  if (existingBinding) {
-    const boundEntity = next.entities.find(({ key }) => key === existingBinding.entity_key);
-    const questionTransaction = ancestor(next, question, 'transaction');
-    if (boundEntity?.type !== 'transaction' || boundEntity.key !== questionTransaction?.key) {
-      throw new TypeError('element_key_in_use');
-    }
-  }
+  if (existingBinding && !canClaimTransactionBinding(next, existingBinding, question)) throw new TypeError('element_key_in_use');
   const key = uniqueKey(next, 'field', fieldLabel);
   next.entities.push({
     key,
@@ -52,14 +46,21 @@ export function updateField(model, fieldKey, { label, elementKey, required }) {
   const next = nextVersion(model);
   const field = requireEntity(next, fieldKey, 'field');
   const semanticElementKey = requiredElementKey(elementKey);
-  const collision = next.bindings.find((binding) => binding.element_key === semanticElementKey && binding.entity_key !== fieldKey);
-  if (collision) throw new TypeError('element_key_in_use');
+  const targetBinding = next.bindings.find((binding) => binding.element_key === semanticElementKey);
+  if (targetBinding?.entity_key !== fieldKey && targetBinding && !canClaimTransactionBinding(next, targetBinding, field)) {
+    throw new TypeError('element_key_in_use');
+  }
   const binding = next.bindings.find((candidate) => candidate.entity_key === fieldKey);
   field.label = requiredLabel(label);
   field.required = requiredBoolean(required);
   if (binding) {
     const previousElementKey = binding.element_key;
-    binding.element_key = semanticElementKey;
+    if (targetBinding && targetBinding !== binding) {
+      targetBinding.entity_key = fieldKey;
+      next.bindings = next.bindings.filter((candidate) => candidate !== binding);
+    } else {
+      binding.element_key = semanticElementKey;
+    }
     for (const keyEvent of next.key_events) {
       if (keyEvent.element_key === previousElementKey) keyEvent.element_key = semanticElementKey;
     }
@@ -113,6 +114,7 @@ function requiredComplexity(value) {
 function requiredElementKey(value) {
   const key = typeof value === 'string' ? value.trim().toLowerCase() : '';
   if (key.startsWith('autocomplete.')) throw new TypeError('global_autocomplete_key');
+  if (key === 'auth.otp' || /(^|[.:-])auth(?=[.:-]|$)/.test(key)) throw new TypeError('auth_scoped_key');
   if (key.length < 3 || key.length > 120 || !/^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$/.test(key)) {
     throw new TypeError('invalid_element_key');
   }
@@ -138,6 +140,11 @@ function ancestor(model, entity, type) {
     if (current?.type === type) return current;
   }
   return null;
+}
+
+function canClaimTransactionBinding(model, binding, entity) {
+  const boundEntity = model.entities.find(({ key }) => key === binding.entity_key);
+  return boundEntity?.type === 'transaction' && boundEntity.key === ancestor(model, entity, 'transaction')?.key;
 }
 
 function children(model, parentKey, type) {
