@@ -26,14 +26,16 @@ Publication validates the complete model, calculates a canonical SHA-256 manifes
 
 ## Owner configuration workflow
 
-The **Tasks and funnels** dashboard area provides the authenticated authoring workflow. Tenant owners can:
+The **Tasks and funnels** and **Fields** dashboard areas provide the authenticated authoring workflow. Tenant owners can:
 
 - create, rename, reorder and delete funnels;
 - create, rename, reorder and delete tasks within a funnel;
 - create, rename, reorder and delete steps, each bound to an exact publisher `data-flux-key`;
 - create, edit and delete success events from an exact Flux action and `data-flux-key` pair.
+- create, rename and delete question or field groups under an ordered step and declare their service complexity from 1 to 7;
+- create, edit and delete required or optional fields with an exact publisher `data-flux-key` binding.
 
-Labels can change without changing stable entity, outcome or key-event keys. Deleting a funnel removes its dependent tasks, steps, bindings and outcomes from the next model version; deleting a task or step removes only its dependent hierarchy and event bindings. Viewers see the published structure but cannot edit it, and the publication API repeats the owner check rather than relying on hidden controls. A version conflict is rejected instead of overwriting another owner's publication.
+Labels can change without changing stable entity, outcome or key-event keys. Renaming a field binding updates a matching key event without changing the field's identity. Deleting a funnel removes its dependent tasks, steps, bindings and outcomes from the next model version; deleting a task or step removes only its dependent hierarchy and event bindings; deleting a question group removes its fields and their bindings. Viewers see the published structure but cannot edit it, and the publication API repeats the owner check rather than relying on hidden controls. A version conflict is rejected instead of overwriting another owner's publication.
 
 Every saved action publishes the complete next model version. Newly accepted events use that version; historical event context remains attached to the version that was active at collection time. The editor is tenant-generic: ResearchOps supplies the current tenant model and semantic attributes, while Flux owns authoring, validation, versioning and interpretation.
 

@@ -22,6 +22,8 @@ The completion and abandonment denominator is started journeys. The recovery den
 
 ## Field coverage
 
+The collapsed **Manage field configuration** surface is available to authenticated tenant members. Owners can add, edit and delete question groups and their fields; viewers see the published hierarchy without mutation controls. Complexity belongs to the question group, while required status and the exact publisher `data-flux-key` belong to each field. Every save publishes a complete immutable next model version, so historical reports keep the meaning that was active when their events were accepted.
+
 A field is exposed when a journey reaches its configured parent step. Interaction requires a resolved event for that field. Non-interaction is reported neutrally and is not called a skip. A required-field skip attempt is counted only when explicit validation metadata reports `reason=empty_field`.
 
 Each configured field reports:

@@ -1,5 +1,9 @@
 # Recent Learnings
 
+## 2026-07-13 — Configuration must follow the model's semantic ownership
+
+A field editor should not invent field-level complexity when the governed contract declares complexity on the parent question. Tenant authoring must expose that hierarchy plainly: owners create a question or field group under an ordered step, declare its 1–7 service complexity, then create required or optional fields with exact publisher `data-flux-key` bindings. Stable keys survive label and binding edits, every mutation publishes a complete next version, and complexity copy must describe the service—not judge the person completing it.
+
 ## 2026-07-13 — SaaS service models need an owner workflow, not a seeded product assumption
 
 A versioned publisher model is not genuinely publisher-owned when the only practical authoring path is a repository seed or raw API request. Tenant owners need an authenticated configuration surface for funnels, tasks, ordered semantic steps and completion events. Every create, edit, reorder and delete should publish a complete validated next version, retain stable keys during label edits, reject conflicting `data-flux-key` bindings and leave historical event context attached to its original immutable version. A new tenant must also be able to start with a service-only model and zero outcomes rather than inventing a completion event before configuration begins.

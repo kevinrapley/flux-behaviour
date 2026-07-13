@@ -1,4 +1,5 @@
 import { createTaskFunnelManager } from './task-funnel-manager.mjs';
+import { createFieldManager } from './field-manager.mjs';
 
 const dashboard = document.querySelector('[data-flux-dashboard]');
 const status = document.querySelector('[data-flux-live-status]');
@@ -21,6 +22,7 @@ const signals = document.querySelector('[data-flux-signals]');
 const journeys = document.querySelector('[data-flux-live-journeys]');
 const governance = document.querySelector('[data-flux-governance]');
 const taskFunnelManagerRoot = document.querySelector('[data-flux-task-funnel-manager]');
+const fieldManagerRoot = document.querySelector('[data-flux-field-manager]');
 const refresh = document.querySelector('[data-flux-refresh]');
 const rangeButtons = [...document.querySelectorAll('[data-flux-range]')];
 const customRange = document.querySelector('[data-flux-custom-range]');
@@ -53,6 +55,11 @@ const ACTION_LABELS = Object.freeze({
 
 const taskFunnelManager = createTaskFunnelManager({
   root: taskFunnelManagerRoot,
+  tenantId: dashboard?.dataset.fluxTenant,
+  onPublished: () => void loadDashboard()
+});
+const fieldManager = createFieldManager({
+  root: fieldManagerRoot,
   tenantId: dashboard?.dataset.fluxTenant,
   onPublished: () => void loadDashboard()
 });
@@ -227,6 +234,7 @@ function renderDashboard(data) {
   journeys.replaceChildren(...(data.journeys ?? []).map(journeyCard));
   governance.replaceChildren(renderGovernance(analytics.governance));
   void taskFunnelManager.load();
+  void fieldManager.load();
   if ((data.journeys ?? []).length === 0) journeys.replaceChildren(emptyState('No journeys in this period', 'Choose a wider date range or check again after visitors have used ResearchOps.'));
 }
 

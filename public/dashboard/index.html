@@ -225,6 +225,23 @@
 			<div data-flux-field-report></div>
 		</section>
 
+		<section class="flux-dashboard__panel flux-model-manager" aria-labelledby="field-manager-heading" data-flux-report-area="fields" hidden>
+			<div class="flux-dashboard__section-heading">
+				<div>
+					<h2 class="govuk-heading-l" id="field-manager-heading">Configure fields and complexity</h2>
+					<p class="govuk-body flux-dashboard__section-copy">Create the fields Flux should measure. Complexity is declared from 1 to 7 on each question or field group, and every saved change publishes a new model version.</p>
+				</div>
+			</div>
+			<details class="govuk-details flux-model-manager__disclosure">
+				<summary class="govuk-details__summary">
+					<span class="govuk-details__summary-text">Manage field configuration</span>
+				</summary>
+				<div class="govuk-details__text">
+					<div data-flux-field-manager aria-live="polite"></div>
+				</div>
+			</details>
+		</section>
+
 		<div class="flux-dashboard__split" data-flux-report-area="overview">
 			<section class="flux-dashboard__panel" aria-labelledby="health-heading">
 				<h2 class="govuk-heading-l" id="health-heading">Journey health</h2>

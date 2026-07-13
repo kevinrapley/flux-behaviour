@@ -12,13 +12,13 @@ This audit distinguishes repository implementation from live production proof. T
 
 | Requirement | Audit state | Authoritative repository evidence | Residual gap or release boundary |
 | --- | --- | --- | --- |
-| MODEL-01 | Implemented with residual inventory gap | `contracts/models/flux-service-model.schema.json`; `src/model/`; owner task/funnel configuration modules and dashboard; migrations 0003–0004; service-model and configuration tests | GAP-013: complete ResearchOps inventory |
-| MODEL-02 | Partial, retained | Model contract, summary and funnel/field reports store and show complexity | GAP-013: comparable complexity-adjusted effort/error/help baselines |
+| MODEL-01 | Implemented with residual inventory gap | `contracts/models/flux-service-model.schema.json`; `src/model/`; owner task/funnel and field/complexity configuration modules and dashboard; migrations 0003–0004; service-model and configuration tests | GAP-013: complete ResearchOps inventory |
+| MODEL-02 | Partial, retained | Owner field configuration declares question complexity from 1 to 7; model summary and field reports store and show it | GAP-013: comparable complexity-adjusted effort/error/help baselines |
 | MODEL-03 | Implemented | Publisher outcomes/key events, collector attribution, event report and tests | Generic submit must never imply success |
 | MODEL-04 | Implemented | `src/product/funnel-field-reports.mjs`; funnel tests and dashboard panel | Preserve ordered/time-bounded definitions |
-| MODEL-05 | Implemented | Field report module, aggregate distributions, dashboard and tests | Values remain prohibited; publisher inventory incomplete |
+| MODEL-05 | Implemented | Owner-managed question/field configuration, field report module, aggregate distributions, dashboard and tests | Values remain prohibited; publisher inventory incomplete |
 | MODEL-06 | Implemented for configured transactions | Time-ordered friction/recovery/configured-success funnel SQL and tests | Richer recovery capture remains optional governed depth |
-| MODEL-07 | Partial, retained | Required/optional field model and aggregate field evidence | GAP-015: disclosure purpose and complete consent-choice denominator |
+| MODEL-07 | Partial, retained | Owner-managed required/optional field configuration and aggregate field evidence | GAP-015: disclosure purpose and complete consent-choice denominator |
 | MODEL-08 | Retained | No idle/visibility/resume event contract or hosted capture lifecycle found | GAP-015: bounded, conservative interrupted-journey lifecycle |
 | MODEL-09 | Partial, retained | Pointer/touch metadata and k=5 interaction-mode comparison | GAP-015: necessary coarse compatibility/accessibility context only |
 | MODEL-10 | Retained | `assist.help` opening exists; no configured help level/type or dismissed/engaged/outcome lifecycle | GAP-015: content-free contextual-help taxonomy |
