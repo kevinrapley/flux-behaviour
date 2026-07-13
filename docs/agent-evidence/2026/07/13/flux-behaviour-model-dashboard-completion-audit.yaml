@@ -1,0 +1,116 @@
+task_id: flux-behaviour-model-dashboard-completion-audit
+mode: repo-conformance
+repository: kevinrapley/flux-behaviour
+risk_level: high
+base_branch: main
+working_branch: feature/model-dashboard-completion-audit
+files_read:
+  - README.md
+  - AGENTS.md
+  - RECENT_LEARNINGS.md
+  - CONTRIBUTING.md
+  - SECURITY.md
+  - repository-contract.yaml
+  - github-settings.yaml
+  - conformance-matrix.yaml
+  - gap-register.yaml
+  - harm-register.yaml
+  - docs/product/behaviour-model-dashboard-gap-analysis.md
+  - docs/product/lifecycle-analytics.md
+  - docs/product/dashboard-information-architecture-and-uncertainty.md
+  - docs/product/comparisons-and-aggregate-export.md
+  - docs/product/funnel-field-reports.md
+  - docs/product/event-entity-reports.md
+  - docs/product/realtime-analytics.md
+  - docs/product/publisher-service-model.md
+  - Private source: supplied Google Analytics overview and 30-minute activity screenshot
+  - Private source: supplied Google Analytics event, key-event and user-property screenshot
+  - Private source: supplied Google Analytics realtime, comparison, source, audience and page screenshot
+files_changed:
+  - docs/product/model-dashboard-completion-audit.md
+  - docs/product/behaviour-model-dashboard-gap-analysis.md
+  - tests/model-dashboard-completion-audit.test.mjs
+  - README.md
+  - conformance-matrix.yaml
+  - gap-register.yaml
+  - github-settings.yaml
+  - harm-register.yaml
+  - RECENT_LEARNINGS.md
+  - agent-evidence.yaml
+promotion_decisions:
+  - Treat requirement reconciliation as complete only when every roadmap item has one current state and an owned residual boundary.
+  - Keep implemented repository evidence distinct from live production and release-assurance evidence.
+  - Retain risky person-level inference as rejected or reframed rather than presenting it as missing product functionality.
+  - Record source/property reporting as GAP-018 instead of allowing retained DASH-07 and DASH-08 work to become unowned.
+commands_run:
+  - command: node --test tests/model-dashboard-completion-audit.test.mjs
+    status: passed
+    evidence: Two focused tests proved unique coverage of all 25 roadmap requirements, source/screenshot coverage, live-evidence limits and owned residual gaps.
+  - command: npm test
+    status: passed
+    evidence: All 287 repository tests passed.
+  - command: npm run validate && npm run security:secrets && npm run sbom
+    status: passed
+    evidence: Required governance files passed after correcting the README invariant; secret scanning passed and the CycloneDX SBOM regenerated without tracked drift.
+  - command: GitHub API main branch protection and repository ruleset queries
+    status: failed
+    evidence: Main returned 404 Branch not protected and the ruleset list was empty; this observed enforcement failure is recorded in GAP-001 and github-settings.yaml.
+  - command: python3 Diamond Standard 2.9.1 validate-bundle.py
+    status: passed
+    evidence: Bundle validation passed.
+  - command: python3 Diamond Standard 2.9.1 validate-agent-evidence.py docs/agent-evidence/2026/07/13/flux-behaviour-model-dashboard-completion-audit.yaml
+    status: passed
+    evidence: The flat Diamond Standard 2.9.1 agent-evidence record passed its dedicated validator.
+  - command: Visual recheck of the three supplied Google Analytics screenshots
+    status: passed
+    evidence: Realtime, comparison, event/key-event, page/screen, acquisition-source and audience/property patterns were visibly confirmed and reconciled in the completion ledger.
+  - command: Codex review of PR 47 at commit 573935992de0d67162f30c99f283ad6a51a246d3
+    status: passed
+    evidence: "Six P2 findings were validated and corrected: private source labels, screenshot scope, provenance, required evidence sections, explicit open-gap IDs and owned source/property work."
+contracts_validated:
+  - conformance-matrix.yaml
+  - gap-register.yaml
+  - github-settings.yaml
+  - harm-register.yaml
+tests_run:
+  - command: node --test tests/model-dashboard-completion-audit.test.mjs
+    status: passed
+  - command: npm test
+    status: passed
+gaps_recorded:
+  - GAP-001
+  - GAP-013
+  - GAP-015
+  - GAP-016
+  - GAP-017
+  - GAP-018
+waivers_recorded: []
+artifacts_created:
+  - docs/product/model-dashboard-completion-audit.md
+  - tests/model-dashboard-completion-audit.test.mjs
+recent_learnings:
+  read: true
+  updated: true
+github_settings:
+  desired_state_file: github-settings.yaml
+  observed_main_branch_protection: absent
+  observed_repository_rulesets: 0
+security:
+  runtime_change: false
+  release_blockers_preserved: true
+privacy:
+  runtime_change: false
+  evidence_boundary: No captured values, visitor/session identifiers or external source locations were added; retained reporting gaps preserve minimisation and k-anonymity gates.
+accessibility:
+  required: false
+  reason: Documentation and governance audit only; no interface change.
+performance:
+  required: false
+harms:
+  - HARM-007 mitigation updated to require a reconciled requirement ledger.
+claims:
+  - Gap identification is complete and source-grounded; product general availability is not complete.
+  - Repository implementation evidence is kept separate from live and release evidence.
+risks:
+  - Production retention/deletion, rate limiting, incident, DPIA, accessibility, corpus/fairness and live-provider evidence remain open.
+  - Main branch controls are desired but not enforced by branch protection or a repository ruleset.

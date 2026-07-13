@@ -23,7 +23,7 @@ harms:
       - People using public services
     likelihood: high
     severity: high
-    mitigation: Treat education, literacy, intelligence, personality, openness, sociability, conscientiousness and ICT-ability inference as rejected; use interaction evidence to investigate service friction; require aggregate-first reporting, alternative explanations, k-anonymity, user control, explicit adaptation consent, accessible override and human review.
+    mitigation: Treat education, literacy, intelligence, personality, openness, sociability, conscientiousness and ICT-ability inference as rejected; keep a requirement ledger that distinguishes implemented, partial, retained and reframed capabilities; use interaction evidence to investigate service friction; require aggregate-first reporting, alternative explanations, k-anonymity, user control, explicit adaptation consent, accessible override and human review.
     residual_risk: medium
     owner: governance-lead
     escalation_route: Product owner, data protection lead, accessibility lead and ethics reviewer

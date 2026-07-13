@@ -12,7 +12,7 @@ Flux is service-improvement evidence. It is not surveillance tooling. It must no
 
 ## Current status
 
-Status: governed foundation with early runtime code. The event contract, runtime validator, collector scaffold (storage disabled), consent-gated SDK tag and a GOV.UK demo prototype have been promoted. Collector storage, aggregation and production deployment have not.
+Status: governed foundation with a D1-backed early product runtime; not production-ready. The consent-gated hosted SDK, metadata-only collector, versioned publisher service model, authenticated aggregate dashboard and ResearchOps integration have been promoted. Retention/deletion, production rate limiting, incident controls, DPIA, complete accessibility and corpus/fairness assurance remain release blockers.
 
 The repository also provides branch posture, CODEOWNERS, security policy, CI scaffolding, assurance records, a harm register, migration controls and local validation scripts.
 
@@ -22,7 +22,7 @@ Services add Flux like other analytics tags: a snippet plus a hosted module, con
 
 ## Demo prototype
 
-`npm run demo:serve` builds and serves a GOV.UK Frontend prototype at `http://localhost:4321/`: an instrumented demo journey with a consent banner and live event log, and a dashboard of behavioural signals following ONS Charts conventions (fixture data while storage is disabled). See `docs/product/demo-prototype.md`.
+`npm run demo:serve` builds and serves a GOV.UK Frontend prototype at `http://localhost:4321/`: an instrumented consented journey, playground and the protected dashboard shell. The deployed dashboard reads authenticated aggregate D1 evidence; local static serving does not provide the authenticated API. See `docs/product/demo-prototype.md`.
 
 ## Repository layout
 

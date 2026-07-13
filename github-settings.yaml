@@ -39,4 +39,9 @@ repository_rulesets:
   required: true
 environments:
   deployment_protections_required: true
-verification_method: file-api-unavailable
+verification_method: github-api-2026-07-13
+observed_state:
+  default_branch: main
+  branch_protection_api: branch-not-protected
+  repository_ruleset_count: 0
+  desired_branch_controls_enforced: false

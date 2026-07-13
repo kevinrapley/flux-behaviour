@@ -1,5 +1,9 @@
 # Recent Learnings
 
+## 2026-07-13 — A roadmap must be reconciled after implementation
+
+A source-grounded gap matrix can become actively misleading when its “current evidence” column still describes the pre-implementation system. Completion auditing must enumerate every requirement, cite current contracts/runtime/tests, separate repository implementation from live release evidence, and map partial or missing capability to an owned gap. Green tests cannot prove DPIA, accessibility, retention, incident, corpus/fairness or live-provider controls, and those release boundaries must remain explicit.
+
 ## 2026-07-13 — Repeat visits are service evidence, not proof of learning
 
 Recency and celeration can be calculated without widening capture: order consented sessions within the tenant, aggregate prior-visit intervals, and compare journey-level validation, help and revisit rates across like-for-like periods. Keep visitor identifiers inside the query, suppress named lifecycle groups and small interval buckets, expose samples and denominators, and state that audience, task, collection, accessibility or service changes may explain movement. A falling friction rate does not establish that an individual learned or improved.

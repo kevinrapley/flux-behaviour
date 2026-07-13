@@ -2,8 +2,10 @@ agent_evidence_registry:
   version: 1
   purpose: Registry for agent evidence records. Individual records live under docs/agent-evidence/YYYY/MM/DD/.
   canonical_format:
-    root_key: evidence_records
-    item_key: task_id
+    current_shape: diamond-standard-flat
+    legacy_root_key: evidence_records
+    identity_key: task_id
+    migration_note: Records created before the completion audit retain the legacy wrapper; new records use the validated flat Diamond Standard 2.9.1 shape.
     required_fields:
       - task_id
       - mode
@@ -25,6 +27,10 @@ agent_evidence_registry:
     root_file: Keep this file as the registry and canonical format reference only.
     naming: Use the task_id as the filename, with .yaml extension.
   entries:
+    - task_id: flux-behaviour-model-dashboard-completion-audit
+      date: 2026-07-13
+      path: docs/agent-evidence/2026/07/13/flux-behaviour-model-dashboard-completion-audit.yaml
+      status: externalised
     - task_id: flux-behaviour-lifecycle-analytics
       date: 2026-07-13
       path: docs/agent-evidence/2026/07/13/flux-behaviour-lifecycle-analytics.yaml

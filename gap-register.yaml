@@ -1,11 +1,11 @@
 gaps:
   - id: GAP-013
-    title: Publisher-declared service model is missing
+    title: Publisher service inventory and comparison baselines are incomplete
     severity: high
     observed_state: Flux now publishes and persists a validated versioned service hierarchy with required status, question and transaction complexity, semantic bindings, configured outcomes and key events; event-time model context, selected-period mapping/outcome evidence, entity performance, publisher-ordered funnels and dedicated privacy-safe field coverage are implemented. The ResearchOps model remains an initial rather than complete service inventory.
     expected_state: Tenant owners can publish a validated, versioned, non-identifying service model that events resolve against and aggregate reports use consistently.
     risk: Unmodelled ResearchOps transactions and fields remain absent from otherwise configured reporting, and complexity-adjusted interpretation remains incomplete.
-    action: Deliver MODEL-01 through MODEL-05 from docs/product/behaviour-model-dashboard-gap-analysis.md before expanding inference.
+    action: Complete the ResearchOps service inventory and add comparable complexity-adjusted effort/error/help baselines without expanding person-level inference.
     owner: product-lead
     status: in-progress
 
@@ -49,6 +49,16 @@ gaps:
     owner: governance-lead
     status: open
 
+  - id: GAP-018
+    title: Acquisition source and service-property reporting lacks a governed contract
+    severity: medium
+    observed_state: Realtime, event, page/entity and controlled comparison reporting are implemented, but no allow-listed acquisition/source/campaign contract exists and general audience properties are limited to existing non-sensitive journey cohorts and controlled comparisons.
+    expected_state: Necessary source categories and publisher-defined service properties can be compared as aggregates without query strings, identifiers, sensitive traits or small groups.
+    risk: Unowned dashboard expectations could either remain silently absent or be added later as invasive, fingerprinting or demographic-style data collection.
+    action: Define a necessity-reviewed, identifier-free source/property contract with direct/unknown defaults, k=5 suppression, retention limits and explicit prohibited fields before implementing DASH-07 or the remaining DASH-08 scope.
+    owner: product-lead
+    status: open
+
   - id: GAP-012
     title: UK English writing indicators need representative corpus, accessibility and fairness validation
     severity: high
@@ -60,23 +70,24 @@ gaps:
     status: open
 
   - id: GAP-001
-    title: GitHub branch protection and security settings require API verification
+    title: GitHub branch protection and repository rulesets are not enforced
     severity: high
-    observed_state: Desired state is documented, but live enforcement has not been API-verified.
+    observed_state: GitHub API verification on 13 July 2026 returned 404 “Branch not protected” for main and an empty repository-ruleset list. Desired reviews, CODEOWNERS, status checks, conversation resolution, force-push and deletion controls are therefore not enforced by branch protection or a repository ruleset.
     expected_state: Main branch requires pull requests, CODEOWNERS review, status checks and blocks force pushes.
-    risk: Documented posture may not match enforced posture.
-    action: Configure and verify GitHub settings after the foundation PR is open.
+    risk: Changes could bypass the documented review, status-check, conversation-resolution and history-protection posture.
+    action: Configure a main-branch ruleset or branch protection matching github-settings.yaml, then verify every required control through the GitHub API.
     owner: maintainer
     status: open
   - id: GAP-002
     title: Runtime product code requires governed production assurance
     severity: medium
-    observed_state: Pages API, D1 model, hosted browser capture engine, account UI, purpose-led semantic narratives and dashboard have been promoted, but the current publisher-boundary migration is awaiting reviewed PRs and release assurance.
+    observed_state: Pages API, D1 model, hosted browser capture engine, account UI, publisher service model, purpose-led semantic narratives and aggregate dashboard are merged. Production release assurance remains incomplete.
     expected_state: Runtime code is reviewed with DPIA, accessibility, retention, incident and rate-limit evidence before general availability.
     risk: Live collection could be enabled without the assurance controls required for a public-service analytics product.
     action: Complete release assurance and retain the production blocks in GAP-003, GAP-004 and GAP-005.
     owner: product-lead
     status: open
+
   - id: GAP-003
     title: DPIA and accessibility evidence are not complete
     severity: high
@@ -89,10 +100,10 @@ gaps:
   - id: GAP-004
     title: Cloudflare Worker adapter lacks production deployment controls
     severity: high
-    observed_state: Worker-compatible adapter now has boundary control scaffolding for CORS, preflight, allowed headers, request body size and a rate-limit interface, but lacks wrangler configuration, routes, production rate limiting, retention policy or storage bindings.
+    observed_state: Wrangler Pages configuration and the D1 storage binding exist, and the collector enforces origin, preflight, method, header, request-size and schema boundaries. Production rate limiting, retention/deletion policy, incident controls and operational monitoring are not evidenced.
     expected_state: Deployment controls, request limits, CORS policy and retention decisions are reviewed before any public route is exposed.
     risk: A collector boundary could be exposed before operational safeguards are complete.
-    action: Add and review Cloudflare deployment posture, production rate limiting, retention, deletion and storage policy before enabling live collection.
+    action: Review the live Cloudflare deployment posture and implement production rate limiting, retention/deletion, incident and operational-monitoring controls before general availability.
     owner: product-lead
     status: open
   - id: GAP-005
