@@ -81,7 +81,7 @@ export async function readPublishedServiceModel(db, accountId, tenantId) {
   try {
     const model = JSON.parse(row.model_json);
     return validateServiceModel(model).valid
-      ? { ok: true, model, manifest_hash: row.manifest_hash }
+      ? { ok: true, model, manifest_hash: row.manifest_hash, role: access.role }
       : { ok: false, error: 'service_model_invalid_at_rest' };
   } catch {
     return { ok: false, error: 'service_model_invalid_at_rest' };

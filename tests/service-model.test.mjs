@@ -170,7 +170,7 @@ test('resolves an action-specific key event to a configured transaction outcome 
   assert.equal(context.outcome_type, 'success');
 });
 
-test('requires configured outcomes and key events instead of treating generic submits as success', () => {
+test('requires outcome and key-event collections even before they are configured', () => {
   const model = validModel();
   delete model.outcomes;
   delete model.key_events;
@@ -179,8 +179,8 @@ test('requires configured outcomes and key events instead of treating generic su
   const codes = result.errors.map(({ code }) => code);
 
   assert.equal(result.valid, false);
-  assert.ok(codes.includes('missing_outcomes'));
-  assert.ok(codes.includes('missing_key_events'));
+  assert.ok(codes.includes('invalid_outcomes'));
+  assert.ok(codes.includes('invalid_key_events'));
 });
 
 test('requires each key event to have one unambiguous action and bound element pair', () => {
@@ -301,4 +301,14 @@ test('requires a key event and its outcome to belong to the same transaction', (
 
   assert.equal(result.valid, false);
   assert.ok(result.errors.some(({ code }) => code === 'key_event_outcome_transaction_mismatch'));
+});
+
+test('accepts a service-only model before an owner configures tasks and funnels', () => {
+  const model = validModel();
+  model.entities = model.entities.filter(({ type }) => type === 'service');
+  model.bindings = [];
+  model.outcomes = [];
+  model.key_events = [];
+
+  assert.deepEqual(validateServiceModel(model), { valid: true, errors: [] });
 });

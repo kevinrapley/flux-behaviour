@@ -12,7 +12,7 @@ This audit distinguishes repository implementation from live production proof. T
 
 | Requirement | Audit state | Authoritative repository evidence | Residual gap or release boundary |
 | --- | --- | --- | --- |
-| MODEL-01 | Implemented with residual inventory gap | `contracts/models/flux-service-model.schema.json`; `src/model/`; migrations 0003–0004; service-model tests | GAP-013: complete ResearchOps inventory |
+| MODEL-01 | Implemented with residual inventory gap | `contracts/models/flux-service-model.schema.json`; `src/model/`; owner task/funnel configuration modules and dashboard; migrations 0003–0004; service-model and configuration tests | GAP-013: complete ResearchOps inventory |
 | MODEL-02 | Partial, retained | Model contract, summary and funnel/field reports store and show complexity | GAP-013: comparable complexity-adjusted effort/error/help baselines |
 | MODEL-03 | Implemented | Publisher outcomes/key events, collector attribution, event report and tests | Generic submit must never imply success |
 | MODEL-04 | Implemented | `src/product/funnel-field-reports.mjs`; funnel tests and dashboard panel | Preserve ordered/time-bounded definitions |

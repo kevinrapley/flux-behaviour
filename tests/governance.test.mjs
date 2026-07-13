@@ -45,3 +45,13 @@ test('secret scanner catches quoted, unquoted and YAML-style assignments', () =>
     }
   }
 });
+
+test('secret scanner does not mistake ordinary task identifiers for provider keys', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'flux-secret-scan-'));
+  try {
+    writeFileSync(join(dir, 'configuration.mjs'), "export const feature = 'task-funnel-configuration-manager';\n");
+    assert.doesNotThrow(() => execFileSync('node', [scanner], { cwd: dir, stdio: 'pipe' }));
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

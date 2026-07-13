@@ -1,3 +1,5 @@
+import { createTaskFunnelManager } from './task-funnel-manager.mjs';
+
 const dashboard = document.querySelector('[data-flux-dashboard]');
 const status = document.querySelector('[data-flux-live-status]');
 const content = document.querySelector('[data-flux-dashboard-content]');
@@ -18,6 +20,7 @@ const cohorts = document.querySelector('[data-flux-cohorts]');
 const signals = document.querySelector('[data-flux-signals]');
 const journeys = document.querySelector('[data-flux-live-journeys]');
 const governance = document.querySelector('[data-flux-governance]');
+const taskFunnelManagerRoot = document.querySelector('[data-flux-task-funnel-manager]');
 const refresh = document.querySelector('[data-flux-refresh]');
 const rangeButtons = [...document.querySelectorAll('[data-flux-range]')];
 const customRange = document.querySelector('[data-flux-custom-range]');
@@ -46,6 +49,12 @@ const ACTION_LABELS = Object.freeze({
   'error.invalid': 'Validation errors',
   'error.recovered': 'Errors recovered',
   'flow.submit': 'Forms submitted'
+});
+
+const taskFunnelManager = createTaskFunnelManager({
+  root: taskFunnelManagerRoot,
+  tenantId: dashboard?.dataset.fluxTenant,
+  onPublished: () => void loadDashboard()
 });
 
 let currentRange = new URL(window.location.href).searchParams.get('range') || '30d';
@@ -217,6 +226,7 @@ function renderDashboard(data) {
   signals.replaceChildren(renderSignals(analytics.dimension_scores ?? []));
   journeys.replaceChildren(...(data.journeys ?? []).map(journeyCard));
   governance.replaceChildren(renderGovernance(analytics.governance));
+  void taskFunnelManager.load();
   if ((data.journeys ?? []).length === 0) journeys.replaceChildren(emptyState('No journeys in this period', 'Choose a wider date range or check again after visitors have used ResearchOps.'));
 }
 

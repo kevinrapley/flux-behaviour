@@ -8,7 +8,7 @@ const secretAssignmentValue = '(?:"[^"\\n]{16,}"|\'[^\'\\n]{16,}\'|[A-Za-z0-9_./
 const patterns = [
   new RegExp(`(?:^|[\\s"'])${secretAssignmentName}\\s*[:=]\\s*${secretAssignmentValue}`, 'im'),
   /gh[pousr]_[A-Za-z0-9_]{36,}/,
-  /sk-[A-Za-z0-9_-]{20,}/
+  /(?:^|[^A-Za-z0-9])sk-[A-Za-z0-9_-]{20,}/m
 ];
 
 function walk(dir) {

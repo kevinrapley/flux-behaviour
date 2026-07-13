@@ -2,10 +2,10 @@ gaps:
   - id: GAP-013
     title: Publisher service inventory and comparison baselines are incomplete
     severity: high
-    observed_state: Flux now publishes and persists a validated versioned service hierarchy with required status, question and transaction complexity, semantic bindings, configured outcomes and key events; event-time model context, selected-period mapping/outcome evidence, entity performance, publisher-ordered funnels and dedicated privacy-safe field coverage are implemented. The ResearchOps model remains an initial rather than complete service inventory.
-    expected_state: Tenant owners can publish a validated, versioned, non-identifying service model that events resolve against and aggregate reports use consistently.
+    observed_state: Tenant owners can now create, edit, reorder and delete funnels, tasks, exact-key steps and success events through the authenticated dashboard; each action publishes a complete validated immutable next version and historical evidence retains its original version. Required status, complexity and question/field authoring remain API-level, and the ResearchOps model remains an initial rather than complete service inventory.
+    expected_state: The full ResearchOps service inventory and comparable complexity-adjusted effort, error and help baselines are configured through governed owner workflows without identifying content.
     risk: Unmodelled ResearchOps transactions and fields remain absent from otherwise configured reporting, and complexity-adjusted interpretation remains incomplete.
-    action: Complete the ResearchOps service inventory and add comparable complexity-adjusted effort/error/help baselines without expanding person-level inference.
+    action: Extend the owner workflow to remaining question/field/complexity configuration as that inventory is completed, then add comparable complexity-adjusted effort/error/help baselines without expanding person-level inference.
     owner: product-lead
     status: in-progress
 

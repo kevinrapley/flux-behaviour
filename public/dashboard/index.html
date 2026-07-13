@@ -48,7 +48,7 @@
 	<div class="govuk-width-container">
 		<main class="govuk-main-wrapper" id="main-content" role="main">
 
-<div class="flux-dashboard" data-flux-dashboard aria-busy="true">
+<div class="flux-dashboard" data-flux-dashboard data-flux-tenant="researchops" aria-busy="true">
 	<header class="flux-dashboard__header">
 		<div>
 			<span class="govuk-caption-l">ResearchOps</span>
@@ -186,6 +186,23 @@
 				</div>
 			</div>
 			<div data-flux-entity-report></div>
+		</section>
+
+		<section class="flux-dashboard__panel flux-model-manager" aria-labelledby="task-funnel-manager-heading" data-flux-report-area="tasks" hidden>
+			<div class="flux-dashboard__section-heading">
+				<div>
+					<h2 class="govuk-heading-l" id="task-funnel-manager-heading">Configure tasks and funnels</h2>
+					<p class="govuk-body flux-dashboard__section-copy">Create the service journeys Flux should measure. Each saved change publishes a new model version, preserving the meaning of historical analytics.</p>
+				</div>
+			</div>
+			<details class="govuk-details flux-model-manager__disclosure">
+				<summary class="govuk-details__summary">
+					<span class="govuk-details__summary-text">Manage published configuration</span>
+				</summary>
+				<div class="govuk-details__text">
+					<div data-flux-task-funnel-manager aria-live="polite"></div>
+				</div>
+			</details>
 		</section>
 
 		<section class="flux-dashboard__panel" aria-labelledby="funnel-report-heading" data-flux-report-area="tasks" hidden>

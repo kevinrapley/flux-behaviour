@@ -1,0 +1,138 @@
+task_id: flux-behaviour-tenant-task-funnel-manager
+mode: repo-build
+repository: kevinrapley/flux-behaviour
+risk_level: high
+base_branch: main
+working_branch: feature/tenant-task-funnel-manager
+files_read:
+  - README.md
+  - AGENTS.md
+  - RECENT_LEARNINGS.md
+  - CONTRIBUTING.md
+  - SECURITY.md
+  - repository-contract.yaml
+  - github-settings.yaml
+  - conformance-matrix.yaml
+  - gap-register.yaml
+  - harm-register.yaml
+  - docs/product/production-runtime.md
+  - docs/product/publisher-service-model.md
+  - docs/product/funnel-field-reports.md
+  - docs/product/dashboard-information-architecture-and-uncertainty.md
+  - docs/product/behaviour-model-dashboard-gap-analysis.md
+  - docs/product/model-dashboard-completion-audit.md
+  - contracts/models/flux-service-model.schema.json
+  - src/model/service-model.mjs
+  - src/model/service-model-store.mjs
+  - src/product/router.mjs
+  - src/dashboard/live-dashboard.mjs
+  - demo/templates/pages/dashboard.njk
+files_changed:
+  - contracts/models/flux-service-model.schema.json
+  - src/model/service-model.mjs
+  - src/model/service-model-store.mjs
+  - src/dashboard/task-funnel-configuration.mjs
+  - src/dashboard/task-funnel-manager.mjs
+  - src/dashboard/live-dashboard.mjs
+  - demo/templates/pages/dashboard.njk
+  - demo/styles/demo.scss
+  - public/dashboard/index.html
+  - public/assets/styles/demo.css
+  - public/assets/flux/dashboard/live-dashboard.mjs
+  - public/assets/flux/dashboard/task-funnel-configuration.mjs
+  - public/assets/flux/dashboard/task-funnel-manager.mjs
+  - scripts/secret-pattern-scan.mjs
+  - tests/governance.test.mjs
+  - tests/service-model-contract.test.mjs
+  - tests/service-model-route.test.mjs
+  - tests/service-model.test.mjs
+  - tests/task-funnel-configuration.test.mjs
+  - tests/dashboard-task-funnel-manager.test.mjs
+  - docs/product/publisher-service-model.md
+  - docs/product/production-runtime.md
+  - docs/product/behaviour-model-dashboard-gap-analysis.md
+  - docs/product/model-dashboard-completion-audit.md
+  - RECENT_LEARNINGS.md
+  - agent-evidence.yaml
+  - conformance-matrix.yaml
+  - gap-register.yaml
+  - harm-register.yaml
+promotion_decisions:
+  - Keep task and funnel definitions tenant-owned and generic; ResearchOps supplies configuration rather than Flux product logic.
+  - Publish every owner action as a complete immutable next model version so historical evidence keeps its event-time meaning.
+  - Preserve stable keys when labels change and require exact publisher data-flux-key values for ordered steps and completion events.
+  - Permit a service-only model with empty outcome and key-event collections so new tenants can configure incrementally.
+  - Restrict mutation to tenant owners, retain viewer read access and reject concurrent version overwrite.
+  - Cascade deletion through dependent hierarchy and bindings while never rewriting historical versions.
+commands_run:
+  - command: node --test tests/service-model.test.mjs tests/service-model-contract.test.mjs
+    state: verified
+    status: passed
+    evidence: 22 service-model contract and runtime tests passed after the empty-owner-configuration RED to GREEN cycle.
+  - command: node --test tests/task-funnel-configuration.test.mjs tests/dashboard-task-funnel-manager.test.mjs
+    state: verified
+    status: passed
+    evidence: 15 configuration and dashboard-surface tests passed after individual create, edit, delete, reorder, legacy-step binding and success-event RED to GREEN cycles.
+  - command: node --test tests/service-model-route.test.mjs tests/service-model-store.test.mjs
+    state: verified
+    status: passed
+    evidence: 12 authenticated route and immutable-store tests passed, including owner publication, viewer role visibility and conflict rejection.
+  - command: npm test
+    state: verified
+    status: passed
+    evidence: All 307 repository tests passed.
+  - command: FLUX_DEMO_COLLECTOR_ENDPOINT=https://flux-behaviour.pages.dev/api/collect npm run demo:build
+    state: verified
+    status: passed
+    evidence: Production-shaped dashboard pages, styles and browser modules built successfully; only existing GOV.UK Sass deprecation warnings were emitted.
+  - command: npm run validate
+    state: verified
+    status: passed
+    evidence: All 19 governed repository files were present.
+  - command: npm run security:secrets
+    state: verified
+    status: passed
+    evidence: Secret-pattern sanity scan passed after a regression test prevented ordinary task-funnel identifiers from matching the sk- boundary rule.
+  - command: npm run sbom
+    state: verified
+    status: passed
+    evidence: CycloneDX SBOM generation completed successfully.
+  - command: npm audit --audit-level=high
+    state: verified
+    status: passed
+    evidence: npm reported zero vulnerabilities.
+  - command: git diff --check
+    state: verified
+    status: passed
+    evidence: No whitespace errors were found.
+  - command: local production-shaped browser verification at 1440x1000 and 390x844
+    state: verified
+    status: passed
+    evidence: Configuration was collapsed by default; an owner created and published a funnel as model version 2; the mobile manager and create form had no horizontal overflow; browser logs contained no warnings or errors.
+contracts_validated:
+  - contracts/models/flux-service-model.schema.json
+  - authenticated tenant service-model GET and immutable-version PUT routes
+  - exact publisher data-flux-key and Flux-action bindings
+gaps_recorded:
+  - GAP-013 updated to retain question, field and complexity authoring outside this change.
+waivers_recorded: []
+artifacts_created:
+  - src/dashboard/task-funnel-configuration.mjs
+  - src/dashboard/task-funnel-manager.mjs
+  - tests/task-funnel-configuration.test.mjs
+  - tests/dashboard-task-funnel-manager.test.mjs
+  - docs/agent-evidence/2026/07/13/flux-behaviour-tenant-task-funnel-manager.yaml
+recent_learnings:
+  - A raw publication API does not make a service model practically publisher-owned; owners need an authenticated authoring workflow.
+  - A new tenant must be able to publish a service root before it has invented funnels or completion outcomes.
+  - Stable keys, exact semantic bindings and immutable versions allow labels and structure to evolve without rewriting historical meaning.
+security:
+  - The dashboard hides mutation from viewers and the publication API independently enforces the tenant-owner role.
+  - Existing-version conflicts are rejected rather than overwriting another owner's publication.
+privacy:
+  - Configuration contains controlled service labels and semantic keys only; no visitor identity, event payload, entered value or page content is introduced.
+accessibility:
+  - The editor uses semantic sections, headings, lists, labelled native inputs and buttons, visible status messages and responsive action layouts.
+risks:
+  - Owner configuration can still be semantically wrong even when structurally valid; HARM-009 retains human review and exact-key mitigation.
+  - Question, field and complexity authoring remains outside this change and is retained under GAP-013.

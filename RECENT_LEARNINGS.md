@@ -1,5 +1,9 @@
 # Recent Learnings
 
+## 2026-07-13 — SaaS service models need an owner workflow, not a seeded product assumption
+
+A versioned publisher model is not genuinely publisher-owned when the only practical authoring path is a repository seed or raw API request. Tenant owners need an authenticated configuration surface for funnels, tasks, ordered semantic steps and completion events. Every create, edit, reorder and delete should publish a complete validated next version, retain stable keys during label edits, reject conflicting `data-flux-key` bindings and leave historical event context attached to its original immutable version. A new tenant must also be able to start with a service-only model and zero outcomes rather than inventing a completion event before configuration begins.
+
 ## 2026-07-13 — A roadmap must be reconciled after implementation
 
 A source-grounded gap matrix can become actively misleading when its “current evidence” column still describes the pre-implementation system. Completion auditing must enumerate every requirement, cite current contracts/runtime/tests, separate repository implementation from live release evidence, and map partial or missing capability to an owned gap. Green tests cannot prove DPIA, accessibility, retention, incident, corpus/fairness or live-provider controls, and those release boundaries must remain explicit.
