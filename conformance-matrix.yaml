@@ -1,4 +1,11 @@
 records:
+  - id: CONF-027
+    rule: Model and dashboard completion claims must be reconciled requirement by requirement against current repository and release evidence
+    expected_evidence: All 25 source-grounded roadmap rows have one explicit state, authoritative evidence and a residual gap/release boundary; stale implementation claims are corrected
+    actual_evidence: docs/product/model-dashboard-completion-audit.md classifies MODEL-01–13, DASH-01–10, NLP-01 and ADAPT-01 and maps each partial or retained item to GAP-013/015/016/017 or an explicit release gate. A regression test verifies complete unique coverage.
+    status: present-with-release-blockers
+    owner: product-lead
+
   - id: CONF-026
     rule: Lifecycle analytics must remain aggregate, privacy-suppressed and neutral about individual learning or ability
     expected_evidence: Return intervals, visit frequency, maturity movement and comparable friction rates use explicit samples, k=5 controls, bounded periods and alternative explanations without returning identifiers
