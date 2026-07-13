@@ -24,7 +24,7 @@ Tenant owners publish a model with `PUT /api/service-model/:tenant`. Authenticat
 
 Publication validates the complete model, calculates a canonical SHA-256 manifest hash, retires the previous published version and atomically stores the new immutable version. Existing version numbers cannot be overwritten. An invalid model at rest is not used by the dashboard or collector.
 
-New publication also applies field-specific safety policy: a field binding must fit the 120-character event contract and cannot claim a global `autocomplete.*` category or reserved/nested authentication scope. This policy blocks dashboard and direct API publication equally. Structural validation remains able to read a previously published legacy version so a stricter release does not make the tenant dashboard unavailable before an owner can replace that model.
+New publication also applies binding safety policy: tenant-global `autocomplete.*` categories cannot be attached to any service entity; a field binding must begin with `field.`, fit the 120-character event contract and cannot claim a reserved or nested authentication scope; and underscore is treated as an authentication namespace separator alongside dot, colon and hyphen. The neutral `auth.otp` lifecycle binding remains valid outside fields. This policy blocks dashboard and direct API publication equally. Structural validation remains able to read a previously published legacy version so a stricter release does not make the tenant dashboard unavailable before an owner can replace that model.
 
 ## Owner configuration workflow
 

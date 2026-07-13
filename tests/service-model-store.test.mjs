@@ -117,10 +117,24 @@ test('refuses unsafe field bindings at the publication boundary without invalida
 
     assert.equal(result.ok, false, elementKey);
     assert.equal(result.error, 'invalid_service_model');
-    assert.ok(result.details.some(({ code }) => code === 'prohibited_field_binding'), elementKey);
+    const expectedCode = elementKey.startsWith('autocomplete.') ? 'prohibited_global_binding' : 'prohibited_field_binding';
+    assert.ok(result.details.some(({ code }) => code === expectedCode), elementKey);
     assert.equal(db.prepared.length, 0);
     assert.equal(db.batches.length, 0);
   }
+});
+
+test('refuses tenant-global autocomplete categories on non-field bindings at publication', async () => {
+  const db = recordingDb();
+  const model = validModel();
+  model.bindings.push({ element_key: 'autocomplete.email', entity_key: 'transaction.manage-project' });
+
+  const result = await publishServiceModel(db, 'account-1', model);
+
+  assert.equal(result.ok, false);
+  assert.equal(result.error, 'invalid_service_model');
+  assert.ok(result.details.some(({ code }) => code === 'prohibited_global_binding'));
+  assert.equal(db.prepared.length, 0);
 });
 
 test('resolves a collected semantic key against the currently published model version', async () => {

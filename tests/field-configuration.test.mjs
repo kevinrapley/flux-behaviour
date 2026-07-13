@@ -244,11 +244,24 @@ test('rejects reserved and nested authentication scopes as field bindings', asyn
     stepKey: 'step.enter-details', label: 'Contact details', complexity: 4
   });
 
-  for (const elementKey of ['auth.otp', 'field.auth.otp', 'field:auth:code', 'field-auth-code']) {
+  for (const elementKey of ['auth.otp', 'field.auth.otp', 'field:auth:code', 'field-auth-code', 'field_auth_code', 'field.auth_code']) {
     assert.throws(() => createField(current, {
       questionKey: 'question.contact-details', label: 'Authentication field',
       elementKey, required: true
     }), /auth_scoped_key/);
+  }
+});
+
+test('requires a field-specific namespace instead of claiming form or page success keys', async () => {
+  const { createField, createQuestionGroup } = await import('../src/dashboard/field-configuration.mjs');
+  const current = createQuestionGroup(modelWithStep(), {
+    stepKey: 'step.enter-details', label: 'Contact details', complexity: 4
+  });
+
+  for (const elementKey of ['form.support.confirmation', 'page.support-confirmed']) {
+    assert.throws(() => createField(current, {
+      questionKey: 'question.contact-details', label: 'Confirmation field', elementKey, required: true
+    }), /field_key_required/);
   }
 });
 

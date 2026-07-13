@@ -27,6 +27,7 @@ files_read:
   - src/dashboard/live-dashboard.mjs
   - src/model/service-model.mjs
   - src/model/service-model-store.mjs
+  - src/events/event-privacy-policy.mjs
   - demo/templates/pages/dashboard.njk
 files_changed:
   - src/dashboard/field-configuration.mjs
@@ -34,6 +35,7 @@ files_changed:
   - src/dashboard/live-dashboard.mjs
   - src/model/service-model.mjs
   - src/model/service-model-store.mjs
+  - src/events/event-privacy-policy.mjs
   - demo/templates/pages/dashboard.njk
   - demo/styles/demo.scss
   - public/dashboard/index.html
@@ -43,6 +45,8 @@ files_changed:
   - public/assets/flux/dashboard/field-manager.mjs
   - tests/field-configuration.test.mjs
   - tests/dashboard-field-manager.test.mjs
+  - tests/event-validation.test.mjs
+  - tests/service-model-store.test.mjs
   - docs/product/publisher-service-model.md
   - docs/product/production-runtime.md
   - docs/product/funnel-field-reports.md
@@ -63,7 +67,7 @@ commands_run:
   - command: node --test tests/dashboard-field-manager.test.mjs tests/field-configuration.test.mjs
     state: verified
     status: passed
-    evidence: Sixteen field configuration and dashboard-surface tests passed after individual create, edit, binding, deletion, collectable-key, global-autocomplete, auth-scope, success-binding, unbound-repair, refresh-preservation and responsive-layout RED to GREEN cycles.
+    evidence: Seventeen field configuration and dashboard-surface tests passed after individual create, edit, binding, deletion, collectable-key, namespace, global-autocomplete, auth-scope, success-binding, unbound-repair, refresh-preservation and responsive-layout RED to GREEN cycles.
   - command: FLUX_DEMO_COLLECTOR_ENDPOINT=https://flux-behaviour.pages.dev/api/collect npm run demo:build
     state: verified
     status: passed
@@ -71,7 +75,7 @@ commands_run:
   - command: npm test
     state: verified
     status: passed
-    evidence: All 324 repository tests passed after addressing ten Codex review findings across three review passes.
+    evidence: All 327 repository tests passed after addressing thirteen Codex review findings across four review passes.
   - command: npm run validate
     state: verified
     status: passed
@@ -119,7 +123,8 @@ security:
   - Existing-version conflicts are rejected rather than overwriting another owner's publication.
   - Global content-free autocomplete categories are rejected as field-specific bindings, and publisher keys are capped at the collector contract's 120-character limit.
   - Reserved and nested authentication scopes are rejected so excluded authentication interactions cannot be attributed to ordinary field analytics.
-  - The direct publication API enforces the same field-binding boundary as the dashboard without retroactively invalidating a stored legacy model.
+  - The direct publication API enforces field namespaces and tenant-global autocomplete boundaries without retroactively invalidating a stored legacy model.
+  - Underscore-delimited authentication scopes are excluded by the same privacy policy as dot, colon and hyphen-delimited scopes.
 privacy:
   - Configuration contains controlled service labels, bounded complexity and semantic keys only; no visitor identity, event payload, entered value or page content is introduced.
 accessibility:

@@ -115,7 +115,8 @@ function requiredComplexity(value) {
 function requiredElementKey(value) {
   const key = typeof value === 'string' ? value.trim().toLowerCase() : '';
   if (key.startsWith('autocomplete.')) throw new TypeError('global_autocomplete_key');
-  if (key === 'auth.otp' || /(^|[.:-])auth(?=[.:-]|$)/.test(key)) throw new TypeError('auth_scoped_key');
+  if (key === 'auth.otp' || /(^|[._:-])auth(?=[._:-]|$)/.test(key)) throw new TypeError('auth_scoped_key');
+  if (!key.startsWith('field.')) throw new TypeError('field_key_required');
   if (key.length < 3 || key.length > 120 || !/^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$/.test(key)) {
     throw new TypeError('invalid_element_key');
   }

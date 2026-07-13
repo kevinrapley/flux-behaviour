@@ -120,9 +120,18 @@ export function validateServiceModelForPublication(model) {
   const entitiesByKey = new Map(model.entities.map((entity) => [entity.key, entity]));
   const errors = [];
   for (const [index, binding] of model.bindings.entries()) {
-    if (entitiesByKey.get(binding.entity_key)?.type !== 'field') continue;
     const key = binding.element_key.toLowerCase();
-    if (key.length > 120 || key.startsWith('autocomplete.') || key === 'auth.otp' || /(^|[.:-])auth(?=[.:-]|$)/.test(key)) {
+    const fieldBinding = entitiesByKey.get(binding.entity_key)?.type === 'field';
+    if (key.startsWith('autocomplete.')) {
+      errors.push({ code: 'prohibited_global_binding', path: `bindings[${index}].element_key` });
+      continue;
+    }
+    const nestedAuthScope = key !== 'auth.otp' && /(^|[._:-])auth(?=[._:-]|$)/.test(key);
+    if (nestedAuthScope && !fieldBinding) {
+      errors.push({ code: 'prohibited_global_binding', path: `bindings[${index}].element_key` });
+      continue;
+    }
+    if (fieldBinding && (key.length > 120 || !key.startsWith('field.') || key === 'auth.otp' || nestedAuthScope)) {
       errors.push({ code: 'prohibited_field_binding', path: `bindings[${index}].element_key` });
     }
   }
