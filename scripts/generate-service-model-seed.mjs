@@ -14,7 +14,6 @@ const manifestHash = await sha256(modelJson);
 const sql = [
   '-- Generated from the governed publisher service model. Do not edit by hand.',
   `-- Source: ${inputPath}`,
-  'BEGIN TRANSACTION;',
   '',
   `INSERT OR IGNORE INTO service_model_versions (tenant_id, model_key, version, schema_version, status, model_json, manifest_hash, created_by_account_id, created_at_ms, published_at_ms) VALUES (${quote(model.tenant_id)}, ${quote(model.model_key)}, ${model.version}, ${quote(model.schema_version)}, 'published', ${quote(modelJson)}, ${quote(manifestHash)}, NULL, unixepoch() * 1000, unixepoch() * 1000);`,
   '',
@@ -26,8 +25,6 @@ const sql = [
   '',
   ...(model.key_events ?? []).map((keyEvent) => `INSERT OR IGNORE INTO service_model_key_events (tenant_id, model_key, version, key_event_key, label, action, element_key, outcome_key) VALUES (${quote(model.tenant_id)}, ${quote(model.model_key)}, ${model.version}, ${quote(keyEvent.key)}, ${quote(keyEvent.label)}, ${quote(keyEvent.action)}, ${quote(keyEvent.element_key)}, ${quote(keyEvent.outcome_key)});`),
   '',
-  'COMMIT;',
-  ''
 ].join('\n');
 
 await writeFile(outputPath, sql, 'utf8');

@@ -1,0 +1,64 @@
+evidence_records:
+  - task_id: flux-behaviour-d1-seed-release-fix
+    mode: repo-fix
+    repository: kevinrapley/flux-behaviour
+    risk_level: high
+    base_branch: main
+    working_branch: fix/d1-seed-migration-transaction
+    files_read:
+      - README.md
+      - AGENTS.md
+      - RECENT_LEARNINGS.md
+      - CONTRIBUTING.md
+      - SECURITY.md
+      - repository-contract.yaml
+      - github-settings.yaml
+      - conformance-matrix.yaml
+      - gap-register.yaml
+      - harm-register.yaml
+      - docs/product/production-runtime.md
+    files_changed:
+      - migrations/0004_seed_researchops_service_model.sql
+      - scripts/generate-service-model-seed.mjs
+      - tests/researchops-service-model.test.mjs
+      - RECENT_LEARNINGS.md
+      - agent-evidence.yaml
+      - conformance-matrix.yaml
+      - gap-register.yaml
+      - harm-register.yaml
+    promotion_decisions:
+      - decision: Remove explicit SQL transaction statements from generated D1 seed migrations.
+        reason: Remote D1 rejects transaction-control SQL while Wrangler already applies each migration atomically.
+      - decision: Add a generated-migration regression assertion.
+        reason: Local D1 accepted the invalid statements and did not reproduce the remote constraint.
+    commands_run:
+      - command: node --test tests/researchops-service-model.test.mjs
+        state: verified
+        status: passed
+        evidence: The generated seed remains deterministic and contains no explicit transaction-control SQL.
+      - command: npm test
+        state: verified
+        status: passed
+        evidence: All 288 repository tests passed.
+      - command: npm run validate
+        state: verified
+        status: passed
+        evidence: Repository governance file check passed for 19 files.
+      - command: npm run security:secrets
+        state: verified
+        status: passed
+        evidence: Secret pattern sanity scan passed.
+      - command: npm run sbom
+        state: verified
+        status: passed
+        evidence: CycloneDX SBOM generation completed.
+    recent_learnings:
+      - Local D1 migration success does not prove compatibility with remote D1 transaction constraints.
+    security:
+      - The change affects migration execution only and introduces no secret or runtime request handling.
+    privacy:
+      - The seed remains metadata-only and does not add visitor, session or entered-content data.
+    accessibility:
+      - No user-interface behaviour changes.
+    risks:
+      - Production operational controls remain tracked in GAP-004.
