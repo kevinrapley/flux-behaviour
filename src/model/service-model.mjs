@@ -20,8 +20,8 @@ export function validateServiceModel(model) {
   if (!model || typeof model !== 'object' || Array.isArray(model)) addError('invalid_model', '$');
   for (const key of Object.keys(model ?? {})) if (!MODEL_PROPERTIES.has(key)) addError('unknown_property', key);
   if (model?.schema_version !== '1.0.0') addError('invalid_schema_version', 'schema_version');
-  if (!semanticKey(model?.tenant_id, 120)) addError('invalid_tenant_id', 'tenant_id');
-  if (!semanticKey(model?.model_key, 120)) addError('invalid_model_key', 'model_key');
+  if (!semanticKey(model?.tenant_id, 160)) addError('invalid_tenant_id', 'tenant_id');
+  if (!semanticKey(model?.model_key, 160)) addError('invalid_model_key', 'model_key');
   if (!Number.isInteger(model?.version) || model.version < 1) addError('invalid_version', 'version');
   if (!Array.isArray(model?.entities) || model.entities.length === 0) addError('missing_entities', 'entities');
   if (!Array.isArray(model?.bindings)) addError('invalid_bindings', 'bindings');
@@ -42,7 +42,7 @@ export function validateServiceModel(model) {
     const path = `entities[${index}]`;
     for (const key of Object.keys(entity ?? {})) if (!ENTITY_PROPERTIES.has(key)) addError('unknown_property', `${path}.${key}`);
     if (!ENTITY_TYPES.has(entity?.type)) addError('invalid_entity_type', `${path}.type`);
-    if (!semanticKey(entity?.key, 120)) addError('invalid_entity_key', `${path}.key`);
+    if (!semanticKey(entity?.key, 160)) addError('invalid_entity_key', `${path}.key`);
     if (typeof entity?.label !== 'string' || entity.label.trim().length === 0 || entity.label.length > 120) addError('invalid_label', `${path}.label`);
     if (typeof entity?.label === 'string' && (entity.label.includes('@') || /https?:|[\r\n]/i.test(entity.label))) addError('unsafe_label', `${path}.label`);
     if (!Number.isInteger(entity?.position) || entity.position < 1 || entity.position > 10000) addError('invalid_position', `${path}.position`);
@@ -82,7 +82,7 @@ export function validateServiceModel(model) {
   for (const [index, outcome] of outcomes.entries()) {
     const path = `outcomes[${index}]`;
     for (const key of Object.keys(outcome ?? {})) if (!OUTCOME_PROPERTIES.has(key)) addError('unknown_property', `${path}.${key}`);
-    if (!semanticKey(outcome?.key, 120)) addError('invalid_outcome_key', `${path}.key`);
+    if (!semanticKey(outcome?.key, 160)) addError('invalid_outcome_key', `${path}.key`);
     if (outcomesByKey.has(outcome?.key)) addError('duplicate_outcome_key', `${path}.key`);
     else outcomesByKey.set(outcome?.key, outcome);
     if (!safeLabel(outcome?.label)) addError('invalid_label', `${path}.label`);
@@ -94,12 +94,12 @@ export function validateServiceModel(model) {
   for (const [index, keyEvent] of keyEvents.entries()) {
     const path = `key_events[${index}]`;
     for (const key of Object.keys(keyEvent ?? {})) if (!KEY_EVENT_PROPERTIES.has(key)) addError('unknown_property', `${path}.${key}`);
-    if (!semanticKey(keyEvent?.key, 120)) addError('invalid_key_event_key', `${path}.key`);
+    if (!semanticKey(keyEvent?.key, 160)) addError('invalid_key_event_key', `${path}.key`);
     if (keyEventKeys.has(keyEvent?.key)) addError('duplicate_key_event_key', `${path}.key`);
     else keyEventKeys.add(keyEvent?.key);
     if (!safeLabel(keyEvent?.label)) addError('invalid_label', `${path}.label`);
     if (!semanticKey(keyEvent?.action, 80)) addError('invalid_key_event_action', `${path}.action`);
-    if (!semanticKey(keyEvent?.element_key, 120)) addError('invalid_element_key', `${path}.element_key`);
+    if (!semanticKey(keyEvent?.element_key, 160)) addError('invalid_element_key', `${path}.element_key`);
     if (!validKeyEventContract(keyEvent?.action, keyEvent?.element_key)) addError('invalid_key_event_contract', path);
     if (!boundElementKeys.has(keyEvent?.element_key)) addError('unresolved_key_event_binding', `${path}.element_key`);
     const matchKey = `${keyEvent?.action}\u0000${keyEvent?.element_key}`;
@@ -135,7 +135,7 @@ export function validateServiceModelForPublication(model, previousModel = null) 
       if (!unchangedLegacyBinding) errors.push({ code: 'prohibited_global_binding', path: `bindings[${index}].element_key` });
       continue;
     }
-    if (fieldBinding && (key.length > 120 || !key.startsWith('field.') || key === 'auth.otp' || nestedAuthScope)) {
+    if (fieldBinding && (!key.startsWith('field.') || key === 'auth.otp' || nestedAuthScope)) {
       if (!unchangedLegacyBinding) errors.push({ code: 'prohibited_field_binding', path: `bindings[${index}].element_key` });
     }
   }

@@ -28,9 +28,8 @@ export function createTask(model, { transactionKey, label }) {
 
 export function createStep(model, { taskKey, label, elementKey }) {
   const next = nextVersion(model);
-  requireEntity(next, taskKey, 'task');
+  const task = requireEntity(next, taskKey, 'task');
   const semanticElementKey = requiredElementKey(elementKey);
-  if (next.bindings.some((binding) => binding.element_key === semanticElementKey)) throw new TypeError('element_key_in_use');
   const key = uniqueKey(next, 'step', label);
   next.entities.push({
     key,
@@ -39,7 +38,7 @@ export function createStep(model, { taskKey, label, elementKey }) {
     parent_key: taskKey,
     position: children(next, taskKey, 'step').length + 1
   });
-  next.bindings.push({ element_key: semanticElementKey, entity_key: key });
+  assignStepBinding(next, semanticElementKey, key, transactionAncestor(next, task).key);
   return next;
 }
 
@@ -55,18 +54,24 @@ export function updateStep(model, stepKey, { label, elementKey }) {
   const next = nextVersion(model);
   const step = requireEntity(next, stepKey, 'step');
   const semanticElementKey = requiredElementKey(elementKey);
-  const collision = next.bindings.find((binding) => binding.element_key === semanticElementKey && binding.entity_key !== stepKey);
-  if (collision) throw new TypeError('element_key_in_use');
   const binding = next.bindings.find((candidate) => candidate.entity_key === stepKey);
+  const transactionKey = transactionAncestor(next, step).key;
   step.label = requiredLabel(label);
   if (binding) {
     const previousElementKey = binding.element_key;
-    binding.element_key = semanticElementKey;
+    const targetBinding = next.bindings.find((candidate) => candidate.element_key === semanticElementKey);
+    if (targetBinding && targetBinding !== binding) {
+      if (targetBinding.entity_key !== transactionKey) throw new TypeError('element_key_in_use');
+      next.bindings = next.bindings.filter((candidate) => candidate !== binding);
+      targetBinding.entity_key = stepKey;
+    } else {
+      binding.element_key = semanticElementKey;
+    }
     for (const keyEvent of next.key_events) {
       if (keyEvent.element_key === previousElementKey) keyEvent.element_key = semanticElementKey;
     }
   } else {
-    next.bindings.push({ element_key: semanticElementKey, entity_key: stepKey });
+    assignStepBinding(next, semanticElementKey, stepKey, transactionKey);
   }
   return next;
 }
@@ -109,10 +114,17 @@ export function deleteEntity(model, entityKey) {
       ? next.outcomes.filter(({ transaction_key }) => transaction_key === root.key).map(({ key }) => key)
       : []
   );
+  const affectedOutcomeKeys = new Set(
+    next.key_events.filter(({ element_key }) => deletedElementKeys.has(element_key)).map(({ outcome_key }) => outcome_key)
+  );
   next.entities = next.entities.filter(({ key }) => !deletedKeys.has(key));
   next.bindings = next.bindings.filter(({ entity_key }) => !deletedKeys.has(entity_key));
-  next.outcomes = next.outcomes.filter(({ key }) => !deletedOutcomeKeys.has(key));
   next.key_events = next.key_events.filter(({ element_key, outcome_key }) => !deletedElementKeys.has(element_key) && !deletedOutcomeKeys.has(outcome_key));
+  for (const outcomeKey of affectedOutcomeKeys) {
+    if (!next.key_events.some(({ outcome_key }) => outcome_key === outcomeKey)) deletedOutcomeKeys.add(outcomeKey);
+  }
+  next.outcomes = next.outcomes.filter(({ key }) => !deletedOutcomeKeys.has(key));
+  next.key_events = next.key_events.filter(({ outcome_key }) => !deletedOutcomeKeys.has(outcome_key));
   reindexEntities(next);
   return next;
 }
@@ -147,11 +159,18 @@ export function createSuccessEvent(model, { transactionKey, label, action, eleme
   return next;
 }
 
-export function updateSuccessEvent(model, outcomeKey, { label, action, elementKey }) {
+export function updateSuccessEvent(model, outcomeKey, keyEventKeyOrChanges, maybeChanges) {
   const next = nextVersion(model);
   const outcome = next.outcomes.find(({ key }) => key === outcomeKey);
-  const keyEvent = next.key_events.find(({ outcome_key }) => outcome_key === outcomeKey);
+  const changes = typeof keyEventKeyOrChanges === 'string' ? maybeChanges : keyEventKeyOrChanges;
+  const keyEventKey = typeof keyEventKeyOrChanges === 'string' ? keyEventKeyOrChanges : null;
+  const matchingEvents = next.key_events.filter(({ outcome_key }) => outcome_key === outcomeKey);
+  if (!keyEventKey && matchingEvents.length > 1) throw new TypeError('ambiguous_success_event');
+  const keyEvent = keyEventKey
+    ? matchingEvents.find(({ key }) => key === keyEventKey)
+    : matchingEvents[0];
   if (!outcome || !keyEvent) throw new TypeError('success_event_not_found');
+  const { label, action, elementKey } = changes ?? {};
   const outcomeLabel = requiredLabel(label);
   const semanticAction = requiredAction(action);
   const semanticElementKey = requiredElementKey(elementKey);
@@ -162,23 +181,25 @@ export function updateSuccessEvent(model, outcomeKey, { label, action, elementKe
   } else {
     next.bindings.push({ element_key: semanticElementKey, entity_key: outcome.transaction_key });
   }
-  const oldElementKey = keyEvent.element_key;
-  outcome.label = outcomeLabel;
+  if (matchingEvents.length === 1) outcome.label = outcomeLabel;
   keyEvent.label = outcomeLabel;
   keyEvent.action = semanticAction;
   keyEvent.element_key = semanticElementKey;
-  removeUnusedTransactionBinding(next, oldElementKey, outcome.transaction_key);
   return next;
 }
 
-export function deleteSuccessEvent(model, outcomeKey) {
+export function deleteSuccessEvent(model, outcomeKey, keyEventKey = null) {
   const next = nextVersion(model);
   const outcome = next.outcomes.find(({ key }) => key === outcomeKey);
   if (!outcome) throw new TypeError('success_event_not_found');
-  const elementKeys = next.key_events.filter(({ outcome_key }) => outcome_key === outcomeKey).map(({ element_key }) => element_key);
-  next.key_events = next.key_events.filter(({ outcome_key }) => outcome_key !== outcomeKey);
-  next.outcomes = next.outcomes.filter(({ key }) => key !== outcomeKey);
-  for (const elementKey of elementKeys) removeUnusedTransactionBinding(next, elementKey, outcome.transaction_key);
+  const matchingEvents = next.key_events.filter(({ outcome_key }) => outcome_key === outcomeKey);
+  if (!keyEventKey && matchingEvents.length > 1) throw new TypeError('ambiguous_success_event');
+  if (keyEventKey && !matchingEvents.some(({ key }) => key === keyEventKey)) throw new TypeError('success_event_not_found');
+  const deletedKey = keyEventKey ?? matchingEvents[0]?.key;
+  if (deletedKey) next.key_events = next.key_events.filter(({ key }) => key !== deletedKey);
+  if (!next.key_events.some(({ outcome_key }) => outcome_key === outcomeKey)) {
+    next.outcomes = next.outcomes.filter(({ key }) => key !== outcomeKey);
+  }
   return next;
 }
 
@@ -229,9 +250,14 @@ function transactionAncestor(model, entity) {
   return null;
 }
 
-function removeUnusedTransactionBinding(model, elementKey, transactionKey) {
-  if (model.key_events.some((keyEvent) => keyEvent.element_key === elementKey)) return;
-  model.bindings = model.bindings.filter((binding) => !(binding.element_key === elementKey && binding.entity_key === transactionKey));
+function assignStepBinding(model, elementKey, stepKey, transactionKey) {
+  const binding = model.bindings.find((candidate) => candidate.element_key === elementKey);
+  if (!binding) {
+    model.bindings.push({ element_key: elementKey, entity_key: stepKey });
+    return;
+  }
+  if (binding.entity_key !== transactionKey) throw new TypeError('element_key_in_use');
+  binding.entity_key = stepKey;
 }
 
 function reindexEntities(model) {
@@ -255,13 +281,20 @@ function uniqueKey(model, prefix, label) {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '') || 'item';
   const keys = new Set(model.entities.map(({ key }) => key));
-  let key = `${prefix}.${stem}`;
-  let suffix = 2;
+  let suffix = 1;
+  let key = boundedKey(prefix, stem, suffix);
   while (keys.has(key)) {
-    key = `${prefix}.${stem}-${suffix}`;
     suffix += 1;
+    key = boundedKey(prefix, stem, suffix);
   }
   return key;
+}
+
+function boundedKey(prefix, stem, suffix) {
+  const suffixText = suffix === 1 ? '' : `-${suffix}`;
+  const maximumStemLength = 160 - prefix.length - 1 - suffixText.length;
+  const boundedStem = stem.slice(0, maximumStemLength).replace(/-+$/g, '') || 'item'.slice(0, maximumStemLength);
+  return `${prefix}.${boundedStem}${suffixText}`;
 }
 
 function uniqueArtifactKey(items, prefix, label) {

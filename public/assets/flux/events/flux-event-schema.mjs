@@ -177,7 +177,7 @@ export const fluxEventSchema = Object.freeze({
     element_key: {
       type: 'string',
       minLength: 1,
-      maxLength: 120,
+      maxLength: 160,
       pattern: '^[A-Za-z0-9._:-]+$'
     },
     timestamp_ms: {

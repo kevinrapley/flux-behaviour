@@ -39,6 +39,7 @@ test('event schema declares metadata-only consented event contract', () => {
     maximum: 3600000
   });
   assert.deepEqual(schema.properties.writing_language, { type: 'string', const: 'en-GB' });
+  assert.equal(schema.properties.element_key.maxLength, 160);
   for (const field of [
     'word_count',
     'spelling_issue_count',

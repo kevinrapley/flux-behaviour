@@ -123,6 +123,43 @@ test('deletes a funnel and every dependent task, step, binding and outcome', () 
   assert.deepEqual(validateServiceModel(next), { valid: true, errors: [] });
 });
 
+test('deleting a bound step removes an outcome that loses its final matching event', () => {
+  let current = createFunnel(emptyModel(), { label: 'Apply for support' });
+  current = createTask(current, { transactionKey: 'transaction.apply-for-support', label: 'Provide details' });
+  current = createStep(current, { taskKey: 'task.provide-details', label: 'Send request', elementKey: 'form.support.request' });
+  current = createSuccessEvent(current, {
+    transactionKey: 'transaction.apply-for-support', label: 'Request sent',
+    action: 'flow.submit', elementKey: 'form.support.request'
+  });
+
+  const next = deleteEntity(current, 'step.send-request');
+
+  assert.deepEqual(next.outcomes, []);
+  assert.deepEqual(next.key_events, []);
+  assert.deepEqual(validateServiceModel(next), { valid: true, errors: [] });
+});
+
+test('deleting one bound step retains an outcome that still has another matching event', () => {
+  let current = createFunnel(emptyModel(), { label: 'Use guidance' });
+  current = createTask(current, { transactionKey: 'transaction.use-guidance', label: 'Open guidance' });
+  current = createStep(current, { taskKey: 'task.open-guidance', label: 'Open scope', elementKey: 'page.guidance.scope' });
+  current = createStep(current, { taskKey: 'task.open-guidance', label: 'Open people', elementKey: 'page.guidance.people' });
+  current.outcomes.push({
+    key: 'outcome.guidance-opened', label: 'Guidance opened',
+    transaction_key: 'transaction.use-guidance', type: 'success'
+  });
+  current.key_events.push(
+    { key: 'key-event.scope-opened', label: 'Scope opened', action: 'page.loaded', element_key: 'page.guidance.scope', outcome_key: 'outcome.guidance-opened' },
+    { key: 'key-event.people-opened', label: 'People opened', action: 'page.loaded', element_key: 'page.guidance.people', outcome_key: 'outcome.guidance-opened' }
+  );
+
+  const next = deleteEntity(current, 'step.open-scope');
+
+  assert.deepEqual(next.outcomes.map(({ key }) => key), ['outcome.guidance-opened']);
+  assert.deepEqual(next.key_events.map(({ key }) => key), ['key-event.people-opened']);
+  assert.deepEqual(validateServiceModel(next), { valid: true, errors: [] });
+});
+
 test('configures a funnel success from an action and publisher data-flux-key', () => {
   let current = createFunnel(emptyModel(), { label: 'Apply for support' });
   current = createTask(current, { transactionKey: 'transaction.apply-for-support', label: 'Provide details' });
@@ -200,10 +237,14 @@ test('edits a configured funnel success without changing its stable outcome key'
   assert.equal(next.key_events[0].label, 'Application accepted');
   assert.equal(next.key_events[0].action, 'flow.complete');
   assert.equal(next.key_events[0].element_key, 'page.support.confirmation');
+  assert.deepEqual(next.bindings, [
+    { element_key: 'form.support.request', entity_key: 'transaction.apply-for-support' },
+    { element_key: 'page.support.confirmation', entity_key: 'transaction.apply-for-support' }
+  ]);
   assert.deepEqual(validateServiceModel(next), { valid: true, errors: [] });
 });
 
-test('deletes a configured funnel success and its unused transaction binding', () => {
+test('deletes a configured funnel success without guessing that its transaction binding is disposable', () => {
   let current = createFunnel(emptyModel(), { label: 'Apply for support' });
   current = createSuccessEvent(current, {
     transactionKey: 'transaction.apply-for-support', label: 'Request sent',
@@ -214,8 +255,100 @@ test('deletes a configured funnel success and its unused transaction binding', (
 
   assert.deepEqual(next.outcomes, []);
   assert.deepEqual(next.key_events, []);
-  assert.deepEqual(next.bindings, []);
+  assert.deepEqual(next.bindings, [{ element_key: 'form.support.request', entity_key: 'transaction.apply-for-support' }]);
   assert.deepEqual(validateServiceModel(next), { valid: true, errors: [] });
+});
+
+test('edits one of several matching events without hiding or changing the others', () => {
+  let current = createFunnel(emptyModel(), { label: 'Use guidance' });
+  current.bindings.push(
+    { element_key: 'page.guidance.scope', entity_key: 'transaction.use-guidance' },
+    { element_key: 'page.guidance.people', entity_key: 'transaction.use-guidance' }
+  );
+  current.outcomes.push({ key: 'outcome.guidance-opened', label: 'Guidance opened', transaction_key: 'transaction.use-guidance', type: 'success' });
+  current.key_events.push(
+    { key: 'key-event.scope-opened', label: 'Scope opened', action: 'page.loaded', element_key: 'page.guidance.scope', outcome_key: 'outcome.guidance-opened' },
+    { key: 'key-event.people-opened', label: 'People opened', action: 'page.loaded', element_key: 'page.guidance.people', outcome_key: 'outcome.guidance-opened' }
+  );
+
+  const next = updateSuccessEvent(current, 'outcome.guidance-opened', 'key-event.people-opened', {
+    label: 'People guidance opened', action: 'page.loaded', elementKey: 'page.guidance.people'
+  });
+
+  assert.equal(next.outcomes[0].label, 'Guidance opened');
+  assert.deepEqual(next.key_events.map(({ key, label }) => [key, label]), [
+    ['key-event.scope-opened', 'Scope opened'],
+    ['key-event.people-opened', 'People guidance opened']
+  ]);
+  assert.deepEqual(validateServiceModel(next), { valid: true, errors: [] });
+});
+
+test('deletes one of several matching events and removes the outcome only with its final event', () => {
+  let current = createFunnel(emptyModel(), { label: 'Use guidance' });
+  current.bindings.push(
+    { element_key: 'page.guidance.scope', entity_key: 'transaction.use-guidance' },
+    { element_key: 'page.guidance.people', entity_key: 'transaction.use-guidance' }
+  );
+  current.outcomes.push({ key: 'outcome.guidance-opened', label: 'Guidance opened', transaction_key: 'transaction.use-guidance', type: 'success' });
+  current.key_events.push(
+    { key: 'key-event.scope-opened', label: 'Scope opened', action: 'page.loaded', element_key: 'page.guidance.scope', outcome_key: 'outcome.guidance-opened' },
+    { key: 'key-event.people-opened', label: 'People opened', action: 'page.loaded', element_key: 'page.guidance.people', outcome_key: 'outcome.guidance-opened' }
+  );
+
+  const oneLeft = deleteSuccessEvent(current, 'outcome.guidance-opened', 'key-event.scope-opened');
+  const noneLeft = deleteSuccessEvent(oneLeft, 'outcome.guidance-opened', 'key-event.people-opened');
+
+  assert.deepEqual(oneLeft.outcomes.map(({ key }) => key), ['outcome.guidance-opened']);
+  assert.deepEqual(oneLeft.key_events.map(({ key }) => key), ['key-event.people-opened']);
+  assert.deepEqual(noneLeft.outcomes, []);
+  assert.deepEqual(noneLeft.key_events, []);
+  assert.equal(noneLeft.bindings.length, 2);
+});
+
+test('promotes a same-funnel transaction success binding when its key becomes an ordered step', () => {
+  let current = createFunnel(emptyModel(), { label: 'Apply for support' });
+  current = createTask(current, { transactionKey: 'transaction.apply-for-support', label: 'Provide details' });
+  current = createSuccessEvent(current, {
+    transactionKey: 'transaction.apply-for-support', label: 'Request sent',
+    action: 'flow.submit', elementKey: 'form.support.request'
+  });
+
+  const next = createStep(current, {
+    taskKey: 'task.provide-details', label: 'Send request', elementKey: 'form.support.request'
+  });
+
+  assert.deepEqual(next.bindings, [{ element_key: 'form.support.request', entity_key: 'step.send-request' }]);
+  assert.equal(next.key_events[0].element_key, 'form.support.request');
+  assert.deepEqual(validateServiceModel(next), { valid: true, errors: [] });
+});
+
+test('rejects publisher element keys longer than the collectable event contract', () => {
+  let current = createFunnel(emptyModel(), { label: 'Apply for support' });
+  current = createTask(current, { transactionKey: 'transaction.apply-for-support', label: 'Provide details' });
+  const longKey = `field.${'a'.repeat(155)}`;
+
+  assert.throws(() => createStep(current, {
+    taskKey: 'task.provide-details', label: 'Provide details', elementKey: longKey
+  }), /invalid_element_key/);
+  assert.throws(() => createSuccessEvent(current, {
+    transactionKey: 'transaction.apply-for-support', label: 'Details provided', action: 'flow.submit', elementKey: longKey
+  }), /invalid_element_key/);
+});
+
+test('keeps generated entity and artifact keys within the unified semantic-key contract', () => {
+  const label = 'a'.repeat(120);
+  const first = createFunnel(emptyModel(), { label });
+  const second = createFunnel(first, { label });
+  const withSuccess = createSuccessEvent(first, {
+    transactionKey: first.entities[1].key, label, action: 'flow.submit', elementKey: 'form.support.request'
+  });
+
+  assert.ok(first.entities[1].key.length <= 160);
+  assert.ok(second.entities[2].key.length <= 160);
+  assert.notEqual(first.entities[1].key, second.entities[2].key);
+  assert.ok(withSuccess.outcomes[0].key.length <= 160);
+  assert.ok(withSuccess.key_events[0].key.length <= 160);
+  assert.deepEqual(validateServiceModel(withSuccess), { valid: true, errors: [] });
 });
 
 test('keeps a step-bound success event valid when the step data-flux-key changes', () => {

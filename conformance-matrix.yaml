@@ -2,14 +2,14 @@ records:
   - id: CONF-029
     rule: Fields and service complexity must be tenant-owner configuration rather than product-hardcoded definitions
     expected_evidence: An authenticated owner can create, edit and delete question groups with 1–7 service complexity and required/optional fields with exact publisher bindings; saves publish immutable validated next versions and viewers remain read-only
-    actual_evidence: src/dashboard/field-configuration.mjs, src/dashboard/field-manager.mjs, the publication-only model policy, the collapsed Fields dashboard configuration surface and focused tests implement owner-managed hierarchy, stable-key edits, field-namespace-only same-transaction claims, 120-character collectable-key limits, tenant-global autocomplete rejection, dot/colon/hyphen/underscore auth-scope rejection before SDK capture and at collector/API publication, exact authorised legacy-binding transition, a publishable governed seed, disclosed dependent-outcome cleanup, sibling-editor preservation, collision rejection and responsive presentation.
+    actual_evidence: src/dashboard/field-configuration.mjs, src/dashboard/field-manager.mjs, the publication-only model policy, the collapsed Fields dashboard configuration surface and focused tests implement owner-managed hierarchy, stable-key edits, field-namespace-only same-transaction claims, a common 160-character semantic-key limit across generated identifiers, bindings and collection, tenant-global autocomplete rejection, dot/colon/hyphen/underscore auth-scope rejection before SDK capture and at collector/API publication, exact authorised legacy-binding transition, a publishable governed seed, disclosed dependent-outcome cleanup, sibling-editor preservation, collision rejection and responsive presentation.
     status: present-with-release-blockers
     owner: product-lead
 
   - id: CONF-028
     rule: Tasks and funnels must be tenant-owner configuration rather than product-hardcoded service definitions
     expected_evidence: An authenticated owner can create, edit, reorder and delete funnels, tasks, exact-key steps and success events; every save publishes an immutable validated next version and viewers remain read-only
-    actual_evidence: src/dashboard/task-funnel-configuration.mjs, src/dashboard/task-funnel-manager.mjs, the Tasks and funnels dashboard surface, the generic service-model API and focused tests implement owner-managed versioned configuration with stable keys, cascade deletion and conflict rejection.
+    actual_evidence: src/dashboard/task-funnel-configuration.mjs, src/dashboard/task-funnel-manager.mjs, the Tasks and funnels dashboard surface, the generic service-model API and focused tests implement owner-managed versioned configuration with bounded stable keys, explicit multi-match outcome events, same-funnel success-to-step binding promotion, transaction-binding preservation, orphan-outcome cleanup, cascade deletion and conflict rejection.
     status: present-with-release-blockers
     owner: product-lead
 

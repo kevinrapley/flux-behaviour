@@ -79,7 +79,7 @@
         "properties": {
           "key": { "$ref": "#/$defs/key" },
           "label": { "$ref": "#/$defs/label" },
-          "action": { "$ref": "#/$defs/key" },
+          "action": { "$ref": "#/$defs/action" },
           "element_key": { "$ref": "#/$defs/element_key" },
           "outcome_key": { "$ref": "#/$defs/key" }
         }
@@ -87,7 +87,8 @@
     }
   },
   "$defs": {
-    "key": { "type": "string", "minLength": 3, "maxLength": 120, "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$" },
+    "key": { "type": "string", "minLength": 3, "maxLength": 160, "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$" },
+    "action": { "type": "string", "minLength": 3, "maxLength": 80, "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$" },
     "label": { "type": "string", "minLength": 1, "maxLength": 120, "pattern": "^(?!.*https?:)[^@\\r\\n]+$" },
     "element_key": { "type": "string", "minLength": 3, "maxLength": 160, "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$" },
     "complexity": { "type": "integer", "minimum": 1, "maximum": 7 }

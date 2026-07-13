@@ -1,0 +1,137 @@
+task_id: flux-behaviour-pr-51-review-remediation
+mode: repo-fix
+repository: kevinrapley/flux-behaviour
+risk_level: high
+base_branch: main
+working_branch: fix/task-funnel-review-followup
+files_read:
+  - README.md
+  - AGENTS.md
+  - RECENT_LEARNINGS.md
+  - CONTRIBUTING.md
+  - SECURITY.md
+  - repository-contract.yaml
+  - github-settings.yaml
+  - conformance-matrix.yaml
+  - gap-register.yaml
+  - harm-register.yaml
+  - agent-evidence.yaml
+  - docs/product/publisher-service-model.md
+  - docs/product/production-runtime.md
+  - docs/product/funnel-field-reports.md
+  - src/dashboard/task-funnel-configuration.mjs
+  - src/dashboard/task-funnel-manager.mjs
+  - src/model/service-model.mjs
+  - contracts/models/flux-service-model.schema.json
+  - tests/task-funnel-configuration.test.mjs
+  - tests/dashboard-task-funnel-manager.test.mjs
+  - tests/service-model-store.test.mjs
+files_changed:
+  - contracts/events/flux-event.schema.json
+  - contracts/models/flux-service-model.schema.json
+  - src/dashboard/field-configuration.mjs
+  - src/dashboard/field-manager.mjs
+  - src/dashboard/task-funnel-configuration.mjs
+  - src/dashboard/task-funnel-manager.mjs
+  - src/events/flux-event-schema.mjs
+  - src/model/service-model.mjs
+  - public/assets/flux/dashboard/field-configuration.mjs
+  - public/assets/flux/dashboard/field-manager.mjs
+  - public/assets/flux/dashboard/task-funnel-configuration.mjs
+  - public/assets/flux/dashboard/task-funnel-manager.mjs
+  - public/assets/flux/events/flux-event-schema.mjs
+  - tests/event-schema.test.mjs
+  - tests/event-validation.test.mjs
+  - tests/field-configuration.test.mjs
+  - tests/task-funnel-configuration.test.mjs
+  - tests/dashboard-task-funnel-manager.test.mjs
+  - tests/service-model.test.mjs
+  - tests/service-model-store.test.mjs
+  - docs/product/publisher-service-model.md
+  - docs/product/production-runtime.md
+  - RECENT_LEARNINGS.md
+  - agent-evidence.yaml
+  - conformance-matrix.yaml
+  - gap-register.yaml
+  - harm-register.yaml
+promotion_decisions:
+  - Treat every unresolved Codex thread on merged PR 51 as a follow-up correctness fix on current main rather than rewriting the merged feature branch.
+  - Render and mutate every key event explicitly when several events resolve to one outcome; remove an outcome only after its final event disappears.
+  - Retain transaction-level bindings when success events change because the model does not record whether a binding was event-created or independently publisher-declared.
+  - Allow a same-transaction success binding to be promoted to an ordered step so owners can configure either object first.
+  - Use one 160-character semantic-key limit for generated identifiers, publisher bindings, owner workflows, direct publication and collected events while preserving exact authorised legacy bindings.
+  - Bound generated entity, outcome and key-event identifiers before adding collision suffixes.
+commands_run:
+  - command: node --test tests/task-funnel-configuration.test.mjs tests/dashboard-task-funnel-manager.test.mjs
+    state: verified
+    status: passed
+    evidence: Twenty-two focused tests passed after eight review-regression assertions first failed against the merged implementation.
+  - command: node --test tests/task-funnel-configuration.test.mjs tests/dashboard-task-funnel-manager.test.mjs tests/service-model-store.test.mjs
+    state: verified
+    status: passed
+    evidence: Thirty-two configuration, dashboard-surface and publication-boundary tests passed.
+  - command: npm test
+    state: verified
+    status: failed
+    evidence: The first clean-worktree run executed without installed dependencies and failed four module-loading tests because Nunjucks and dictionary-en-gb were absent; no product assertion failed.
+  - command: npm ci
+    state: verified
+    status: passed
+    evidence: Sixty locked packages were installed and npm reported zero vulnerabilities.
+  - command: npm test
+    state: verified
+    status: passed
+    evidence: All 337 repository tests passed after locked dependencies were installed.
+  - command: FLUX_DEMO_COLLECTOR_ENDPOINT=https://flux-behaviour.pages.dev/api/collect npm run demo:build
+    state: verified
+    status: passed
+    evidence: Production-shaped pages and source-owned browser assets built successfully; only existing GOV.UK Sass deprecation warnings were emitted.
+  - command: node --test tests/event-schema.test.mjs tests/event-validation.test.mjs tests/service-model.test.mjs tests/service-model-store.test.mjs tests/field-configuration.test.mjs tests/dashboard-field-manager.test.mjs tests/task-funnel-configuration.test.mjs tests/dashboard-task-funnel-manager.test.mjs
+    state: verified
+    status: passed
+    evidence: All 92 focused event-contract, service-model, publication and owner-editor tests passed, including acceptance at 160 characters and rejection at 161.
+  - command: npm test
+    state: verified
+    status: passed
+    evidence: All 339 repository tests passed after the shared 160-character contract was applied.
+  - command: npm run validate
+    state: verified
+    status: passed
+    evidence: Repository governance validation passed for all 19 required files.
+  - command: npm run security:secrets
+    state: verified
+    status: passed
+    evidence: Secret pattern sanity scan passed.
+  - command: npm audit --audit-level=high
+    state: verified
+    status: passed
+    evidence: npm reported zero vulnerabilities.
+  - command: npm run sbom
+    state: verified
+    status: passed
+    evidence: The CycloneDX SBOM was generated successfully without changing its tracked content.
+contracts_validated:
+  - shared 160-character model-identifier and collected event element-key boundary
+  - immutable tenant service-model publication boundary
+  - one-to-many key-event to outcome relationships
+  - transaction-consistent semantic binding promotion
+gaps_recorded:
+  - GAP-013 updated to describe the corrected owner workflow while retaining the incomplete ResearchOps inventory and comparison-baseline gap.
+waivers_recorded: []
+artifacts_created:
+  - tests covering the six PR 51 Codex findings
+  - docs/agent-evidence/2026/07/13/flux-behaviour-pr-51-review-remediation.yaml
+recent_learnings:
+  - Outcome authoring must preserve and expose every action-and-element match rather than collapsing an outcome to its first key event.
+  - Transaction bindings without explicit provenance must be retained when an outcome changes.
+  - Incremental authoring requires same-transaction binding promotion and pre-publication contract bounds.
+security:
+  - Direct publication and collection both reject semantic keys over the common 160-character boundary, while exact prohibited legacy bindings retain the existing transition rule.
+  - No credentials, visitor data, event payloads or entered content were introduced.
+privacy:
+  - The metadata-only element-key allowance expands from 120 to 160 characters, but the controlled semantic-key pattern and content-bearing-field prohibition are unchanged; no entered content or journey identity is exposed.
+accessibility:
+  - Every matching success event is rendered as its own labelled row with keyboard-operable edit and delete buttons; existing semantic forms and responsive layout are retained.
+risks:
+  - Retained transaction bindings can remain after their last matching event is removed, but preserving publisher semantic meaning is safer than deleting a binding with unknown provenance.
+  - Publisher configuration can still be semantically wrong despite structural validation; HARM-009 retains owner review and immutable-version controls.

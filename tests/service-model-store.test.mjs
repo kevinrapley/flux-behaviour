@@ -109,7 +109,7 @@ test('refuses an invalid publisher model before any database access', async () =
 });
 
 test('refuses unsafe field bindings at the publication boundary without invalidating legacy reads', async () => {
-  for (const elementKey of ['autocomplete.email', 'field.auth.otp', `field.${'a'.repeat(115)}`]) {
+  for (const elementKey of ['autocomplete.email', 'field.auth.otp']) {
     const db = recordingDb();
     const model = validModel();
     model.bindings.find(({ entity_key }) => entity_key === 'field.objective').element_key = elementKey;
@@ -136,6 +136,31 @@ test('refuses tenant-global autocomplete categories on non-field bindings at pub
   assert.equal(result.error, 'invalid_service_model');
   assert.ok(result.details.some(({ code }) => code === 'prohibited_global_binding'));
   assert.ok(db.prepared.length > 0);
+  assert.equal(db.batches.length, 0);
+});
+
+test('publishes a field binding at the shared 160-character semantic-key boundary', async () => {
+  const db = recordingDb();
+  const model = validModel();
+  model.bindings.find(({ entity_key }) => entity_key === 'field.objective').element_key = `field.${'a'.repeat(154)}`;
+
+  const result = await publishServiceModel(db, 'account-1', model);
+
+  assert.deepEqual(result, { ok: true, model_key: 'model.researchops', version: 1 });
+  assert.equal(db.batches.length, 1);
+});
+
+test('refuses a binding beyond the shared 160-character semantic-key boundary', async () => {
+  const db = recordingDb();
+  const model = validModel();
+  model.bindings.push({ element_key: `page.${'a'.repeat(156)}`, entity_key: 'transaction.manage-project' });
+
+  const result = await publishServiceModel(db, 'account-1', model);
+
+  assert.equal(result.ok, false);
+  assert.equal(result.error, 'invalid_service_model');
+  assert.ok(result.details.some(({ code }) => code === 'invalid_element_key'));
+  assert.equal(db.prepared.length, 0);
   assert.equal(db.batches.length, 0);
 });
 
