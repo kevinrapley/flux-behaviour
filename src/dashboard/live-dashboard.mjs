@@ -4,6 +4,7 @@ const content = document.querySelector('[data-flux-dashboard-content]');
 const overview = document.querySelector('[data-flux-overview]');
 const periodCopy = document.querySelector('[data-flux-period-copy]');
 const trend = document.querySelector('[data-flux-trend]');
+const realtime = document.querySelector('[data-flux-realtime]');
 const serviceModel = document.querySelector('[data-flux-service-model]');
 const health = document.querySelector('[data-flux-health]');
 const interactions = document.querySelector('[data-flux-interactions]');
@@ -91,6 +92,7 @@ function renderDashboard(data) {
   status.textContent = `${analytics.period?.label ?? 'Selected period'} · updated ${new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`;
   periodCopy.textContent = periodDescription(analytics.period, summary);
   overview.replaceChildren(...overviewCards(summary, analytics.comparison));
+  realtime.replaceChildren(renderRealtime(analytics.realtime));
   trend.replaceChildren(renderTrend(analytics.trend ?? []));
   serviceModel.replaceChildren(renderServiceModel(analytics.service_model));
   health.replaceChildren(renderHealth(summary));
@@ -243,6 +245,81 @@ function renderInteractions(rows) {
     list.append(item);
   }
   return list;
+}
+
+function renderRealtime(data) {
+  if (!data) return emptyState('Realtime data unavailable', 'Collection activity and freshness could not be calculated.');
+  const wrapper = document.createElement('div');
+  wrapper.className = 'flux-realtime';
+  const metrics = document.createElement('div');
+  metrics.className = 'flux-realtime__metrics';
+  for (const [label, value, note] of [
+    ['Active sessions · 5 minutes', data.active_sessions_5m, 'Sessions with a recently accepted interaction'],
+    ['Active sessions · 30 minutes', data.active_sessions_30m, 'Sessions active in the wider realtime window'],
+    ['Interactions · 5 minutes', data.interactions_5m, 'Events accepted by Flux'],
+    ['Interactions · 30 minutes', data.interactions_30m, 'Events accepted by Flux']
+  ]) metrics.append(realtimeMetric(label, value, note));
+
+  const freshness = document.createElement('div');
+  freshness.className = `flux-realtime__freshness flux-realtime__freshness--${data.freshness_status ?? 'no_data'}`;
+  freshness.append(
+    element('h3', 'govuk-heading-s', 'Ingestion freshness'),
+    element('p', 'govuk-body-s', freshnessCopy(data))
+  );
+
+  const rows = data.interactions_per_minute ?? [];
+  const maximum = Math.max(1, ...rows.map((row) => Number(row.interaction_count) || 0));
+  const chart = document.createElement('div');
+  chart.className = 'flux-realtime__bars';
+  chart.setAttribute('role', 'img');
+  chart.setAttribute('aria-label', realtimeSummary(rows));
+  for (const row of rows) {
+    const interactionCount = Number(row.interaction_count) || 0;
+    const bar = document.createElement('span');
+    bar.className = 'flux-realtime__bar';
+    bar.style.height = `${interactionCount === 0 ? 0 : Math.max(2, (interactionCount / maximum) * 100)}%`;
+    bar.title = `${minuteLabel(row.minute_start_ms)}: ${numberFormat.format(interactionCount)} interaction${interactionCount === 1 ? '' : 's'}`;
+    chart.append(bar);
+  }
+  const details = document.createElement('details');
+  details.className = 'govuk-details flux-realtime__data';
+  const detailsSummary = document.createElement('summary');
+  detailsSummary.className = 'govuk-details__summary';
+  detailsSummary.append(element('span', 'govuk-details__summary-text', 'Interactions per minute'));
+  const table = document.createElement('table');
+  table.className = 'govuk-table govuk-table--small-text-until-tablet';
+  table.append(tableHead(['Minute', 'Interactions']), tableBody(rows.map((row) => [minuteLabel(row.minute_start_ms), row.interaction_count]), true));
+  details.append(detailsSummary, table);
+  wrapper.append(metrics, freshness, chart, details);
+  return wrapper;
+}
+
+function realtimeMetric(label, value, note) {
+  const card = document.createElement('article');
+  card.className = 'flux-realtime__metric';
+  card.append(
+    element('h3', 'flux-realtime__metric-label', label),
+    element('p', 'flux-realtime__metric-value', numberFormat.format(Number(value) || 0)),
+    element('p', 'flux-realtime__metric-note', note)
+  );
+  return card;
+}
+
+function freshnessCopy(data) {
+  if (data.latest_accepted_at_ms === null || data.latest_accepted_at_ms === undefined) return 'No interactions have been accepted in the realtime window.';
+  const age = formatDuration(data.freshness_ms ?? 0);
+  const state = { live: 'Live', delayed: 'Delayed', stale: 'Stale' }[data.freshness_status] ?? 'Unknown';
+  return `${state} · latest interaction accepted ${age} ago at ${minuteLabel(data.latest_accepted_at_ms)}.`;
+}
+
+function realtimeSummary(rows) {
+  const total = rows.reduce((sum, row) => sum + (Number(row.interaction_count) || 0), 0);
+  const activeMinutes = rows.filter((row) => Number(row.interaction_count) > 0).length;
+  return `${numberFormat.format(total)} interactions across ${numberFormat.format(activeMinutes)} of the last 30 minutes.`;
+}
+
+function minuteLabel(value) {
+  return new Date(Number(value) || 0).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 }
 
 function renderServiceModel(data) {

@@ -1,4 +1,18 @@
 harms:
+  - id: HARM-008
+    harm: A realtime analytics panel could become a live surveillance view of identifiable service users.
+    affected_groups:
+      - People using public services
+      - Users in small or low-traffic cohorts
+      - Vulnerable users
+    likelihood: medium
+    severity: high
+    mitigation: Report only aggregate 5/30-minute session and interaction counts, zero-filled minute buckets and ingestion health; expose no visitor/session identifiers, precise location, page content, narratives or live user snapshot; keep individual journeys in a separate authenticated intentional drill-down.
+    residual_risk: low
+    owner: governance-lead
+    escalation_route: Product owner, data protection lead and security lead
+    release_decision: proceed-with-monitoring
+
   - id: HARM-007
     harm: Implementing the historical behavioural model literally could turn service analytics into covert person-level profiling or manipulative adaptation.
     affected_groups:

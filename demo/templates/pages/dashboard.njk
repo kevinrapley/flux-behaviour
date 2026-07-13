@@ -22,6 +22,16 @@
 	<p class="flux-dashboard__status" data-flux-live-status aria-live="polite">Loading ResearchOps analytics…</p>
 
 	<div data-flux-dashboard-content hidden>
+		<section class="flux-dashboard__panel flux-dashboard__panel--realtime" aria-labelledby="realtime-heading">
+			<div class="flux-dashboard__section-heading">
+				<div>
+					<h2 class="govuk-heading-l" id="realtime-heading">Realtime activity</h2>
+					<p class="govuk-body flux-dashboard__section-copy">See accepted interactions and active sessions from the last 5 and 30 minutes, with collection freshness.</p>
+				</div>
+			</div>
+			<div data-flux-realtime></div>
+		</section>
+
 		<section aria-labelledby="overview-heading">
 			<div class="flux-dashboard__section-heading">
 				<div>

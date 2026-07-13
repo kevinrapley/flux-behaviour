@@ -1,4 +1,11 @@
 records:
+  - id: CONF-021
+    rule: Realtime analytics must report aggregate activity and ingestion freshness without exposing a live user snapshot
+    expected_evidence: Server acceptance timestamps, indexed 5/30-minute queries, zero-filled minute buckets, accessible presentation and privacy regression tests exist
+    actual_evidence: migration 0005, src/product/realtime-analytics.mjs, dashboardRealtime, the realtime dashboard panel and focused tests provide aggregate session/event counts and freshness without visitor or session identifiers.
+    status: present-with-release-blockers
+    owner: product-lead
+
   - id: CONF-020
     rule: Analytics outcomes must resolve from a versioned publisher service model rather than generic submit inference
     expected_evidence: A privacy-safe model contract, immutable D1 publication, event-time context, configured ResearchOps seed, aggregate dashboard evidence and regression tests exist

@@ -4,6 +4,10 @@
 
 A content-free autocomplete category such as `autocomplete.email` is global, not proof that the visitor is in a sign-in field, so it must not be bound to a transaction-specific model entity without contextual capture. Publisher key events also need event-contract validation: syntactically valid but uncollectable action/element pairs create silent outcome gaps. When a model version changes, exclude retired-version context from current mapping coverage and report it separately from genuinely unmapped events.
 
+## 2026-07-13 — Realtime freshness needs server acceptance time
+
+Browser occurrence time answers when an interaction claims to have happened; it cannot prove when Flux received it and may be skewed. Store an indexed server acceptance timestamp, use that for realtime windows and freshness, and keep the realtime response aggregate-only so operational visibility does not become a live user surveillance view.
+
 ## 2026-07-13 — Completion is a configured outcome, not a submit event
 
 A submit records an interaction, not whether the service achieved its purpose. Bind an exact action and semantic element to a publisher-declared transaction outcome, freeze that model version beside the event, and calculate completion only from configured success outcomes. This prevents failed, progress-only and unrelated submissions from becoming false success evidence.

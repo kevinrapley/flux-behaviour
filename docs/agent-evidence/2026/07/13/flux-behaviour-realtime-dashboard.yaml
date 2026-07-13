@@ -1,0 +1,100 @@
+evidence_records:
+  - task_id: flux-behaviour-realtime-dashboard
+    mode: repo-build
+    repository: kevinrapley/flux-behaviour
+    risk_level: high
+    base_branch: feature/publisher-service-model
+    working_branch: feature/realtime-dashboard
+    files_read:
+      - README.md
+      - AGENTS.md
+      - RECENT_LEARNINGS.md
+      - CONTRIBUTING.md
+      - SECURITY.md
+      - repository-contract.yaml
+      - github-settings.yaml
+      - conformance-matrix.yaml
+      - gap-register.yaml
+      - harm-register.yaml
+      - docs/product/behaviour-model-dashboard-gap-analysis.md
+      - docs/product/production-runtime.md
+      - src/product/router.mjs
+      - src/dashboard/live-dashboard.mjs
+      - demo/templates/pages/dashboard.njk
+      - migrations/0001_flux_behaviour.sql
+    files_changed:
+      - migrations/0005_event_ingestion_time.sql
+      - src/product/realtime-analytics.mjs
+      - src/product/router.mjs
+      - src/dashboard/live-dashboard.mjs
+      - demo/templates/pages/dashboard.njk
+      - demo/styles/demo.scss
+      - public/assets/flux/dashboard/live-dashboard.mjs
+      - public/assets/styles/demo.css
+      - public/dashboard/index.html
+      - tests/realtime-analytics.test.mjs
+      - tests/realtime-migration.test.mjs
+      - tests/realtime-route.test.mjs
+      - tests/dashboard-realtime-panel.test.mjs
+      - tests/service-model-collection.test.mjs
+      - docs/product/realtime-analytics.md
+      - docs/product/production-runtime.md
+      - RECENT_LEARNINGS.md
+      - agent-evidence.yaml
+      - conformance-matrix.yaml
+      - gap-register.yaml
+      - harm-register.yaml
+    promotion_decisions:
+      - Measure ingestion freshness from server acceptance time rather than browser occurrence time.
+      - Expose aggregate 5/30-minute activity and zero-filled minute buckets without identity, geography or live journey snapshots.
+      - Keep older backfilled occurrence times explicitly non-authoritative for historical ingestion latency.
+    commands_run:
+      - command: npm ci
+        state: verified
+        status: passed
+        evidence: Installed 60 locked packages; npm reported zero vulnerabilities.
+      - command: npm test
+        state: verified
+        status: passed
+        evidence: All 242 repository tests passed after dependency installation.
+      - command: npm run demo:build
+        state: verified
+        status: passed
+        evidence: Rebuilt dashboard source, styles and generated assets.
+      - command: npx wrangler d1 migrations apply flux-behaviour --local --persist-to /tmp/flux-realtime.cCdQz3 --config wrangler.toml
+        state: verified
+        status: passed
+        evidence: Migrations 0001 through 0005 applied successfully to a fresh local D1 directory.
+      - command: frontend visual verification at 1440x900 and 390x844
+        state: verified
+        status: passed
+        evidence: Populated realtime metrics, freshness, bar chart and 30-row minute disclosure rendered without sentinel values or page-level horizontal overflow.
+      - command: npm run validate
+        state: verified
+        status: passed
+        evidence: Repository governance file check passed for 19 files.
+      - command: npm run security:secrets
+        state: verified
+        status: passed
+        evidence: Secret pattern sanity scan passed.
+      - command: git diff --check
+        state: verified
+        status: passed
+        evidence: No whitespace errors were reported.
+      - command: ruby YAML safe-load for governed records
+        state: verified
+        status: passed
+        evidence: Agent evidence, conformance, gap and harm YAML records parsed successfully.
+    recent_learnings:
+      - Realtime freshness requires server acceptance time, not browser occurrence time.
+    security:
+      - Realtime data remains behind the existing authenticated tenant dashboard route.
+      - Queries are tenant-scoped and bounded to fixed 5/30-minute windows.
+    privacy:
+      - Responses expose aggregate counts and timestamps only; visitor IDs, session IDs, locations, narratives and page content are absent.
+    accessibility:
+      - The chart has a plain-language accessible summary and a complete semantic minute table.
+      - Desktop and mobile populated states were exercised; the page remained within each viewport.
+    risks:
+      - Backfilled historical acceptance timestamps equal browser occurrence time and cannot evidence historical pipeline latency.
+      - Operational deployment and retention controls remain release blockers.

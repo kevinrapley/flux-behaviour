@@ -12,12 +12,12 @@ gaps:
   - id: GAP-014
     title: Dashboard lacks mature analytics report breadth
     severity: high
-    observed_state: The dashboard provides period overview, daily audience trend, health summaries, action ranking, cohorts, indicators and journey histories, but no realtime, key-event, page/task/control, field, funnel, custom-comparison or export reports.
+    observed_state: The dashboard provides period overview, daily audience trend, aggregate 5/30-minute realtime activity with ingestion freshness, configured key-event evidence, health summaries, action ranking, cohorts, indicators and journey histories. Page/task/control, field, funnel, custom-comparison, export and target information-architecture reports remain incomplete.
     expected_state: The target information architecture and P1 dashboard reports in the source-grounded gap analysis are implemented with shared filters, accessible tables and provenance.
     risk: Teams can inspect individual journeys but cannot reliably locate systemic friction, compare changes or prioritise service action.
-    action: Deliver DASH-01 through DASH-06 and the DASH-10 information architecture after the service model foundation.
+    action: Deliver DASH-02 through DASH-06 and the DASH-10 information architecture after the service model foundation; retain DASH-01 realtime privacy and freshness regression evidence.
     owner: product-lead
-    status: open
+    status: in-progress
 
   - id: GAP-015
     title: Behavioural lifecycle coverage is incomplete

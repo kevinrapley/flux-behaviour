@@ -14,6 +14,7 @@ import { fluxEventSchema } from '../events/flux-event-schema.mjs';
 import { publishServiceModel, readPublishedServiceModel, resolvePublishedServiceContext } from '../model/service-model-store.mjs';
 import { summariseServiceModel } from '../model/service-model-summary.mjs';
 import { validateServiceModel } from '../model/service-model.mjs';
+import { buildRealtimeSnapshot } from './realtime-analytics.mjs';
 
 const HEADERS = { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' };
 
@@ -116,7 +117,7 @@ async function collect(request, env) {
   const statements = [
     env.FLUX_DB.prepare('INSERT INTO visitors (tenant_id, visitor_id, first_seen_at_ms, last_seen_at_ms, session_count) VALUES (?, ?, ?, ?, 1) ON CONFLICT(tenant_id, visitor_id) DO UPDATE SET last_seen_at_ms = excluded.last_seen_at_ms, session_count = session_count + ?').bind(event.tenant_id, event.visitor_id, now, now, existingSession ? 0 : 1),
     existingSession ? env.FLUX_DB.prepare('UPDATE sessions SET last_seen_at_ms = ? WHERE id = ?').bind(now, event.session_id) : env.FLUX_DB.prepare('INSERT OR IGNORE INTO sessions (id, tenant_id, visitor_id, started_at_ms, last_seen_at_ms, is_returning_visitor) VALUES (?, ?, ?, ?, ?, ?)').bind(event.session_id, event.tenant_id, event.visitor_id, now, now, existingVisitor ? 1 : 0),
-    env.FLUX_DB.prepare('INSERT INTO events (id, tenant_id, visitor_id, session_id, event_class, action, role, element_key, metadata_json, narrative, occurred_at_ms) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').bind(eventId, event.tenant_id, event.visitor_id, event.session_id, event.event_class, event.action, event.role, event.element_key, JSON.stringify(metadata(event)), describeInteraction(event), event.timestamp_ms)
+    env.FLUX_DB.prepare('INSERT INTO events (id, tenant_id, visitor_id, session_id, event_class, action, role, element_key, metadata_json, narrative, occurred_at_ms, accepted_at_ms) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').bind(eventId, event.tenant_id, event.visitor_id, event.session_id, event.event_class, event.action, event.role, event.element_key, JSON.stringify(metadata(event)), describeInteraction(event), event.timestamp_ms, now)
   ];
   if (serviceContext) {
     statements.push(env.FLUX_DB.prepare('INSERT INTO event_service_contexts (event_id, tenant_id, model_key, model_version, entity_key, service_key, transaction_key, task_key, step_key, question_key, field_key, field_required, question_complexity, transaction_complexity, key_event_key, outcome_key, outcome_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').bind(
@@ -173,8 +174,11 @@ async function dashboard(request, env) {
   const events = await env.FLUX_DB.prepare("SELECT session_id, event_class, action, role, element_key, metadata_json, narrative, occurred_at_ms FROM (SELECT e.session_id, e.event_class, e.action, e.role, e.element_key, e.metadata_json, e.narrative, e.occurred_at_ms FROM events e WHERE e.tenant_id = 'researchops' AND e.session_id IN (SELECT id FROM sessions WHERE tenant_id = 'researchops' AND started_at_ms >= ? AND started_at_ms < ? ORDER BY started_at_ms DESC LIMIT 12) ORDER BY e.occurred_at_ms DESC LIMIT 500) ORDER BY occurred_at_ms ASC").bind(period.start_at_ms, period.end_at_ms).all();
   const presentedEvents = presentJourneyEvents(events.results ?? []);
   const journeys = groupJourneys(sessions.results, presentedEvents).map((journey) => ({ ...journey, dimension_scores: scoreSessionDimensions(journey.events) }));
-  const cohorts = await dashboardCohorts(env, period.start_at_ms, period.end_at_ms, overview.session_count);
-  const serviceModel = await dashboardServiceModel(env, 'researchops', period.start_at_ms, period.end_at_ms);
+  const [cohorts, serviceModel, realtime] = await Promise.all([
+    dashboardCohorts(env, period.start_at_ms, period.end_at_ms, overview.session_count),
+    dashboardServiceModel(env, 'researchops', period.start_at_ms, period.end_at_ms),
+    dashboardRealtime(env, 'researchops')
+  ]);
   return json({
     ok: true,
     sessions: sessions.results,
@@ -187,9 +191,22 @@ async function dashboard(request, env) {
       trend: trend.results ?? [],
       actions: actions.results ?? [],
       cohorts,
+      realtime,
       service_model: serviceModel
     }
   });
+}
+
+export async function dashboardRealtime(env, tenantId, now = Date.now()) {
+  const fiveMinutesAgo = now - (5 * 60000);
+  const thirtyMinutesAgo = now - (30 * 60000);
+  const [sessions, events, latest, minutes] = await Promise.all([
+    env.FLUX_DB.prepare('SELECT COUNT(DISTINCT CASE WHEN last_seen_at_ms >= ? THEN id END) AS active_sessions_5m, COUNT(DISTINCT id) AS active_sessions_30m FROM sessions WHERE tenant_id = ? AND last_seen_at_ms >= ? AND last_seen_at_ms <= ?').bind(fiveMinutesAgo, tenantId, thirtyMinutesAgo, now).first(),
+    env.FLUX_DB.prepare('SELECT COUNT(CASE WHEN accepted_at_ms >= ? THEN 1 END) AS interactions_5m, COUNT(*) AS interactions_30m FROM events WHERE tenant_id = ? AND accepted_at_ms >= ? AND accepted_at_ms <= ?').bind(fiveMinutesAgo, tenantId, thirtyMinutesAgo, now).first(),
+    env.FLUX_DB.prepare('SELECT MAX(accepted_at_ms) AS latest_accepted_at_ms FROM events WHERE tenant_id = ? AND accepted_at_ms <= ?').bind(tenantId, now).first(),
+    env.FLUX_DB.prepare('SELECT CAST(accepted_at_ms / 60000 AS INTEGER) * 60000 AS minute_start_ms, COUNT(*) AS interaction_count FROM events WHERE tenant_id = ? AND accepted_at_ms >= ? AND accepted_at_ms <= ? GROUP BY minute_start_ms ORDER BY minute_start_ms ASC').bind(tenantId, thirtyMinutesAgo, now).all()
+  ]);
+  return buildRealtimeSnapshot({ sessions, events: { ...events, ...latest }, minutes: minutes.results ?? [] }, now);
 }
 
 export async function dashboardCohorts(env, startAtMs, endAtMs, selectedSessionCount) {
