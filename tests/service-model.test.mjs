@@ -236,7 +236,7 @@ test('rejects duplicate action and element pairs even when key-event keys differ
 test('requires bounded semantic tenant and model keys', () => {
   const model = validModel();
   model.tenant_id = 'researchops/private';
-  model.model_key = 'x'.repeat(121);
+  model.model_key = 'x'.repeat(161);
 
   const result = validateServiceModel(model);
 
@@ -247,7 +247,7 @@ test('requires bounded semantic tenant and model keys', () => {
 
 test('keeps outcome and key-event identifiers within the JSON contract bounds', () => {
   const model = validModel();
-  model.outcomes[0].key = `outcome.${'x'.repeat(121)}`;
+  model.outcomes[0].key = `outcome.${'x'.repeat(153)}`;
   model.key_events[0].key = 'x';
   model.key_events[0].action = `action.${'x'.repeat(121)}`;
   model.key_events[0].element_key = `form.${'x'.repeat(161)}`;

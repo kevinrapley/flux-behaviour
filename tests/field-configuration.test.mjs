@@ -222,7 +222,7 @@ test('rejects field bindings longer than the collectable event key limit', async
 
   assert.throws(() => createField(current, {
     questionKey: 'question.contact-details', label: 'Long key',
-    elementKey: `field.${'a'.repeat(115)}`, required: true
+    elementKey: `field.${'a'.repeat(155)}`, required: true
   }), /invalid_element_key/);
 });
 

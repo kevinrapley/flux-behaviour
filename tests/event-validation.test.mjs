@@ -109,6 +109,17 @@ test('event validation rejects non-object events', () => {
   }]);
 });
 
+test('event validation shares the 160-character semantic element-key boundary', () => {
+  const event = JSON.parse(readFileSync('fixtures/events/valid/focus-enter.json', 'utf8'));
+  event.element_key = `field.${'a'.repeat(154)}`;
+  assert.equal(validateEvent(event, schema).valid, true);
+
+  event.element_key = `field.${'a'.repeat(155)}`;
+  const result = validateEvent(event, schema);
+  assert.equal(result.valid, false);
+  assert.ok(result.errors.some((error) => error.field === 'element_key'));
+});
+
 test('event validation rejects optional metadata on authentication milestones', () => {
   const event = JSON.parse(readFileSync('fixtures/events/valid/focus-enter.json', 'utf8'));
   Object.assign(event, {

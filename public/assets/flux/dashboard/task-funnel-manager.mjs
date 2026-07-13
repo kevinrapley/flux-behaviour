@@ -133,19 +133,31 @@ export function createTaskFunnelManager({ root, tenantId, onPublished = () => {}
   }
 
   function renderSuccess(outcome, editable) {
-    const keyEvent = configuration.model.key_events.find(({ outcome_key }) => outcome_key === outcome.key);
-    const row = element('div', 'flux-model-manager__success');
-    const copy = element('div');
-    copy.append(
-      element('strong', '', outcome.label),
-      keyCopy(`${keyEvent?.action ?? 'No action'} on ${keyEvent?.element_key ?? 'no data-flux-key'}`)
-    );
-    row.append(copy);
-    if (editable) row.append(itemActions([
-      ['Edit', () => openEditor({ type: 'success-edit', outcomeKey: outcome.key })],
-      ['Delete', () => confirmSuccessDelete(outcome)]
-    ]));
-    return row;
+    const group = element('div', 'flux-model-manager__success-group');
+    group.append(element('strong', '', outcome.label));
+    const keyEvents = configuration.model.key_events.filter(({ outcome_key }) => outcome_key === outcome.key);
+    if (keyEvents.length === 0) {
+      group.append(message('No matching events are configured for this outcome.', 'flux-model-manager__warning'));
+      if (editable) group.append(itemActions([
+        ['Delete outcome', () => confirmSuccessDelete(outcome, null)]
+      ]));
+      return group;
+    }
+    for (const keyEvent of keyEvents) {
+      const row = element('div', 'flux-model-manager__success');
+      const copy = element('div');
+      copy.append(
+        element('strong', '', keyEvent.label),
+        keyCopy(`${keyEvent.action} on ${keyEvent.element_key}`)
+      );
+      row.append(copy);
+      if (editable) row.append(itemActions([
+        ['Edit event', () => openEditor({ type: 'success-edit', outcomeKey: outcome.key, keyEventKey: keyEvent.key })],
+        ['Delete event', () => confirmSuccessDelete(outcome, keyEvent)]
+      ]));
+      group.append(row);
+    }
+    return group;
   }
 
   function renderEditor() {
@@ -196,17 +208,21 @@ export function createTaskFunnelManager({ root, tenantId, onPublished = () => {}
     }
     const editing = editor.type === 'success-edit';
     const outcome = editing ? configuration.model.outcomes.find(({ key }) => key === editor.outcomeKey) : null;
-    const keyEvent = outcome ? configuration.model.key_events.find(({ outcome_key }) => outcome_key === outcome.key) : null;
+    const keyEvent = outcome
+      ? configuration.model.key_events.find(({ key, outcome_key }) => key === editor.keyEventKey && outcome_key === outcome.key)
+      : null;
     return {
-      title: editing ? 'Edit success event' : 'Add success event',
-      copy: 'Flux counts completion only when this exact event is accepted. The data-flux-key must exist on the connected service.',
+      title: editing ? 'Edit matching event' : 'Add success event',
+      copy: editing
+        ? `This event contributes to the ${outcome.label} outcome. Flux counts completion only when this exact event is accepted.`
+        : 'Flux counts completion only when this exact event is accepted. The data-flux-key must exist on the connected service.',
       fields: [
-        labelField('label', 'Success event name', outcome?.label ?? ''),
+        labelField('label', editing ? 'Matching event name' : 'Success event name', keyEvent?.label ?? ''),
         labelField('action', 'Flux action', keyEvent?.action ?? 'flow.submit', 'For example, flow.submit or page.loaded.'),
         labelField('elementKey', 'Publisher data-flux-key', keyEvent?.element_key ?? '', 'For example, form.application.submit or page.application.confirmation.')
       ],
       mutate: ({ label, action, elementKey }) => editing
-        ? updateSuccessEvent(configuration.model, outcome.key, { label, action, elementKey })
+        ? updateSuccessEvent(configuration.model, outcome.key, keyEvent.key, { label, action, elementKey })
         : createSuccessEvent(configuration.model, { transactionKey: editor.transactionKey, label, action, elementKey })
     };
   }
@@ -262,9 +278,13 @@ export function createTaskFunnelManager({ root, tenantId, onPublished = () => {}
     }
   }
 
-  function confirmSuccessDelete(outcome) {
-    if (globalThis.confirm(`Delete the ${outcome.label} success event from the next model version?`)) {
-      void publish(() => deleteSuccessEvent(configuration.model, outcome.key));
+  function confirmSuccessDelete(outcome, keyEvent) {
+    const matchingCount = configuration.model.key_events.filter(({ outcome_key }) => outcome_key === outcome.key).length;
+    const copy = keyEvent && matchingCount > 1
+      ? `Delete the ${keyEvent.label} matching event? The ${outcome.label} outcome and its other matching events will remain.`
+      : `Delete the ${outcome.label} outcome and its final matching event from the next model version?`;
+    if (globalThis.confirm(copy)) {
+      void publish(() => deleteSuccessEvent(configuration.model, outcome.key, keyEvent?.key ?? null));
     }
   }
 

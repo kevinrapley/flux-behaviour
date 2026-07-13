@@ -1,5 +1,9 @@
 # Recent Learnings
 
+## 2026-07-13 — Outcome authoring must preserve every semantic relationship
+
+An outcome is not necessarily a one-row success event: several action-and-element matches can resolve to the same transaction outcome. An editor must display and target each key event explicitly, remove the outcome only after its final match disappears, and cascade structural deletion through newly orphaned outcomes. Transaction bindings cannot be assumed to be event-owned because the model carries no such provenance; retaining them is safer than silently deleting publisher-declared page or entity meaning. Incremental authoring also needs same-transaction promotion from a success binding to an ordered step, and every entered or generated semantic key must fit the shared 160-character model-and-collector contract before publication.
+
 ## 2026-07-13 — Configuration must follow the model's semantic ownership
 
 A field editor should not invent field-level complexity when the governed contract declares complexity on the parent question. Tenant authoring must expose that hierarchy plainly: owners create a question or field group under an ordered step, declare its 1–7 service complexity, then create required or optional fields with exact publisher `data-flux-key` bindings. Stable keys survive label and binding edits, every mutation publishes a complete next version, and complexity copy must describe the service—not judge the person completing it.

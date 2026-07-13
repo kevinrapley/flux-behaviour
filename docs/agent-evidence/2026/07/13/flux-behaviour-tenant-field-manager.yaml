@@ -134,7 +134,7 @@ recent_learnings:
 security:
   - The dashboard hides mutation from viewers and the publication API independently enforces the tenant-owner role.
   - Existing-version conflicts are rejected rather than overwriting another owner's publication.
-  - Global content-free autocomplete categories are rejected as field-specific bindings, and publisher keys are capped at the collector contract's 120-character limit.
+  - Global content-free autocomplete categories are rejected as field-specific bindings, and publisher and generated semantic keys share the collector contract's 160-character limit.
   - Reserved and nested authentication scopes are rejected so excluded authentication interactions cannot be attributed to ordinary field analytics.
   - The direct publication API enforces field namespaces and tenant-global autocomplete boundaries; only an exact binding already present in the authorised current model can be retained during legacy transition.
   - Underscore-delimited authentication scopes are excluded by the same privacy policy as dot, colon and hyphen-delimited scopes before automatic capture or writing analysis begins.

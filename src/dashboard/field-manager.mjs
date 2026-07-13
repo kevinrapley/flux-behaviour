@@ -319,7 +319,7 @@ function renderFormField(definition) {
     }
   } else {
     control.value = definition.value;
-    control.maxLength = 120;
+    control.maxLength = definition.name === 'elementKey' ? 160 : 120;
   }
   group.append(control);
   return group;
