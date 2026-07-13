@@ -1,4 +1,11 @@
 records:
+  - id: CONF-019
+    rule: Behaviour model and dashboard roadmap must be grounded in source expectations, current implementation evidence and humane analytics boundaries
+    expected_evidence: A source register, current-capability inventory, prioritised gap matrix, rejected historical expectations and acceptance criteria exist
+    actual_evidence: docs/product/behaviour-model-dashboard-gap-analysis.md maps the provided Drive corpus, source-referenced dashboard artefacts, GA screenshots and repository runtime to 25 governed gaps and explicit rejection/reframing decisions.
+    status: present
+    owner: product-lead
+
   - id: CONF-017
     rule: Publisher services consume a hosted Flux capture engine rather than copying analytics logic or linguistic resources
     expected_evidence: Flux owns the versioned auto-capture module, session lifecycle, keyboard semantics, autocomplete privacy milestone, UK-English analyser and dictionary build; publisher integration is an include plus controlled attributes
