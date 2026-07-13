@@ -201,6 +201,22 @@ test('requires each key event to have one unambiguous action and bound element p
   assert.ok(codes.includes('unresolved_key_event_binding'));
 });
 
+test('rejects key events that cannot satisfy the event contract', () => {
+  const tooLong = validModel();
+  tooLong.key_events[0].action = `action.${'x'.repeat(75)}`;
+  assert.ok(validateServiceModel(tooLong).errors.some(({ code, path }) => code === 'invalid_key_event_action' && path === 'key_events[0].action'));
+
+  const wrongOtpElement = validModel();
+  wrongOtpElement.key_events[0].action = 'auth.otp.succeeded';
+  assert.ok(validateServiceModel(wrongOtpElement).errors.some(({ code }) => code === 'invalid_key_event_contract'));
+
+  const wrongOtpAction = validModel();
+  wrongOtpAction.bindings.push({ element_key: 'auth.otp', entity_key: 'step.objective' });
+  wrongOtpAction.key_events[0].element_key = 'auth.otp';
+  wrongOtpAction.key_events[0].action = 'flow.submit';
+  assert.ok(validateServiceModel(wrongOtpAction).errors.some(({ code }) => code === 'invalid_key_event_contract'));
+});
+
 test('rejects duplicate action and element pairs even when key-event keys differ', () => {
   const model = validModel();
   model.key_events.push({

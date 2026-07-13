@@ -256,7 +256,7 @@ function renderServiceModel(data) {
     ['Published model', `Version ${numberFormat.format(data.version ?? 0)}`, data.model_key ?? 'No stable model key'],
     ['Configured entities', numberFormat.format(configuredEntities), `${numberFormat.format(data.binding_count ?? 0)} semantic bindings`],
     ['Configured outcomes', numberFormat.format(data.outcome_count ?? 0), `${numberFormat.format(data.key_event_count ?? 0)} key events`],
-    ['Semantic mapping coverage', formatPercent(data.coverage?.mapping_rate), `${numberFormat.format(data.coverage?.resolved_event_count ?? 0)} of ${numberFormat.format(data.coverage?.event_count ?? 0)} interactions resolved`]
+    ['Semantic mapping coverage', formatPercent(data.coverage?.mapping_rate), `${numberFormat.format(data.coverage?.resolved_event_count ?? 0)} of ${numberFormat.format(data.coverage?.event_count ?? 0)} current-or-unmapped interactions resolved · ${numberFormat.format(data.coverage?.retired_model_event_count ?? 0)} retired-version interactions reported separately`]
   ]) {
     const row = document.createElement('div');
     row.className = 'flux-health-list__row';

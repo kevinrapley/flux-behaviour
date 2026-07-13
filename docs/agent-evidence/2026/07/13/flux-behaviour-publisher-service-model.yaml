@@ -63,7 +63,23 @@ evidence_records:
       - Keep funnels and field-coverage reports open in GAP-013 instead of overstating this implementation slice.
       - Scope dashboard evidence to the exact published model key and version so retired semantic context cannot be relabelled as current evidence.
       - Enforce the JSON contract collection ceilings in runtime validation and reject cross-transaction key-event outcomes.
+      - Leave global email autocomplete unbound rather than assigning a context-free signal to account access.
+      - Remove the unobservable sensitive stakeholder-form submit outcome until a neutral post-success milestone exists.
+      - Validate key-event action and element pairs against event-contract bounds and reserved OTP semantics.
+      - Exclude retired-version context from the current mapping denominator and report it separately from unmapped events.
     commands_run:
+      - command: node --test tests/service-model.test.mjs tests/service-model-summary.test.mjs tests/researchops-service-model.test.mjs tests/dashboard-service-model-panel.test.mjs
+        state: verified
+        status: passed
+        evidence: All 26 focused review-remediation tests passed, including uncollectable key-event rejection, deterministic seed parity and retired-version coverage separation.
+      - command: npm test
+        state: verified
+        status: passed
+        evidence: All 240 repository tests passed after the latest Codex review remediation.
+      - command: FLUX_DEMO_COLLECTOR_ENDPOINT=https://flux-behaviour.pages.dev/api/collect npm run demo:build
+        state: verified
+        status: passed
+        evidence: Rebuilt the production dashboard asset with separate retired-version mapping context.
       - command: node --test tests/service-model.test.mjs tests/service-model-migration.test.mjs tests/service-model-summary.test.mjs
         state: verified
         status: passed

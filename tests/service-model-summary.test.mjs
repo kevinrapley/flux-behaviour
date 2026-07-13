@@ -29,7 +29,7 @@ test('summarises configured entities, transaction complexity and event mapping c
     ]
   };
 
-  const summary = summariseServiceModel(model, { event_count: 10, resolved_event_count: 8 }, [
+  const summary = summariseServiceModel(model, { event_count: 10, resolved_event_count: 8, unmapped_event_count: 2, retired_model_event_count: 3 }, [
     { key_event_key: 'key-event.objective-saved', outcome_key: 'outcome.objective-saved', outcome_type: 'success', event_count: 3, session_count: 2 }
   ]);
 
@@ -50,7 +50,7 @@ test('summarises configured entities, transaction complexity and event mapping c
       session_count: 2
     }],
     transaction_complexity: [{ key: 'transaction.projects', label: 'Manage projects', complexity: 4, question_count: 2 }],
-    coverage: { event_count: 10, resolved_event_count: 8, unmapped_event_count: 2, mapping_rate: 80 }
+    coverage: { event_count: 10, resolved_event_count: 8, unmapped_event_count: 2, retired_model_event_count: 3, mapping_rate: 80 }
   });
 });
 
@@ -69,13 +69,13 @@ test('dashboard service-model query reports mapping coverage for the selected pe
     prepare(sql) {
       return {
         bind(...values) {
-          if (sql.includes('LEFT JOIN event_service_contexts')) assert.deepEqual(values, ['model.researchops', 1, 'researchops', 1000, 2000]);
+          if (sql.includes('retired_model_event_count')) assert.deepEqual(values, ['model.researchops', 1, 'model.researchops', 1, 'model.researchops', 1, 'researchops', 1000, 2000]);
           if (sql.includes('GROUP BY esc.key_event_key')) assert.deepEqual(values, ['researchops', 1000, 2000, 'model.researchops', 1]);
           return this;
         },
         async first() {
           if (sql.includes('service_model_versions')) return { model_json: JSON.stringify(model) };
-          if (sql.includes('event_service_contexts')) return { event_count: 5, resolved_event_count: 3 };
+          if (sql.includes('event_service_contexts')) return { event_count: 5, resolved_event_count: 3, unmapped_event_count: 2, retired_model_event_count: 4 };
           throw new Error(`Unexpected query: ${sql}`);
         },
         async all() {
@@ -89,7 +89,7 @@ test('dashboard service-model query reports mapping coverage for the selected pe
   const result = await dashboardServiceModel({ FLUX_DB: db }, 'researchops', 1000, 2000);
 
   assert.equal(result.model_key, 'model.researchops');
-  assert.deepEqual(result.coverage, { event_count: 5, resolved_event_count: 3, unmapped_event_count: 2, mapping_rate: 60 });
+  assert.deepEqual(result.coverage, { event_count: 5, resolved_event_count: 3, unmapped_event_count: 2, retired_model_event_count: 4, mapping_rate: 60 });
   assert.equal(result.key_events[0].event_count, 4);
   assert.equal(result.key_events[0].session_count, 3);
 });

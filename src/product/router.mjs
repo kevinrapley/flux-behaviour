@@ -227,7 +227,15 @@ export async function dashboardServiceModel(env, tenantId, startAtMs, endAtMs) {
   }
   if (!validateServiceModel(model).valid) return null;
   const [coverage, keyEvents] = await Promise.all([
-    env.FLUX_DB.prepare('SELECT COUNT(e.id) AS event_count, COUNT(esc.event_id) AS resolved_event_count FROM events e LEFT JOIN event_service_contexts esc ON esc.event_id = e.id AND esc.model_key = ? AND esc.model_version = ? WHERE e.tenant_id = ? AND e.occurred_at_ms >= ? AND e.occurred_at_ms < ?').bind(model.model_key, model.version, tenantId, startAtMs, endAtMs).first(),
+    env.FLUX_DB.prepare(`SELECT
+      SUM(CASE WHEN esc.event_id IS NULL OR (esc.model_key = ? AND esc.model_version = ?) THEN 1 ELSE 0 END) AS event_count,
+      SUM(CASE WHEN esc.model_key = ? AND esc.model_version = ? THEN 1 ELSE 0 END) AS resolved_event_count,
+      SUM(CASE WHEN esc.event_id IS NULL THEN 1 ELSE 0 END) AS unmapped_event_count,
+      SUM(CASE WHEN esc.event_id IS NOT NULL AND (esc.model_key != ? OR esc.model_version != ?) THEN 1 ELSE 0 END) AS retired_model_event_count
+      FROM events e LEFT JOIN event_service_contexts esc ON esc.event_id = e.id
+      WHERE e.tenant_id = ? AND e.occurred_at_ms >= ? AND e.occurred_at_ms < ?`).bind(
+      model.model_key, model.version, model.model_key, model.version, model.model_key, model.version, tenantId, startAtMs, endAtMs
+    ).first(),
     env.FLUX_DB.prepare('SELECT esc.key_event_key, esc.outcome_key, esc.outcome_type, COUNT(*) AS event_count, COUNT(DISTINCT e.session_id) AS session_count FROM event_service_contexts esc INNER JOIN events e ON e.id = esc.event_id WHERE e.tenant_id = ? AND e.occurred_at_ms >= ? AND e.occurred_at_ms < ? AND esc.model_key = ? AND esc.model_version = ? AND esc.key_event_key IS NOT NULL GROUP BY esc.key_event_key, esc.outcome_key, esc.outcome_type').bind(tenantId, startAtMs, endAtMs, model.model_key, model.version).all()
   ]);
   return summariseServiceModel(model, coverage, keyEvents.results ?? []);

@@ -12,6 +12,8 @@ export function summariseServiceModel(model, coverage = {}, observedKeyEvents = 
     });
   const eventCount = boundedCount(coverage.event_count);
   const resolvedEventCount = Math.min(eventCount, boundedCount(coverage.resolved_event_count));
+  const unmappedEventCount = Math.min(eventCount - resolvedEventCount, boundedCount(coverage.unmapped_event_count ?? eventCount - resolvedEventCount));
+  const retiredModelEventCount = boundedCount(coverage.retired_model_event_count);
   const observedByKey = new Map(observedKeyEvents.map((row) => [row.key_event_key, row]));
   const outcomesByKey = new Map(model.outcomes.map((outcome) => [outcome.key, outcome]));
   const keyEvents = model.key_events.map((keyEvent) => {
@@ -39,7 +41,8 @@ export function summariseServiceModel(model, coverage = {}, observedKeyEvents = 
     coverage: {
       event_count: eventCount,
       resolved_event_count: resolvedEventCount,
-      unmapped_event_count: eventCount - resolvedEventCount,
+      unmapped_event_count: unmappedEventCount,
+      retired_model_event_count: retiredModelEventCount,
       mapping_rate: eventCount === 0 ? 0 : round((resolvedEventCount / eventCount) * 100)
     }
   };

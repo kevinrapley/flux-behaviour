@@ -53,7 +53,6 @@
     { "key": "outcome.sign-in-failed", "label": "Sign-in verification failed", "transaction_key": "transaction.account-access", "type": "failure" },
     { "key": "outcome.project-opened", "label": "Project dashboard opened", "transaction_key": "transaction.project-navigation", "type": "success" },
     { "key": "outcome.objective-saved", "label": "Objective saved", "transaction_key": "transaction.manage-project", "type": "success" },
-    { "key": "outcome.stakeholder-saved", "label": "Stakeholder saved", "transaction_key": "transaction.manage-project", "type": "success" },
     { "key": "outcome.user-group-saved", "label": "User group saved", "transaction_key": "transaction.manage-project", "type": "success" },
     { "key": "outcome.sourcebook-pillar-opened", "label": "Sourcebook pillar opened", "transaction_key": "transaction.use-sourcebook", "type": "success" }
   ],
@@ -63,7 +62,6 @@
     { "key": "key-event.sign-in-failed", "label": "Sign-in verification failed", "action": "auth.otp.failed", "element_key": "auth.otp", "outcome_key": "outcome.sign-in-failed" },
     { "key": "key-event.project-opened", "label": "Project dashboard opened", "action": "page.loaded", "element_key": "page.project-dashboard", "outcome_key": "outcome.project-opened" },
     { "key": "key-event.objective-saved", "label": "Objective saved", "action": "flow.submit", "element_key": "form.project.add-objective", "outcome_key": "outcome.objective-saved" },
-    { "key": "key-event.stakeholder-saved", "label": "Stakeholder saved", "action": "flow.submit", "element_key": "form.stakeholder.add", "outcome_key": "outcome.stakeholder-saved" },
     { "key": "key-event.user-group-saved", "label": "User group saved", "action": "flow.submit", "element_key": "form.user-group.add", "outcome_key": "outcome.user-group-saved" },
     { "key": "key-event.sourcebook-environment-opened", "label": "Sourcebook environment opened", "action": "page.loaded", "element_key": "page.sourcebook-environment", "outcome_key": "outcome.sourcebook-pillar-opened" },
     { "key": "key-event.sourcebook-scope-opened", "label": "Sourcebook scope opened", "action": "page.loaded", "element_key": "page.sourcebook-scope", "outcome_key": "outcome.sourcebook-pillar-opened" },
@@ -76,7 +74,6 @@
   ],
   "bindings": [
     { "element_key": "page.account.sign-in", "entity_key": "task.sign-in" },
-    { "element_key": "autocomplete.email", "entity_key": "field.sign-in-email" },
     { "element_key": "autocomplete.one-time-code", "entity_key": "field.sign-in-code" },
     { "element_key": "auth.otp", "entity_key": "step.verify-account" },
 

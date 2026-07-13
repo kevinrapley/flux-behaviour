@@ -98,8 +98,9 @@ export function validateServiceModel(model) {
     if (keyEventKeys.has(keyEvent?.key)) addError('duplicate_key_event_key', `${path}.key`);
     else keyEventKeys.add(keyEvent?.key);
     if (!safeLabel(keyEvent?.label)) addError('invalid_label', `${path}.label`);
-    if (!semanticKey(keyEvent?.action, 120)) addError('invalid_key_event_action', `${path}.action`);
-    if (!semanticKey(keyEvent?.element_key, 160)) addError('invalid_element_key', `${path}.element_key`);
+    if (!semanticKey(keyEvent?.action, 80)) addError('invalid_key_event_action', `${path}.action`);
+    if (!semanticKey(keyEvent?.element_key, 120)) addError('invalid_element_key', `${path}.element_key`);
+    if (!validKeyEventContract(keyEvent?.action, keyEvent?.element_key)) addError('invalid_key_event_contract', path);
     if (!boundElementKeys.has(keyEvent?.element_key)) addError('unresolved_key_event_binding', `${path}.element_key`);
     const matchKey = `${keyEvent?.action}\u0000${keyEvent?.element_key}`;
     if (keyEventMatches.has(matchKey)) addError('duplicate_key_event_match', path);
@@ -170,4 +171,12 @@ function safeLabel(value) {
 
 function semanticKey(value, maximumLength) {
   return typeof value === 'string' && value.length >= 3 && value.length <= maximumLength && SEMANTIC_KEY.test(value);
+}
+
+function validKeyEventContract(action, elementKey) {
+  const otpActions = new Set(['auth.otp.requested', 'auth.otp.succeeded', 'auth.otp.failed']);
+  const isOtpAction = typeof action === 'string' && action.startsWith('auth.otp.');
+  const isOtpElement = elementKey === 'auth.otp';
+  if (isOtpAction || isOtpElement) return isOtpElement && otpActions.has(action);
+  return true;
 }
