@@ -10,24 +10,24 @@ The central architectural gap is a missing publisher-declared service model. Flu
 
 ## Sources reviewed
 
-The analysis used the current repository at `140313c` and the following user-provided or source-referenced artefacts.
+The analysis used the current repository at `140313c` and the following user-provided or source-referenced artefacts. External source locations and access material are retained privately by the product owner; this public register uses descriptive labels only.
 
 | Source | Evidence used |
 | --- | --- |
-| [Behaviour Model](https://docs.google.com/document/d/1Y8FNKSAvDztSETrgzLOJ-ZiMy9801_LAH2k-SuWnHo4/edit) | Complexity, disclosure, environment, errors/correction, events, requests, information behaviour and time dimensions; repeatability, experience and celeration concepts. |
-| [Product Flow](https://drive.google.com/file/d/0B8jMhPnINO3ARk8tZXNoQndYSzQ/view?resourcekey=0-1iWsJUA0WfDsLO6aF7URfA) | Eight dimensional flows; publisher configuration; behavioural API, profile, model, database, reporting UI and adaptive UI relationship. |
-| [Dimensional Analysis](https://docs.google.com/spreadsheets/d/1WtTHqBGcfLdFTxUe69PdaB0b60ur3oIp3huokSKS03I/edit) | Eight measurement dimensions, 17 behavioural factors and MVP feature matrix. |
-| [Requirements](https://docs.google.com/document/d/1D56bRI6LKkshl2jo3gzLjDTJgxyF-NbmqRqtVv_1Ub4/edit) | Transaction timing, idle state, visits, interaction modes, help, environment, errors, disclosure, information behaviour, server-side analysis and realtime feedback. |
-| [Things to think about](https://docs.google.com/document/d/1BJLJYXx8lQub780hQ5aBoMmBSOayNLbKEmnyCMzd7nc/edit) | Perennial/transient behaviour, page visibility, sentiment and historical technical ideas. |
-| [Event parameters](https://docs.google.com/document/d/1xHS0Nb8roSSyG5NeUWe_XQRbLn9_d3DKcAtRBm3rBHs/edit) | Double/triple click context, empty-field correction guards, selection shortcuts and Caps Lock context. |
-| [NLP Admin Dashboard](https://docs.google.com/document/d/1GGMUvDsKE20TtrAjdwChlp0yCdhUeO1Ogbpkcwj2F-g/edit) | Aggregate natural-language queries, explainability, governance actions, redaction, citations, accessibility, RBAC, audit and evaluation. |
-| [Usability and user experience are moving targets](https://docs.google.com/document/d/1dRqK4Gpl9Km_otgYQHbJStUlPY47zJh8gjCmQWiUaGI/edit) | Experience changes within sessions and across visits. |
-| [Conception of idea](https://docs.google.com/document/d/1t9CFIXePvHczOs_493Rqhtkkt4LZBTrvJcnNkt765CE/edit) | Context-sensitive help, evolving behavioural profiles, cohorts and service intelligence. |
-| [Bridging the Action Chasm](https://docs.google.com/document/d/1rSD50rYqwAkTLF3AeLFWCTmi160lQYMrgNTu0WT0WHU/edit) | Converting evidence into current-service action, experience decay and cohort progression. |
-| [Signals of Care](https://drive.google.com/file/d/1An8bBhWo5cN4GwrmnbR8mSdKP4PT_e8y/view) | Consent, visibility, control, minimisation, retention, community participation, accessibility, anti-surveillance and anti-manipulation boundaries. |
-| [Potential Dashboard Stats](https://docs.google.com/document/d/1t-YVu6Dkljz72p7kmYIEgznpDjxcLXcl6AHoPDFOkls/edit) | Complete/incomplete transactions, completion ratio and duration; field interaction coverage, required status, length, complexity and custom ranges. |
-| [Flux Behavioural Dashboard workbook](https://drive.google.com/file/d/1nKYejaMF7qwlELqM8hF5MkiUpYf60R-A/view) | Dimension scores, five composites and example journey personas. |
-| [eCommerce Sales Funnel](https://docs.google.com/document/d/1sXhWT90DW0Nn85gUKGyLi8tHEaSYxZfXPMljyxJVJao/edit) | Publisher-defined page identity and flexible semantic tracking for repeated controls and promotional regions. |
+| Behaviour Model | Complexity, disclosure, environment, errors/correction, events, requests, information behaviour and time dimensions; repeatability, experience and celeration concepts. |
+| Product Flow | Eight dimensional flows; publisher configuration; behavioural API, profile, model, database, reporting UI and adaptive UI relationship. |
+| Dimensional Analysis | Eight measurement dimensions, 17 behavioural factors and MVP feature matrix. |
+| Requirements | Transaction timing, idle state, visits, interaction modes, help, environment, errors, disclosure, information behaviour, server-side analysis and realtime feedback. |
+| Things to think about | Perennial/transient behaviour, page visibility, sentiment and historical technical ideas. |
+| Event parameters | Double/triple click context, empty-field correction guards, selection shortcuts and Caps Lock context. |
+| NLP Admin Dashboard | Aggregate natural-language queries, explainability, governance actions, redaction, citations, accessibility, RBAC, audit and evaluation. |
+| Usability and user experience are moving targets | Experience changes within sessions and across visits. |
+| Conception of idea | Context-sensitive help, evolving behavioural profiles, cohorts and service intelligence. |
+| Bridging the Action Chasm | Converting evidence into current-service action, experience decay and cohort progression. |
+| Signals of Care | Consent, visibility, control, minimisation, retention, community participation, accessibility, anti-surveillance and anti-manipulation boundaries. |
+| Potential Dashboard Stats | Complete/incomplete transactions, completion ratio and duration; field interaction coverage, required status, length, complexity and custom ranges. |
+| Flux Behavioural Dashboard workbook | Dimension scores, five composites and example journey personas. |
+| eCommerce Sales Funnel | Publisher-defined page identity and flexible semantic tracking for repeated controls and promotional regions. |
 | Three supplied Google Analytics screenshots | Realtime 5/30-minute activity, event/key-event ranking, new/active users, source, audience/property, page/screen and comparison panels. |
 
 ## What is already implemented
@@ -104,7 +104,7 @@ Some source expectations conflict with the current product charter, modern brows
 
 ### Release A — analytics foundation
 
-- versioned publisher configuration for tasks, steps, fields, complexity and key events;
+- versioned publisher configuration for services, transactions, tasks, steps, questions and fields, including required/optional status, question and transaction complexity, configured outcomes and key events;
 - task/step/field storage and aggregate report APIs;
 - semantic coverage and data-quality reporting;
 - custom range and shared comparison contract.

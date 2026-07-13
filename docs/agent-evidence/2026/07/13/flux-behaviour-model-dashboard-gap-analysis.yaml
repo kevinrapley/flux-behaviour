@@ -67,7 +67,7 @@ evidence_records:
     recent_learnings:
       - A semantic event recorder cannot replace a versioned service/task/field/outcome model.
     security:
-      - No credentials, source-document contents containing contact details or external configuration were copied into the repository.
+      - No credentials, source-document contents containing contact details, external configuration, document IDs or link-access resource keys were copied into the repository.
     privacy:
       - The roadmap rejects sensitive person-level inference, visited-link inspection, social-profile analysis, password evaluation and raw-event export.
     accessibility:

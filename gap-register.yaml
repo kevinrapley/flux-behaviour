@@ -15,7 +15,7 @@ gaps:
     observed_state: The dashboard provides period overview, daily audience trend, health summaries, action ranking, cohorts, indicators and journey histories, but no realtime, key-event, page/task/control, field, funnel, custom-comparison or export reports.
     expected_state: The target information architecture and P1 dashboard reports in the source-grounded gap analysis are implemented with shared filters, accessible tables and provenance.
     risk: Teams can inspect individual journeys but cannot reliably locate systemic friction, compare changes or prioritise service action.
-    action: Deliver DASH-01 through DASH-06 after the service model foundation.
+    action: Deliver DASH-01 through DASH-06 and the DASH-10 information architecture after the service model foundation.
     owner: product-lead
     status: open
 
@@ -25,7 +25,7 @@ gaps:
     observed_state: Capture covers core navigation, fields, writing, help disclosure, validation and submit metadata, but not configured recovery, idle/visibility, help dialogue, search/refinement, repeatability, recency, celeration or safe environment context.
     expected_state: The P2 behavioural lifecycles are captured as consented bounded metadata with alternative interpretations and aggregate reporting.
     risk: Flux can overemphasise isolated interactions while missing whether people recover, learn, return or face repeated service problems.
-    action: Deliver MODEL-06 and MODEL-08 through MODEL-13 with privacy, accessibility and golden-corpus evidence.
+    action: Deliver MODEL-06 through MODEL-13, including aggregate optional-field and data-disclosure calibration in MODEL-07, with privacy, accessibility and golden-corpus evidence.
     owner: product-lead
     status: open
 

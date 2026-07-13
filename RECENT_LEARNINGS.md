@@ -1,5 +1,9 @@
 # Recent Learnings
 
+## 2026-07-13 — Public source registers must not contain private Drive access material
+
+Use descriptive source labels in public roadmap and evidence files. Keep Google document IDs, file IDs, resource keys and other link-access material in the product owner's private provenance record unless publication is explicitly approved.
+
 ## 2026-07-13 — A rich event stream is not yet a behavioural analytics model
 
 The source documentation is organised around publisher-defined transactions, tasks, questions, complexity and outcomes. A recorder that stores semantic interaction events can narrate journeys, but it cannot produce trustworthy funnels, field coverage, disclosure, complexity-adjusted effort or action recommendations until those service concepts have first-class versioned definitions. Dashboard breadth depends on that model; charts cannot substitute for it.
