@@ -102,6 +102,7 @@ document.querySelector('#reject-analytics').addEventListener('click', () =&gt; {
 				<li>Flux creates the tenant, its single unique installation tag and the administrator's owner membership atomically. If any step fails, none of them is created.</li>
 				<li>The tenant owner can retrieve the same stable snippet later from <code>GET /api/tenant/:tenant/installation</code>.</li>
 			</ol>
+			<p class="govuk-body">Use the authenticated <a class="govuk-link" href="/admin/">Tenant administration page</a> to choose a tenant, edit property details and origins, manage owner or viewer access, export aggregate data, or move tracking to trash. This follows the Google Analytics account/property pattern while keeping Flux's metadata-only and aggregate-only boundaries.</p>
 			<div class="govuk-inset-text">ResearchOps legacy installation continues to use <code>data-flux-tenant="researchops"</code>. That compatibility path is restricted to ResearchOps; every new integration must use its issued <code>data-flux-tag</code>.</div>
 			<h3 class="govuk-heading-m">Report areas in the logged-in interface</h3>
 			<p class="govuk-body">All report areas use the same date range, comparison and aggregate-export controls. The default range is the last 30 days; you can also choose 24 hours, 7, 90 or 365 days, all time, or a custom UTC date range of up to 366 days.</p>
@@ -352,6 +353,27 @@ const { tag_id, installation } = await response.json();
 
 const { tag_id, installation } = await response.json();</code></pre>
 			<p class="govuk-body"><code>401</code> means the session is missing, <code>403</code> means the account is not a tenant owner and <code>404</code> means no active tag is available.</p>
+
+			<h3 class="govuk-heading-m"><span class="flux-method flux-method--get">GET</span> <code>/api/admin/tenants</code></h3>
+			<p class="govuk-body">Lists the properties available to the signed-in account. Platform administrators see every active and trashed tenant; other accounts see only direct memberships. The response includes status, role, exact origins, installation tag and trash dates.</p>
+
+			<h3 class="govuk-heading-m"><span class="flux-method flux-method--put">PATCH</span> <code>/api/admin/tenants/:tenant</code></h3>
+			<p class="govuk-body">Updates the controlled property name and complete exact-origin allow-list. The caller must be a tenant owner or platform administrator. Updates to a tenant in trash are refused.</p>
+
+			<h3 class="govuk-heading-m"><span class="flux-method flux-method--get">GET</span> / <span class="flux-method flux-method--put">PUT</span> <code>/api/admin/tenants/:tenant/access</code></h3>
+			<p class="govuk-body">Lists property access or grants an existing Flux account the <code>owner</code> or <code>viewer</code> role. Only owners and platform administrators can use these routes. Account emails are administration identity data and never join visitor analytics records.</p>
+			<h3 class="govuk-heading-m"><span class="flux-method flux-method--delete">DELETE</span> <code>/api/admin/tenants/:tenant/access/:accountId</code></h3>
+			<p class="govuk-body">Removes a direct property role. Flux rejects removal or demotion of the final owner so that a tenant cannot be left without accountable administration.</p>
+
+			<h3 class="govuk-heading-m"><span class="flux-method flux-method--get">GET</span> <code>/api/admin/tenants/:tenant/export.csv</code></h3>
+			<p class="govuk-body">Exports up to one year of daily aggregate visitor, session and interaction counts for an authorised tenant member. The CSV contains no raw events, narratives, visitor IDs, session IDs or entered values.</p>
+
+			<h3 class="govuk-heading-m"><span class="flux-method flux-method--delete">DELETE</span> <code>/api/admin/tenants/:tenant</code></h3>
+			<h4 class="govuk-heading-s">Move tracking to trash</h4>
+			<p class="govuk-body">Requires the exact tenant ID in the JSON <code>confirmation</code> field. Flux immediately revokes the installation tag and stops collection, but preserves configuration and historical aggregate data for 35 days. It does not physically delete raw records while retention and deletion policy remains a release blocker.</p>
+
+			<h3 class="govuk-heading-m"><span class="flux-method">POST</span> <code>/api/admin/tenants/:tenant/restore</code></h3>
+			<p class="govuk-body">Restores a trashed tenant during its recovery window and reactivates the same installation tag. Owners and platform administrators can restore tracking.</p>
 
 			<h3 class="govuk-heading-m"><span class="flux-method">POST</span> <code>/api/collect</code></h3>
 			<p class="govuk-body">Accepts one schema version <code>1.2.0</code> event per request. Supply the issued installation tag in the event's <code>tenant_id</code> field; the collector resolves it to the internal tenant. Prefer the SDK: it creates identifiers after consent, strips unknown fields and validates before transport.</p>

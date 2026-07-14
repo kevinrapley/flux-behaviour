@@ -23,6 +23,7 @@ import { buildGovernanceReport, buildUncertaintyReport } from './report-uncertai
 import { dashboardLifecycleAnalytics } from './lifecycle-analytics.mjs';
 import { buildInstallationTag, resolveTenantReference } from '../tenants/tenant-tags.mjs';
 import { provisionTenant } from '../tenants/tenant-provisioning.mjs';
+import { restoreTenantTracking, tenantAggregateCsv, trashTenantTracking, validTenantSettings } from '../tenants/tenant-administration.mjs';
 
 const HEADERS = { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' };
 
@@ -34,7 +35,20 @@ export async function handleProductRequest(request, env) {
   if (path === '/api/collect' && request.method === 'POST') return collect(request, env);
   if (path === '/api/auth/google/start' && request.method === 'GET') return startGoogleSignIn(request, env);
   if (path === '/api/auth/google/callback' && request.method === 'GET') return completeGoogleSignIn(request, env);
+  if (path === '/api/admin/tenants' && request.method === 'GET') return listAdminTenants(request, env);
   if (path === '/api/admin/tenants' && request.method === 'POST') return provisionTenantAsAdmin(request, env);
+  const tenantRestoreRoute = path.match(/^\/api\/admin\/tenants\/([a-z][a-z0-9-]{2,79})\/restore$/);
+  if (tenantRestoreRoute && request.method === 'POST') return restoreAdminTenant(request, env, tenantRestoreRoute[1]);
+  const tenantExportRoute = path.match(/^\/api\/admin\/tenants\/([a-z][a-z0-9-]{2,79})\/export\.csv$/);
+  if (tenantExportRoute && request.method === 'GET') return exportAdminTenant(request, env, tenantExportRoute[1]);
+  const tenantAccessRoute = path.match(/^\/api\/admin\/tenants\/([a-z][a-z0-9-]{2,79})\/access$/);
+  if (tenantAccessRoute && request.method === 'GET') return listTenantAccess(request, env, tenantAccessRoute[1]);
+  if (tenantAccessRoute && request.method === 'PUT') return updateTenantAccess(request, env, tenantAccessRoute[1]);
+  const tenantAccessMemberRoute = path.match(/^\/api\/admin\/tenants\/([a-z][a-z0-9-]{2,79})\/access\/([A-Za-z0-9._:-]{1,128})$/);
+  if (tenantAccessMemberRoute && request.method === 'DELETE') return removeTenantAccess(request, env, tenantAccessMemberRoute[1], tenantAccessMemberRoute[2]);
+  const tenantAdminRoute = path.match(/^\/api\/admin\/tenants\/([a-z][a-z0-9-]{2,79})$/);
+  if (tenantAdminRoute && request.method === 'PATCH') return updateAdminTenant(request, env, tenantAdminRoute[1]);
+  if (tenantAdminRoute && request.method === 'DELETE') return trashAdminTenant(request, env, tenantAdminRoute[1]);
   const installationRoute = path.match(/^\/api\/tenant\/([a-z][a-z0-9-]{2,79})\/installation$/);
   if (installationRoute && request.method === 'GET') return readTenantInstallation(request, env, installationRoute[1]);
   const serviceModelRoute = path.match(/^\/api\/service-model\/([a-z][a-z0-9._-]{2,119})$/);
@@ -44,6 +58,176 @@ export async function handleProductRequest(request, env) {
   if (path === '/api/dashboard/researchops/export.csv' && request.method === 'GET') return aggregateExport(request, env);
   if (path === '/api/dashboard/researchops' && request.method === 'GET') return dashboard(request, env);
   return json({ ok: false, error: 'not_found' }, 404);
+}
+
+async function removeTenantAccess(request, env, tenantId, targetAccountId) {
+  const accountId = await authenticatedAccountId(request, env);
+  if (!accountId) return json({ ok: false, error: 'unauthorised' }, 401);
+  if (!(await canAdministerTenant(env.FLUX_DB, accountId, tenantId))) return json({ ok: false, error: 'forbidden' }, 403);
+  const target = await env.FLUX_DB.prepare('SELECT role FROM account_tenants WHERE tenant_id = ? AND account_id = ?').bind(tenantId, targetAccountId).first();
+  if (!target) return json({ ok: false, error: 'access_not_found' }, 404);
+  if (target.role === 'owner') {
+    const owners = await env.FLUX_DB.prepare("SELECT COUNT(*) AS count FROM account_tenants WHERE tenant_id = ? AND role = 'owner'").bind(tenantId).first();
+    if (Number(owners?.count ?? 0) <= 1) return json({ ok: false, error: 'last_owner_required' }, 409);
+  }
+  const now = Date.now();
+  await env.FLUX_DB.batch([
+    env.FLUX_DB.prepare('DELETE FROM account_tenants WHERE account_id = ? AND tenant_id = ?').bind(targetAccountId, tenantId),
+    env.FLUX_DB.prepare("INSERT INTO tenant_admin_audit (id, tenant_id, actor_account_id, action, created_at_ms) VALUES (?, ?, ?, 'access_updated', ?)").bind(`audit-${crypto.randomUUID()}`, tenantId, accountId, now)
+  ]);
+  return json({ ok: true, tenant_id: tenantId, account_id: targetAccountId });
+}
+
+async function updateTenantAccess(request, env, tenantId) {
+  const accountId = await authenticatedAccountId(request, env);
+  if (!accountId) return json({ ok: false, error: 'unauthorised' }, 401);
+  if (!(await canAdministerTenant(env.FLUX_DB, accountId, tenantId))) return json({ ok: false, error: 'forbidden' }, 403);
+  const tenant = await env.FLUX_DB.prepare('SELECT id, deleted_at_ms FROM tenants WHERE id = ?').bind(tenantId).first();
+  if (!tenant) return json({ ok: false, error: 'tenant_not_found' }, 404);
+  if (tenant.deleted_at_ms != null) return json({ ok: false, error: 'tenant_trashed' }, 409);
+  const body = await safeJson(request);
+  const email = normaliseEmail(body?.email);
+  if (!email || !['owner', 'viewer'].includes(body?.role)) return json({ ok: false, error: 'invalid_access' }, 400);
+  const target = await env.FLUX_DB.prepare('SELECT id FROM accounts WHERE email = ?').bind(email).first();
+  if (!target) return json({ ok: false, error: 'account_not_found' }, 404);
+  if (body.role === 'viewer') {
+    const existingAccess = await env.FLUX_DB.prepare('SELECT role FROM account_tenants WHERE tenant_id = ? AND account_id = ?').bind(tenantId, target.id).first();
+    if (existingAccess?.role === 'owner') {
+      const owners = await env.FLUX_DB.prepare("SELECT COUNT(*) AS count FROM account_tenants WHERE tenant_id = ? AND role = 'owner'").bind(tenantId).first();
+      if (Number(owners?.count ?? 0) <= 1) return json({ ok: false, error: 'last_owner_required' }, 409);
+    }
+  }
+  const now = Date.now();
+  await env.FLUX_DB.batch([
+    env.FLUX_DB.prepare('INSERT INTO account_tenants (account_id, tenant_id, role) VALUES (?, ?, ?) ON CONFLICT(account_id, tenant_id) DO UPDATE SET role = excluded.role').bind(target.id, tenantId, body.role),
+    env.FLUX_DB.prepare("INSERT INTO tenant_admin_audit (id, tenant_id, actor_account_id, action, created_at_ms) VALUES (?, ?, ?, 'access_updated', ?)").bind(`audit-${crypto.randomUUID()}`, tenantId, accountId, now)
+  ]);
+  return json({ ok: true, tenant_id: tenantId, account_id: target.id, role: body.role });
+}
+
+async function listTenantAccess(request, env, tenantId) {
+  const accountId = await authenticatedAccountId(request, env);
+  if (!accountId) return json({ ok: false, error: 'unauthorised' }, 401);
+  if (!(await canAdministerTenant(env.FLUX_DB, accountId, tenantId))) return json({ ok: false, error: 'forbidden' }, 403);
+  const result = await env.FLUX_DB.prepare(`SELECT accounts.id AS account_id, accounts.email, account_tenants.role
+    FROM account_tenants INNER JOIN accounts ON accounts.id = account_tenants.account_id
+    WHERE account_tenants.tenant_id = ? ORDER BY account_tenants.role, accounts.email`).bind(tenantId).all();
+  return json({ ok: true, tenant_id: tenantId, access: result.results ?? [] });
+}
+
+async function exportAdminTenant(request, env, tenantId) {
+  const accountId = await authenticatedAccountId(request, env);
+  if (!accountId) return json({ ok: false, error: 'unauthorised' }, 401);
+  const membership = await env.FLUX_DB.prepare('SELECT role FROM account_tenants WHERE account_id = ? AND tenant_id = ?').bind(accountId, tenantId).first();
+  const platformAdmin = membership ? null : await env.FLUX_DB.prepare('SELECT 1 AS allowed FROM platform_admins WHERE account_id = ?').bind(accountId).first();
+  if (!membership && !platformAdmin) return json({ ok: false, error: 'forbidden' }, 403);
+  const tenant = await env.FLUX_DB.prepare('SELECT id, deleted_at_ms FROM tenants WHERE id = ?').bind(tenantId).first();
+  if (!tenant) return json({ ok: false, error: 'tenant_not_found' }, 404);
+  const endAtMs = Date.now();
+  const startAtMs = endAtMs - (365 * 24 * 60 * 60 * 1000);
+  const result = await env.FLUX_DB.prepare(`SELECT date(s.started_at_ms / 1000, 'unixepoch') AS day,
+      COUNT(DISTINCT s.visitor_id) AS visitors, COUNT(DISTINCT s.id) AS sessions,
+      COUNT(DISTINCT e.id) AS interactions
+    FROM sessions s
+    LEFT JOIN events e ON e.session_id = s.id AND e.tenant_id = s.tenant_id
+    WHERE s.tenant_id = ? AND s.started_at_ms >= ? AND s.started_at_ms < ?
+    GROUP BY day ORDER BY day ASC`).bind(tenantId, startAtMs, endAtMs).all();
+  await env.FLUX_DB.batch([
+    env.FLUX_DB.prepare('INSERT INTO tenant_admin_audit (id, tenant_id, actor_account_id, action, created_at_ms) VALUES (?, ?, ?, ?, ?)').bind(`audit-${crypto.randomUUID()}`, tenantId, accountId, 'exported', endAtMs)
+  ]);
+  return new Response(tenantAggregateCsv({ tenantId, generatedAt: new Date(endAtMs).toISOString(), rows: result.results ?? [] }), {
+    headers: {
+      'content-type': 'text/csv; charset=utf-8',
+      'content-disposition': `attachment; filename="flux-${tenantId}-aggregate-1y.csv"`,
+      'cache-control': 'no-store',
+      'x-content-type-options': 'nosniff'
+    }
+  });
+}
+
+async function restoreAdminTenant(request, env, tenantId) {
+  const accountId = await authenticatedAccountId(request, env);
+  if (!accountId) return json({ ok: false, error: 'unauthorised' }, 401);
+  if (!(await canAdministerTenant(env.FLUX_DB, accountId, tenantId))) return json({ ok: false, error: 'forbidden' }, 403);
+  const tenant = await env.FLUX_DB.prepare('SELECT id, deleted_at_ms FROM tenants WHERE id = ?').bind(tenantId).first();
+  if (!tenant) return json({ ok: false, error: 'tenant_not_found' }, 404);
+  if (tenant.deleted_at_ms == null) return json({ ok: false, error: 'tenant_not_trashed' }, 409);
+  return json(await restoreTenantTracking(env.FLUX_DB, tenantId, accountId));
+}
+
+async function trashAdminTenant(request, env, tenantId) {
+  const accountId = await authenticatedAccountId(request, env);
+  if (!accountId) return json({ ok: false, error: 'unauthorised' }, 401);
+  if (!(await canAdministerTenant(env.FLUX_DB, accountId, tenantId))) return json({ ok: false, error: 'forbidden' }, 403);
+  const body = await safeJson(request);
+  if (body?.confirmation !== tenantId) return json({ ok: false, error: 'confirmation_required' }, 400);
+  const tenant = await env.FLUX_DB.prepare('SELECT id, deleted_at_ms FROM tenants WHERE id = ?').bind(tenantId).first();
+  if (!tenant) return json({ ok: false, error: 'tenant_not_found' }, 404);
+  if (tenant.deleted_at_ms != null) return json({ ok: false, error: 'tenant_already_trashed' }, 409);
+  return json(await trashTenantTracking(env.FLUX_DB, tenantId, accountId));
+}
+
+async function updateAdminTenant(request, env, tenantId) {
+  const accountId = await authenticatedAccountId(request, env);
+  if (!accountId) return json({ ok: false, error: 'unauthorised' }, 401);
+  if (!(await canAdministerTenant(env.FLUX_DB, accountId, tenantId))) return json({ ok: false, error: 'forbidden' }, 403);
+  const tenant = await env.FLUX_DB.prepare('SELECT id, deleted_at_ms FROM tenants WHERE id = ?').bind(tenantId).first();
+  if (!tenant) return json({ ok: false, error: 'tenant_not_found' }, 404);
+  if (tenant.deleted_at_ms != null) return json({ ok: false, error: 'tenant_trashed' }, 409);
+  const body = await safeJson(request);
+  const settings = { name: body?.name, allowedOrigins: body?.allowed_origins };
+  if (!validTenantSettings(settings)) return json({ ok: false, error: 'invalid_tenant_settings' }, 400);
+  const now = Date.now();
+  await env.FLUX_DB.batch([
+    env.FLUX_DB.prepare('UPDATE tenants SET name = ?, allowed_origins_json = ? WHERE id = ? AND deleted_at_ms IS NULL').bind(settings.name, JSON.stringify(settings.allowedOrigins), tenantId),
+    env.FLUX_DB.prepare('INSERT INTO tenant_admin_audit (id, tenant_id, actor_account_id, action, created_at_ms) VALUES (?, ?, ?, ?, ?)').bind(`audit-${crypto.randomUUID()}`, tenantId, accountId, 'updated', now)
+  ]);
+  return json({ ok: true, tenant_id: tenantId, status: 'active' });
+}
+
+async function canAdministerTenant(db, accountId, tenantId) {
+  const platformAdmin = await db.prepare('SELECT 1 AS allowed FROM platform_admins WHERE account_id = ?').bind(accountId).first();
+  if (platformAdmin) return true;
+  const access = await db.prepare('SELECT role FROM account_tenants WHERE account_id = ? AND tenant_id = ?').bind(accountId, tenantId).first();
+  return access?.role === 'owner';
+}
+
+async function listAdminTenants(request, env) {
+  const accountId = await authenticatedAccountId(request, env);
+  if (!accountId) return json({ ok: false, error: 'unauthorised' }, 401);
+  const platformAdmin = Boolean(await env.FLUX_DB.prepare('SELECT 1 AS allowed FROM platform_admins WHERE account_id = ?').bind(accountId).first());
+  const statement = platformAdmin
+    ? env.FLUX_DB.prepare(`SELECT tenants.id, tenants.name, tenants.allowed_origins_json, tenants.created_at_ms,
+        tenants.deleted_at_ms, tenants.purge_after_ms, tenant_installation_tags.tag_id,
+        account_tenants.role
+      FROM tenants
+      LEFT JOIN tenant_installation_tags ON tenant_installation_tags.tenant_id = tenants.id
+      LEFT JOIN account_tenants ON account_tenants.tenant_id = tenants.id AND account_tenants.account_id = ?
+      ORDER BY tenants.deleted_at_ms IS NOT NULL, tenants.name`).bind(accountId)
+    : env.FLUX_DB.prepare(`SELECT tenants.id, tenants.name, tenants.allowed_origins_json, tenants.created_at_ms,
+        tenants.deleted_at_ms, tenants.purge_after_ms, tenant_installation_tags.tag_id,
+        account_tenants.role
+      FROM account_tenants
+      INNER JOIN tenants ON tenants.id = account_tenants.tenant_id
+      LEFT JOIN tenant_installation_tags ON tenant_installation_tags.tenant_id = tenants.id
+      WHERE account_tenants.account_id = ?
+      ORDER BY tenants.deleted_at_ms IS NOT NULL, tenants.name`).bind(accountId);
+  const rows = await statement.all();
+  return json({
+    ok: true,
+    platform_admin: platformAdmin,
+    tenants: (rows.results ?? []).map((tenant) => ({
+      id: tenant.id,
+      name: tenant.name,
+      allowed_origins: parseOrigins(tenant.allowed_origins_json),
+      created_at_ms: tenant.created_at_ms,
+      deleted_at_ms: tenant.deleted_at_ms,
+      purge_after_ms: tenant.purge_after_ms,
+      tag_id: tenant.tag_id,
+      role: tenant.role,
+      status: tenant.deleted_at_ms == null ? 'active' : 'trashed'
+    }))
+  });
 }
 
 async function readTenantInstallation(request, env, tenantId) {
@@ -208,7 +392,7 @@ async function collect(request, env) {
 async function collectPreflight(request, env) {
   const origin = request.headers.get('origin');
   if (!origin) return json({ ok: false, error: 'origin_not_allowed' }, 403);
-  const tenants = await env.FLUX_DB.prepare('SELECT allowed_origins_json FROM tenants').bind().all();
+  const tenants = await env.FLUX_DB.prepare('SELECT allowed_origins_json FROM tenants WHERE deleted_at_ms IS NULL').bind().all();
   if (!tenants.results?.some((tenant) => allows(tenant.allowed_origins_json, origin))) return json({ ok: false, error: 'origin_not_allowed' }, 403);
   return new Response(null, { status: 204, headers: { 'access-control-allow-origin': origin, 'access-control-allow-methods': 'POST, OPTIONS', 'access-control-allow-headers': 'content-type', vary: 'Origin', 'cache-control': 'no-store' } });
 }
@@ -532,6 +716,7 @@ export function groupJourneys(sessions = [], events = []) {
 
 function metadata(event) { const copy = { ...event }; delete copy.session_id; delete copy.visitor_id; delete copy.tenant_id; return copy; }
 function allows(value, origin) { try { return typeof origin === 'string' && JSON.parse(value).includes(origin); } catch { return false; } }
+function parseOrigins(value) { try { const origins = JSON.parse(value); return Array.isArray(origins) ? origins : []; } catch { return []; } }
 function withCors(response, origin) { const headers = new Headers(response.headers); if (origin) headers.set('access-control-allow-origin', origin); headers.set('vary', 'Origin'); return new Response(response.body, { status: response.status, headers }); }
 function json(value, status = 200) { return new Response(JSON.stringify(value), { status, headers: HEADERS }); }
 async function safeJson(request) { try { return await request.json(); } catch { return null; } }

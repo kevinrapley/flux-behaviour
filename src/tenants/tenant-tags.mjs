@@ -4,10 +4,11 @@ export async function resolveTenantReference(db, reference) {
     FROM tenant_installation_tags
     INNER JOIN tenants ON tenants.id = tenant_installation_tags.tenant_id
     WHERE tenant_installation_tags.tag_id = ?
-      AND tenant_installation_tags.revoked_at_ms IS NULL`).bind(reference).first();
+      AND tenant_installation_tags.revoked_at_ms IS NULL
+      AND tenants.deleted_at_ms IS NULL`).bind(reference).first();
   if (taggedTenant) return taggedTenant;
   if (reference !== 'researchops') return null;
-  return db.prepare("SELECT id, allowed_origins_json FROM tenants WHERE id = 'researchops'").bind().first();
+  return db.prepare("SELECT id, allowed_origins_json FROM tenants WHERE id = 'researchops' AND deleted_at_ms IS NULL").bind().first();
 }
 
 export function buildInstallationTag(baseUrl, tagId) {

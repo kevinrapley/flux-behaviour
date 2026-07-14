@@ -61,6 +61,14 @@ const pages = [
     }
   },
   {
+    template: 'pages/admin.njk',
+    output: 'admin/index.html',
+    context: {
+      pageTitle: 'Tenant administration',
+      activeNavigation: 'admin'
+    }
+  },
+  {
     template: 'pages/playground.njk',
     output: 'playground/index.html',
     context: {

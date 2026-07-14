@@ -58,6 +58,24 @@ test('collector preserves the legacy ResearchOps tenant reference during migrati
   assert.equal(tenant.id, 'researchops');
   assert.equal(calls.length, 2);
   assert.match(calls[1].sql, /FROM tenants WHERE id = 'researchops'/);
+  assert.match(calls[1].sql, /deleted_at_ms IS NULL/);
+});
+
+test('collector tag lookup excludes tenants that are in trash', async () => {
+  const calls = [];
+  const db = {
+    prepare(sql) {
+      return {
+        bind(...values) {
+          calls.push({ sql, values });
+          return { first: async () => null };
+        }
+      };
+    }
+  };
+
+  assert.equal(await resolveTenantReference(db, 'flux-11111111111141118111111111111111'), null);
+  assert.match(calls[0].sql, /tenants\.deleted_at_ms IS NULL/);
 });
 
 test('collector stores a tagged event under the resolved internal tenant', async () => {

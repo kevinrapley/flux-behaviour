@@ -55,13 +55,15 @@ test('tenant provisioning atomically creates the tenant, unique tag and owner me
     tag_id: 'flux-33333333333343338333333333333333'
   });
   assert.equal(batches.length, 1);
-  assert.equal(batches[0].length, 3);
+  assert.equal(batches[0].length, 4);
   assert.match(batches[0][0].sql, /INSERT INTO tenants/);
   assert.deepEqual(batches[0][0].values, ['licence-service', 'Licence service', '["https://service.example"]', 1_750_000_000_000]);
   assert.match(batches[0][1].sql, /INSERT INTO tenant_installation_tags/);
   assert.deepEqual(batches[0][1].values, ['flux-33333333333343338333333333333333', 'licence-service', 1_750_000_000_000]);
   assert.match(batches[0][2].sql, /INSERT INTO account_tenants/);
   assert.deepEqual(batches[0][2].values, ['account-1', 'licence-service', 'owner']);
+  assert.match(batches[0][3].sql, /INSERT INTO tenant_admin_audit/);
+  assert.deepEqual(batches[0][3].values.slice(1), ['licence-service', 'account-1', 1_750_000_000_000]);
 });
 
 test('tenant provisioning rejects unsafe identifiers and non-origin URLs before database access', async () => {
