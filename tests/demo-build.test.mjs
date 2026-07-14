@@ -47,6 +47,7 @@ test('demo build renders the GOV.UK prototype pages', () => {
 
     assert.match(developers, /Flux Behaviour developer documentation/);
     assert.match(developers, /data-flux-tenant/);
+    assert.match(developers, /data-flux-tag="YOUR_UNIQUE_TAG"/);
     assert.match(developers, /data-flux-role/);
     assert.match(developers, /data-flux-sensitive/);
     assert.match(developers, /POST<\/span> <code>\/api\/collect/);
@@ -59,6 +60,9 @@ test('demo build renders the GOV.UK prototype pages', () => {
     assert.match(developers, /<code>assist\.help<\/code>/);
     assert.match(developers, /at least 3 characters to bind it/);
     assert.match(developers, /Access-Control-Allow-Origin/);
+    assert.match(developers, /POST<\/span> <code>\/api\/admin\/tenants/);
+    assert.match(developers, /GET<\/span> <code>\/api\/tenant\/:tenant\/installation/);
+    assert.match(developers, /ResearchOps legacy installation continues to use/);
 
     assert.match(account, /Sign in to Flux Behaviour/);
     assert.match(account, /href="\/api\/auth\/google\/start"/);

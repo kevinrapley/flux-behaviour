@@ -312,6 +312,28 @@ test('browser tag reads the endpoint from the script dataset', async () => {
   assert.equal(sent[0].endpoint, 'https://collector.example.test/collect');
 });
 
+test('browser tag sends the tenant installation tag instead of the legacy tenant key', async () => {
+  const { sent, transport } = createCapturingTransport();
+  const windowLike = {
+    document: {
+      currentScript: {
+        dataset: {
+          fluxEndpoint: 'https://collector.example.test/collect',
+          fluxTag: 'flux-11111111111141118111111111111111',
+          fluxTenant: 'researchops'
+        }
+      }
+    }
+  };
+
+  installFluxBrowserTag(windowLike, { transport });
+  windowLike.flux('consent', 'granted');
+  windowLike.flux('event', 'nav', 'page.loaded', { role: 'page', element_key: 'page.home' });
+  await Promise.resolve();
+
+  assert.equal(sent[0].body.tenant_id, 'flux-11111111111141118111111111111111');
+});
+
 test('browser tag starts a new session after 30 minutes of inactivity', async () => {
   const { sent, transport } = createCapturingTransport();
   let now = 1_000;

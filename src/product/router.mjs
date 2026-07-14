@@ -21,6 +21,8 @@ import { dashboardComparisonReport, isComparisonMode } from './comparison-report
 import { buildAggregateCsv, buildAggregateExport, isAggregateExportReport } from './aggregate-export.mjs';
 import { buildGovernanceReport, buildUncertaintyReport } from './report-uncertainty.mjs';
 import { dashboardLifecycleAnalytics } from './lifecycle-analytics.mjs';
+import { buildInstallationTag, resolveTenantReference } from '../tenants/tenant-tags.mjs';
+import { provisionTenant } from '../tenants/tenant-provisioning.mjs';
 
 const HEADERS = { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' };
 
@@ -32,6 +34,9 @@ export async function handleProductRequest(request, env) {
   if (path === '/api/collect' && request.method === 'POST') return collect(request, env);
   if (path === '/api/auth/google/start' && request.method === 'GET') return startGoogleSignIn(request, env);
   if (path === '/api/auth/google/callback' && request.method === 'GET') return completeGoogleSignIn(request, env);
+  if (path === '/api/admin/tenants' && request.method === 'POST') return provisionTenantAsAdmin(request, env);
+  const installationRoute = path.match(/^\/api\/tenant\/([a-z][a-z0-9-]{2,79})\/installation$/);
+  if (installationRoute && request.method === 'GET') return readTenantInstallation(request, env, installationRoute[1]);
   const serviceModelRoute = path.match(/^\/api\/service-model\/([a-z][a-z0-9._-]{2,119})$/);
   if (serviceModelRoute && request.method === 'PUT') return publishTenantServiceModel(request, env, serviceModelRoute[1]);
   if (serviceModelRoute && request.method === 'GET') return readTenantServiceModel(request, env, serviceModelRoute[1]);
@@ -39,6 +44,54 @@ export async function handleProductRequest(request, env) {
   if (path === '/api/dashboard/researchops/export.csv' && request.method === 'GET') return aggregateExport(request, env);
   if (path === '/api/dashboard/researchops' && request.method === 'GET') return dashboard(request, env);
   return json({ ok: false, error: 'not_found' }, 404);
+}
+
+async function readTenantInstallation(request, env, tenantId) {
+  const accountId = await authenticatedAccountId(request, env);
+  if (!accountId) return json({ ok: false, error: 'unauthorised' }, 401);
+  const access = await env.FLUX_DB.prepare('SELECT role FROM account_tenants WHERE account_id = ? AND tenant_id = ?').bind(accountId, tenantId).first();
+  if (access?.role !== 'owner') return json({ ok: false, error: 'forbidden' }, 403);
+  const tag = await env.FLUX_DB.prepare('SELECT tag_id FROM tenant_installation_tags WHERE tenant_id = ? AND revoked_at_ms IS NULL').bind(tenantId).first();
+  if (!tag) return json({ ok: false, error: 'installation_tag_not_found' }, 404);
+  return json({
+    ok: true,
+    tenant_id: tenantId,
+    tag_id: tag.tag_id,
+    installation: {
+      attribute: 'data-flux-tag',
+      script: buildInstallationTag(request.url, tag.tag_id)
+    }
+  });
+}
+
+async function provisionTenantAsAdmin(request, env) {
+  const accountId = await authenticatedAccountId(request, env);
+  if (!accountId) return json({ ok: false, error: 'unauthorised' }, 401);
+  const admin = await env.FLUX_DB.prepare('SELECT 1 AS allowed FROM platform_admins WHERE account_id = ?').bind(accountId).first();
+  if (!admin) return json({ ok: false, error: 'forbidden' }, 403);
+  const input = await safeJson(request);
+  let result;
+  try {
+    result = await provisionTenant(env.FLUX_DB, {
+      tenantId: input?.tenant_id,
+      name: input?.name,
+      allowedOrigins: input?.allowed_origins,
+      ownerAccountId: accountId
+    });
+  } catch (error) {
+    if (/unique|constraint/i.test(String(error?.message))) {
+      return json({ ok: false, error: 'tenant_exists' }, 409);
+    }
+    return json({ ok: false, error: 'tenant_provisioning_failed' }, 500);
+  }
+  if (!result.ok) return json(result, 400);
+  return json({
+    ...result,
+    installation: {
+      attribute: 'data-flux-tag',
+      script: buildInstallationTag(request.url, result.tag_id)
+    }
+  }, 201);
 }
 
 async function readTenantServiceModel(request, env, tenantId) {
@@ -114,8 +167,9 @@ async function collect(request, env) {
   const event = await safeJson(request);
   const valid = event && validateEventRuntime(event, fluxEventSchema).valid && event.tenant_id && event.visitor_id;
   if (!valid) return withCors(json({ ok: false, error: 'invalid_event' }, 400), origin);
-  const tenant = await env.FLUX_DB.prepare('SELECT allowed_origins_json FROM tenants WHERE id = ?').bind(event.tenant_id).first();
+  const tenant = await resolveTenantReference(env.FLUX_DB, event.tenant_id);
   if (!tenant || !allows(tenant.allowed_origins_json, origin)) return withCors(json({ ok: false, error: 'origin_not_allowed' }, 403), origin);
+  event.tenant_id = tenant.id;
   const now = Date.now();
   const existingVisitor = await env.FLUX_DB.prepare('SELECT session_count FROM visitors WHERE tenant_id = ? AND visitor_id = ?').bind(event.tenant_id, event.visitor_id).first();
   const existingSession = await env.FLUX_DB.prepare('SELECT id FROM sessions WHERE id = ? AND tenant_id = ?').bind(event.session_id, event.tenant_id).first();

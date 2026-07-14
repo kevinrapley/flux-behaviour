@@ -1,4 +1,14 @@
 gaps:
+  - id: GAP-019
+    title: Platform administration is API- and operator-led
+    severity: medium
+    observed_state: Explicit platform administrators can atomically provision a tenant, unique installation tag and initial owner through an authenticated API, and tenant owners can retrieve the stable snippet. Platform-admin grants, later origin changes, membership changes and tag revocation remain controlled database/operator workflows.
+    expected_state: Authorised operators can audit and manage platform-admin grants, origins, memberships and tag lifecycle through governed interfaces with confirmation, immutable audit evidence and least privilege.
+    risk: Manual follow-on administration may be slower and more error-prone even though tenant creation itself cannot produce a tenant without a tag.
+    action: Design and assure governed platform-administration workflows without turning tenant ownership into platform-wide authority or treating public tag possession as authentication.
+    owner: product-lead
+    status: open
+
   - id: GAP-013
     title: Publisher service inventory and comparison baselines are incomplete
     severity: high

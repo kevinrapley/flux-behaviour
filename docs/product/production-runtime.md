@@ -1,8 +1,10 @@
 # Production runtime
 
-Flux Behaviour Pages serves a D1-backed API at `/api/collect`, `/api/auth/google/start`, `/api/auth/google/callback` and `/api/dashboard/researchops`.
+Flux Behaviour Pages serves a D1-backed collector, authenticated tenant-provisioning and installation-tag routes, Google authentication and tenant dashboard APIs.
 
-The collector accepts only consented, metadata-only events for the `researchops` tenant from its configured origins. It stores a random, browser-held visitor ID and a browser-session ID; neither is an account identifier. The dashboard builds a plain-language journey narrative from controlled event metadata, never typed values or individual words.
+Each tenant has one active unique installation tag. `POST /api/admin/tenants` is restricted to explicitly registered platform administrators and atomically creates the tenant, tag and initial owner membership. Tenant owners retrieve the stable snippet through `GET /api/tenant/:tenant/installation`. The public tag is a routing identifier rather than a credential: the collector resolves it to an internal tenant and then enforces that tenant's exact origin allow-list before storage. The existing ResearchOps integration remains compatible with the literal legacy `researchops` reference, while every new tenant must use its tag.
+
+The collector accepts only consented, metadata-only events carrying an active tenant tag from the tenant's configured origins. It stores a random, browser-held visitor ID and a browser-session ID; neither is an account identifier. The dashboard builds a plain-language journey narrative from controlled event metadata, never typed values or individual words.
 
 Google sign-in requires protected Pages secrets `FLUX_AUTH_SECRET`, `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`. The Google OAuth client must register `https://flux-behaviour.pages.dev/api/auth/google/callback` as its production redirect URI. A Google identity is attached to the pre-seeded Flux account by verified Google email and is stored separately from visitor and session analytics data.
 
