@@ -70,7 +70,7 @@
 						</li>
 					</ul>
 					<span class="govuk-footer__licence-description">
-						Demo prototype. No real user data is collected. Events are consented, metadata-only and follow the Flux event contract.
+						{% if activeNavigation == 'account' %}Dashboard account identity is stored separately from analytics identifiers. Behavioural events are consented, metadata-only and follow the Flux event contract.{% else %}Demo prototype. No real user data is collected. Events are consented, metadata-only and follow the Flux event contract.{% endif %}
 					</span>
 				</div>
 			</div>

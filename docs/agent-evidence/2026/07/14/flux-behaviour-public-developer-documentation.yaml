@@ -39,6 +39,7 @@ files_read:
 files_changed:
   - demo/templates/pages/developers.njk
   - demo/templates/pages/account.njk
+  - demo/static/_headers
   - demo/templates/layout.njk
   - demo/templates/pages/index.njk
   - demo/styles/demo.scss
@@ -47,6 +48,7 @@ files_changed:
   - docs/instrumentation/tag-integration.md
   - public/developers/index.html
   - public/account/index.html
+  - public/_headers
   - public/index.html
   - public/journey/index.html
   - public/playground/index.html
@@ -61,6 +63,7 @@ files_changed:
 promotion_decisions:
   - Publish one source-owned, generated developer route and expose it from both global navigation and the homepage.
   - Keep every globally linked route source-owned by adding the account page to the static renderer.
+  - Generate a Cloudflare Pages header policy so every hosted Flux module can be loaded by publisher origins.
   - Document the runtime as implemented: event schema 1.2.0, every hosted data-flux attribute, manual and automatic consent behaviour, owner/viewer model workflows and all routed collector/auth/model/dashboard/export APIs.
   - Treat collector POST as the public integration boundary and label Flux-session dashboard routes as authenticated application APIs rather than a tenant-generic reporting API.
   - Keep current pre-release and governance blockers prominent instead of presenting the public documentation as general-availability approval.
@@ -81,6 +84,10 @@ commands_run:
     state: verified
     status: passed
     evidence: Review-remediation tests passed for publisher-compatible guidance, manual sensitive-event exclusion, persistent auto-capture revocation, the recognised assist.help action and the source-generated account route.
+  - command: node --test --test-name-pattern='demo build|production runtime assets' tests/demo-build.test.mjs && node --test tests/account-google-sign-in.test.mjs
+    state: verified
+    status: passed
+    evidence: Second review-remediation tests passed for the generated hosted-module CORS policy, 3-character bindable-key guidance and accurate Google provider identity disclosure.
   - command: npm test
     state: verified
     status: passed
@@ -129,11 +136,14 @@ recent_learnings:
   - A source template is not a shipped developer experience until its route is rendered, published and linked from the public interface.
   - Public integration copy must be checked against current runtime attributes, versioned contracts and authenticated route boundaries.
   - Public key syntax must use the intersection of capture and publisher-model contracts, manual events need an explicit sensitive-data boundary, and external auto-capture revocation must replace persisted consent.
+  - Cross-origin quick starts require response headers for the full module graph, and authentication pages must disclose stored provider identifiers without inheriting inaccurate demo disclaimers.
 security:
   - The guide keeps OAuth and Flux secrets server-side, documents credentials omission for collection and uses secure session-cookie authentication only for application APIs.
+  - The source-generated Pages policy permits cross-origin reads only for public Flux module assets; collector origins remain tenant allow-listed.
   - No secret, bearer credential or environment-specific protected configuration was added.
 privacy:
   - The guide explains consent gating, persistent automatic-capture revocation, automatic-only sensitive-control exclusion, the separate manual-event prohibition, publisher-compatible controlled semantic keys, content-free metadata and the prohibition on entered values and direct identifiers.
+  - The account route accurately discloses that verified Google email and provider account identity are stored separately from pseudonymous behavioural analytics identifiers.
   - Existing release blockers for retention, deletion, DPIA, rate limiting, incident controls and fairness validation remain explicit.
 accessibility:
   - The route uses semantic headings, navigation, tables, lists, disclosures, code examples and GOV.UK components.

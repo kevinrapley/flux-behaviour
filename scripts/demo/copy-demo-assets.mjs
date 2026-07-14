@@ -13,6 +13,7 @@ const directoryTargets = [
 ];
 
 const fileTargets = [
+  ['demo/static/_headers', '_headers'],
   ['node_modules/govuk-frontend/dist/govuk/govuk-frontend.min.js', 'assets/govuk/govuk-frontend.min.js'],
   ['node_modules/govuk-frontend/dist/govuk/govuk-frontend.min.js.map', 'assets/govuk/govuk-frontend.min.js.map'],
   ['node_modules/d3/dist/d3.min.js', 'assets/vendor/d3.min.js']

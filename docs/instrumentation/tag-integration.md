@@ -20,6 +20,8 @@ The rendered, public implementation guide is available at [flux-behaviour.pages.
 
 Commands queued before the module loads are replayed in order once it installs. The module is `src/sdk/flux-browser.mjs`, wired by `installFluxBrowserTag(window)`; a host page or bundler provides the install entry point.
 
+The hosted `/assets/flux/*` module graph is returned with `Access-Control-Allow-Origin: *` so publisher origins can load it. A self-hosted CDN or reverse proxy must return an equivalent CORS header for the entry module and every relative import.
+
 ## Consent
 
 Consent is never assumed. The manual browser tag does not persist the consent decision; the automatic-capture module stores the choice made in its built-in banner under `flux.behaviour.consent`. Until the service calls:

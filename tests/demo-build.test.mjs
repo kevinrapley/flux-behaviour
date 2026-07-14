@@ -57,11 +57,16 @@ test('demo build renders the GOV.UK prototype pages', () => {
     assert.match(developers, /These exclusions apply only to automatic capture/);
     assert.match(developers, /localStorage\.setItem\('flux\.behaviour\.consent', 'no'\)/);
     assert.match(developers, /<code>assist\.help<\/code>/);
+    assert.match(developers, /at least 3 characters to bind it/);
+    assert.match(developers, /Access-Control-Allow-Origin/);
 
     assert.match(account, /Sign in to Flux Behaviour/);
     assert.match(account, /href="\/api\/auth\/google\/start"/);
     assert.match(account, /href="\/developers\/"/);
     assert.match(account, /href="\/account\/" aria-current="true"/);
+    assert.match(account, /verified Google email address/);
+    assert.match(account, /provider account identifier/);
+    assert.doesNotMatch(account, /No real user data is collected/);
   } finally {
     rmSync(outputRoot, { recursive: true, force: true });
   }
@@ -77,6 +82,7 @@ test('production runtime assets are sourced and copied as part of the demo build
     execFileSync(process.execPath, ['scripts/demo/copy-demo-assets.mjs', outputRoot]);
     const copiedCapture = readFileSync(join(outputRoot, 'assets/flux/sdk/flux-auto-capture.mjs'), 'utf8');
     const copiedDashboard = readFileSync(join(outputRoot, 'assets/flux/dashboard/live-dashboard.mjs'), 'utf8');
+    const headers = readFileSync(join(outputRoot, '_headers'), 'utf8');
 
     assert.match(source, /key_press_count/);
     assert.match(source, /backspace_count/);
@@ -93,6 +99,8 @@ test('production runtime assets are sourced and copied as part of the demo build
     assert.match(copy, /src\/dashboard/);
     assert.equal(copiedCapture, source);
     assert.match(copiedDashboard, /api\/dashboard\/researchops/);
+    assert.match(headers, /\/assets\/flux\/\*/);
+    assert.match(headers, /Access-Control-Allow-Origin: \*/);
   } finally {
     rmSync(outputRoot, { recursive: true, force: true });
   }

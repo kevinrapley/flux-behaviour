@@ -72,6 +72,7 @@
   src="https://flux-behaviour.pages.dev/assets/flux/sdk/flux-browser.install.mjs"
   data-flux-endpoint="https://flux-behaviour.pages.dev/api/collect"
   data-flux-tenant="YOUR_TENANT_ID"&gt;&lt;/script&gt;</code></pre>
+			<p class="govuk-body">The hosted <code>/assets/flux/*</code> modules are served with <code>Access-Control-Allow-Origin: *</code> so browsers can load the module graph from a publisher website. If you self-host or proxy the modules, return an equivalent CORS header for every imported Flux module, not only the entry file.</p>
 
 			<h3 class="govuk-heading-m">3. Connect your consent controls</h3>
 			<pre class="flux-code-block"><code>document.querySelector('#accept-analytics').addEventListener('click', () =&gt; {
@@ -184,7 +185,7 @@ document.querySelector('#reject-analytics').addEventListener('click', () =&gt; {
 			</table>
 
 			<h3 class="govuk-heading-m">Key format</h3>
-			<p class="govuk-body"><code>data-flux-key</code> must be 1 to 120 characters in the hosted automatic-capture module. To keep a key compatible with both collection and the publisher service model, start it with a lowercase letter and use only lowercase letters, numbers, dots, underscores and hyphens. Each separator must be followed by a letter or number. Use type-first keys such as <code>page.*</code>, <code>form.*</code>, <code>button.*</code> and <code>field.*</code>. The event and publisher-model contracts allow up to 160 characters, but using 120 or fewer keeps keys compatible with automatic capture.</p>
+			<p class="govuk-body">The hosted automatic-capture module accepts <code>data-flux-key</code> values from 1 to 120 characters, but a key must be at least 3 characters to bind it in the publisher service model. Use 3 to 120 characters for reportable service integrations. To keep a key compatible with both collection and the publisher service model, start it with a lowercase letter and use only lowercase letters, numbers, dots, underscores and hyphens. Each separator must be followed by a letter or number. Use type-first keys such as <code>page.*</code>, <code>form.*</code>, <code>button.*</code> and <code>field.*</code>. The event and publisher-model contracts allow up to 160 characters, but using 120 or fewer keeps keys compatible with automatic capture.</p>
 			<div class="flux-example-grid">
 				<div><h4 class="govuk-heading-s">Safe</h4><pre class="flux-code-block"><code>&lt;input
   name="contact-method"
