@@ -93,7 +93,7 @@ harms:
       - Service teams relying on telemetry evidence
     likelihood: medium
     severity: high
-    mitigation: Restrict the D1-backed collector to named tenant origins, validate metadata-only schema events, serve the public hosted-module graph with explicit cross-origin resource headers, keep verified Google email and provider identifiers separate from visitor records and disclose their account-access purpose, reject remote-D1-incompatible transaction control in generated migrations, and test complex report SQL against known production D1 query limits. Production rate limiting, retention, deletion and incident controls still require review.
+    mitigation: Give every tenant one opaque public installation tag, resolve active tags to internal tenants before storage, restrict the direct internal-ID compatibility path to literal ResearchOps, keep tag routing separate from authentication, restrict provisioning to explicit platform administrators, require owner access to retrieve a stable snippet, enforce named tenant origins, validate metadata-only schema events, serve the public hosted-module graph with explicit cross-origin resource headers, keep verified Google email and provider identifiers separate from visitor records and disclose their account-access purpose, reject remote-D1-incompatible transaction control in generated migrations, and test complex report SQL against known production D1 query limits. Production rate limiting, retention, deletion and incident controls still require review.
     residual_risk: medium
     owner: product-lead
     escalation_route: Product owner and security lead

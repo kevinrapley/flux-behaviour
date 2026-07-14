@@ -49,7 +49,8 @@ test('collector freezes the published service hierarchy beside a resolved event'
         values: [],
         bind(...values) { this.values = values; return this; },
         async first() {
-          if (sql.includes('allowed_origins_json')) return { allowed_origins_json: '["https://researchops.pages.dev"]' };
+          if (sql.includes('tenant_installation_tags')) return null;
+          if (sql.includes('allowed_origins_json')) return { id: 'researchops', allowed_origins_json: '["https://researchops.pages.dev"]' };
           if (sql.includes('service_model_versions')) return { model_json: JSON.stringify(model) };
           return null;
         }
@@ -88,7 +89,8 @@ test('collector freezes a configured key event and outcome instead of inferring 
         values: [],
         bind(...values) { this.values = values; return this; },
         async first() {
-          if (sql.includes('allowed_origins_json')) return { allowed_origins_json: '["https://researchops.pages.dev"]' };
+          if (sql.includes('tenant_installation_tags')) return null;
+          if (sql.includes('allowed_origins_json')) return { id: 'researchops', allowed_origins_json: '["https://researchops.pages.dev"]' };
           if (sql.includes('service_model_versions')) return { model_json: JSON.stringify(model) };
           return null;
         }

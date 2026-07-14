@@ -15,8 +15,12 @@ The rendered, public implementation guide is available at [flux-behaviour.pages.
 <script type="module"
   src="https://your-flux-host/assets/flux/sdk/flux-auto-capture.mjs"
   data-flux-endpoint="https://your-collector.example/collect"
-  data-flux-tenant="your-tenant"></script>
+  data-flux-tag="flux-4b198da742124ec7a2c9e96a1ef0a632"></script>
 ```
+
+Every tenant receives exactly one active, unique installation tag when a platform administrator provisions it. The value is an opaque public routing identifier, not a secret or credential. It does not replace the tenant origin allow-list. A tenant owner can retrieve the stable tag and complete snippet from `GET /api/tenant/:tenant/installation`.
+
+The existing ResearchOps integration may continue to use `data-flux-tenant="researchops"`. That direct tenant-ID compatibility path is restricted to the literal ResearchOps tenant. New tenants must use `data-flux-tag`.
 
 Commands queued before the module loads are replayed in order once it installs. The module is `src/sdk/flux-browser.mjs`, wired by `installFluxBrowserTag(window)`; a host page or bundler provides the install entry point.
 
@@ -61,7 +65,7 @@ Contract version 1.2.0 adds richer interaction metadata and autocomplete milesto
 
 The hosted auto-capture module also owns the 30-minute inactivity boundary, final-destination Tab context, Enter/Return activation, browser-autocomplete signals, purpose-led structural fallbacks and the on-device UK-English analyser. Ordinary autofill emits only the semantic field key. Excluded sensitive autofill emits only an allow-listed category (`email`, `password`, `one-time-code`, `telephone`, `payment` or `other`) with no value, length or identity. Publishers provide the hosted include and controlled `data-flux-*` attributes; they do not copy the analytics engine, dictionary or narrative logic into their service repositories.
 
-Public attributes are `data-flux-endpoint`, `data-flux-tenant`, `data-flux-key`, `data-flux-role`, `data-flux-page`, `data-flux-sensitive`, `data-flux-writing-analysis` and `data-flux-autofocus`. The auto-capture consent banner also uses its internal `data-flux-consent` control. Attribute values must remain controlled configuration and must never contain entered content or direct identifiers. For compatibility with the publisher service model, semantic keys start with a lowercase letter and contain only lowercase letters, numbers, dots, underscores and hyphens, with no trailing or repeated separators.
+Public attributes are `data-flux-endpoint`, `data-flux-tag`, `data-flux-key`, `data-flux-role`, `data-flux-page`, `data-flux-sensitive`, `data-flux-writing-analysis` and `data-flux-autofocus`. `data-flux-tenant` remains available only for the legacy ResearchOps installation. The auto-capture consent banner also uses its internal `data-flux-consent` control. Attribute values must remain controlled configuration and must never contain entered content or direct identifiers. For compatibility with the publisher service model, semantic keys start with a lowercase letter and contain only lowercase letters, numbers, dots, underscores and hyphens, with no trailing or repeated separators.
 
 Sensitive-control detection and `data-flux-sensitive="true"` apply to automatic capture only. A manual `flux('event', ...)` integration must never emit events for sensitive fields or include entered values, contact details, payment details, authentication data or other direct identifiers.
 
@@ -76,6 +80,8 @@ Every event is built against the published event contract (`contracts/events/flu
 ## Transport
 
 The default browser transport uses `fetch` with `keepalive: true` and `credentials: 'omit'`, then falls back to `navigator.sendBeacon` if fetch is unavailable or fails. Both send a single JSON event per request to match the collector contract and its boundary controls.
+
+The SDK places the public installation tag in the event contract's `tenant_id` field. The collector resolves the active tag to the internal tenant before checking its origin and storing any visitor, session, event or model context. An unknown, revoked or cross-tenant tag is rejected.
 
 ## Failure behaviour
 

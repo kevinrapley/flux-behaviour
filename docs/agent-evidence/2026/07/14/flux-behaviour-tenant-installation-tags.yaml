@@ -1,0 +1,133 @@
+task_id: flux-behaviour-tenant-installation-tags
+mode: repo-build
+repository: kevinrapley/flux-behaviour
+risk_level: high
+base_branch: main
+working_branch: feature/tenant-unique-tags
+files_read:
+  - README.md
+  - AGENTS.md
+  - RECENT_LEARNINGS.md
+  - CONTRIBUTING.md
+  - SECURITY.md
+  - repository-contract.yaml
+  - github-settings.yaml
+  - conformance-matrix.yaml
+  - gap-register.yaml
+  - harm-register.yaml
+  - agent-evidence.yaml
+  - docs/instrumentation/tag-integration.md
+  - docs/product/production-runtime.md
+  - docs/product/publisher-service-model.md
+  - docs/data-protection/data-protection-boundary.md
+  - src/product/router.mjs
+  - src/sdk/flux-browser.mjs
+  - migrations/0001_flux_behaviour.sql
+  - migrations/0006_event_entity_reports.sql
+files_changed:
+  - migrations/0007_tenant_installation_tags.sql
+  - src/tenants/tenant-provisioning.mjs
+  - src/tenants/tenant-tags.mjs
+  - src/sdk/flux-browser.mjs
+  - src/product/router.mjs
+  - tests/tenant-tag-migration.test.mjs
+  - tests/tenant-provisioning.test.mjs
+  - tests/tenant-tag-resolution.test.mjs
+  - tests/tenant-admin-route.test.mjs
+  - tests/tenant-installation-route.test.mjs
+  - tests/sdk-tag.test.mjs
+  - tests/demo-build.test.mjs
+  - demo/templates/pages/developers.njk
+  - docs/instrumentation/tag-integration.md
+  - docs/product/production-runtime.md
+  - docs/product/tenant-installation-tags.md
+  - README.md
+  - RECENT_LEARNINGS.md
+  - conformance-matrix.yaml
+  - gap-register.yaml
+  - harm-register.yaml
+  - agent-evidence.yaml
+  - docs/agent-evidence/2026/07/14/flux-behaviour-tenant-installation-tags.yaml
+promotion_decisions:
+  - Use an opaque public per-tenant installation tag and retain exact origin allow-listing as the collection authority boundary.
+  - Provision tenant, tag and initial owner atomically through an authenticated platform-admin route.
+  - Permit only the literal ResearchOps reference to use the legacy direct tenant-ID collection path.
+  - Keep tags stable and retrievable by tenant owners; record self-service rotation, origin and membership administration as a remaining gap.
+commands_run:
+  - command: npm ci
+    state: verified
+    status: passed
+    evidence: Installed all 60 locked dependencies in the isolated worktree; npm reported zero vulnerabilities.
+  - command: focused tenant migration, provisioning, resolution, admin, installation, SDK and developer-build tests
+    state: verified
+    status: passed
+    evidence: Red-green feature slices passed individually while the implementation was developed.
+  - command: sqlite3 application of 0001_flux_behaviour.sql and 0007_tenant_installation_tags.sql with an existing second tenant
+    state: verified
+    status: passed
+    evidence: ResearchOps retained its tenant row and flux-researchops tag, the existing second tenant received flux-existing-2, and the foreign-key check returned no failures.
+  - command: FLUX_DEMO_COLLECTOR_ENDPOINT=https://flux-behaviour.pages.dev/api/collect npm run demo:build
+    state: verified
+    status: passed
+    evidence: Six production-shaped pages and hosted assets built successfully; only existing GOV.UK Sass colour deprecation warnings were emitted.
+  - command: npm test
+    state: verified
+    status: passed
+    evidence: All 354 repository tests passed, including ResearchOps service-model collection regression coverage.
+  - command: npm run validate
+    state: verified
+    status: passed
+    evidence: All 19 governed repository files were present.
+  - command: npm run security:secrets
+    state: verified
+    status: passed
+    evidence: Secret-pattern sanity scan passed.
+  - command: npm audit --audit-level=high
+    state: verified
+    status: passed
+    evidence: npm reported zero vulnerabilities.
+  - command: npm run sbom
+    state: verified
+    status: passed
+    evidence: CycloneDX SBOM generation completed successfully.
+  - command: git diff --check
+    state: verified
+    status: passed
+    evidence: No whitespace errors were found.
+  - command: validate-agent-evidence.py docs/agent-evidence/2026/07/14/flux-behaviour-tenant-installation-tags.yaml
+    state: verified
+    status: passed
+    evidence: Diamond Standard 2.9.1 agent-evidence validation passed using the bundled Python runtime and a temporary PyYAML dependency.
+  - command: local Chrome verification of /developers/ at 1440x1000 and emulated 390x844
+    state: verified
+    status: passed
+    evidence: Desktop and mobile layouts rendered without document-level horizontal overflow; the API navigation reached its section, the troubleshooting disclosure opened, long code remained in contained scroll regions, and both provisioning and owner-retrieval routes were present.
+contracts_validated:
+  - one active installation tag per tenant
+  - explicit platform-admin provisioning authority
+  - tenant-owner installation retrieval
+  - active tag resolution before origin checks and storage
+  - literal ResearchOps legacy compatibility
+gaps_recorded:
+  - GAP-019 records remaining governed platform-administration interfaces and tag lifecycle operations.
+waivers_recorded: []
+artifacts_created:
+  - migrations/0007_tenant_installation_tags.sql
+  - docs/product/tenant-installation-tags.md
+  - docs/agent-evidence/2026/07/14/flux-behaviour-tenant-installation-tags.yaml
+recent_learnings:
+  - A public installed tenant identifier is routing configuration rather than a credential.
+  - Tenant, tag and initial owner creation must be one atomic invariant.
+security:
+  - Tags are opaque, unique and resolved before collection, while exact origin allow-listing remains mandatory.
+  - Platform-wide provisioning authority is explicit and does not derive from tenant ownership.
+  - No secret or environment-specific protected configuration was added.
+privacy:
+  - Tags contain no visitor, session, account or publisher-entered content and do not expand the metadata-only event contract.
+  - Existing consent, sensitive-field and authenticated reporting controls remain unchanged.
+accessibility:
+  - Public developer guidance uses the existing semantic GOV.UK documentation structure.
+  - Chrome checks at desktop and 390px mobile confirmed readable responsive layout, contained code overflow and no document-level horizontal scrolling.
+risks:
+  - Public tags could be mistaken for credentials; documentation and runtime boundaries state that origin controls and authenticated administration remain required.
+  - Platform-admin grants and post-provisioning lifecycle operations remain controlled operator workflows tracked in GAP-019.

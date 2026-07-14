@@ -1,5 +1,11 @@
 # Recent Learnings
 
+## 2026-07-14 — Public tenant tags must remain routing identifiers, not credentials
+
+A publisher-installed identifier cannot be secret because it is visible in page HTML. Tenant isolation therefore needs two separate controls: an opaque unique tag for routing and an exact origin allow-list for collection authority. The collector must resolve the tag to the internal tenant before every visitor, session, event or model write, and direct internal-ID compatibility must be restricted to the one legacy integration that requires it.
+
+Tenant creation is also an invariant rather than three loosely related operator steps. Creating the tenant, its one-to-one tag and its first owner membership in one database batch prevents usable tenants without tags or orphaned tags without owners. Platform-wide provisioning authority must be explicit and separate from tenant ownership, while owners need an authenticated route to retrieve the same stable installation snippet.
+
 ## 2026-07-14 — Public developer documentation must be generated and reachable
 
 A complete source template is not a shipped developer experience. The route must be part of the static renderer, the generated artefact must be published, and every globally linked route—including sign-in—must have a source template so a clean build or Pages fallback cannot disguise a missing page. Integration copy also needs to be checked against the current runtime rather than copied from an earlier product state: list the actual hosted attributes, event schema version, owner configuration workflow, authenticated API boundaries and unresolved release controls, while keeping manual consent and automatic-capture consent storage distinct.

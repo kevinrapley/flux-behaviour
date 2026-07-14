@@ -194,3 +194,9 @@ records:
     actual_evidence: Controlled text-area keys produce purpose-led focus and typing prose; generated keys are shown only as unlabelled control types; stored events are re-presented on read; and pre-input dwell, total focus and active typing duration remain distinct throughout capture, presentation, aggregates and session scoring.
     status: present
     owner: product-lead
+  - id: CONF-016
+    rule: Every tenant must have one unique public installation tag without weakening tenant origin isolation
+    expected_evidence: A one-to-one D1 migration, atomic platform-admin provisioning, owner retrieval, SDK tag transport, collector resolution, legacy ResearchOps regression coverage and public integration documentation exist
+    actual_evidence: Tenant installation tags are unique by primary key and tenant uniqueness constraint; provisioning atomically creates tenant, tag and initial owner; only explicit platform administrators may provision; tenant owners retrieve a stable snippet; the collector resolves active tags before origin checks and storage; and only the literal ResearchOps reference retains direct-ID compatibility.
+    status: present
+    owner: product-lead

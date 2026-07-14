@@ -18,7 +18,7 @@ The repository also provides branch posture, CODEOWNERS, security policy, CI sca
 
 ## Adding Flux to a service
 
-Services add Flux like other analytics tags: a snippet plus a hosted module, configured with a collector endpoint. Events are consent-gated, metadata-only and validated against the published contract in the browser before transport and again at the collector. See `docs/instrumentation/tag-integration.md`.
+Services add Flux like other analytics tags: a snippet plus a hosted module, configured with a collector endpoint and the tenant's unique public installation tag. Events are consent-gated, metadata-only and validated against the published contract in the browser before transport and again at the collector. See `docs/instrumentation/tag-integration.md`.
 
 ## Demo prototype
 

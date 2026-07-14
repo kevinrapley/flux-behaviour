@@ -41,7 +41,7 @@ export function installFluxBrowserTag(windowLike, config = {}) {
       memorySessionId = null;
       clearPersistentIdentifiers(windowLike);
     },
-    tenantId: config.tenantId ?? readTenantFromScript(windowLike),
+    tenantId: config.tenantId ?? readTenantReferenceFromScript(windowLike),
     consent: config.consent,
     now: config.now,
     onDrop: config.onDrop,
@@ -85,10 +85,10 @@ function readEndpointFromScript(windowLike) {
   return typeof endpoint === 'string' && endpoint !== '' ? endpoint : null;
 }
 
-function readTenantFromScript(windowLike) {
+function readTenantReferenceFromScript(windowLike) {
   const script = windowLike.document?.currentScript
-    ?? windowLike.document?.querySelector?.('script[data-flux-tenant]');
-  return script?.dataset?.fluxTenant ?? null;
+    ?? windowLike.document?.querySelector?.('script[data-flux-tag],script[data-flux-tenant]');
+  return script?.dataset?.fluxTag ?? script?.dataset?.fluxTenant ?? null;
 }
 
 function persistentVisitorId(windowLike) {
