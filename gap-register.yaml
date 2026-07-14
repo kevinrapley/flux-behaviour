@@ -118,10 +118,10 @@ gaps:
   - id: GAP-006
     title: Demo prototype has not been through a full accessibility audit
     severity: medium
-    observed_state: Demo pages use GOV.UK Frontend components and patterns with accessible summaries on charts, but no audit has run.
+    observed_state: Demo pages and the public developer documentation use GOV.UK Frontend components and semantic navigation, tables, disclosures and code examples, but no full audit has run.
     expected_state: Keyboard, screen reader and axe-style audits recorded in accessibility-evidence.md before any public deployment.
     risk: Demo may ship inaccessible interactions, undermining the product's public-service positioning.
-    action: Run and record an accessibility audit of the demo before it is deployed anywhere public.
+    action: Run and record an accessibility audit of the demo and developer documentation before release approval.
     owner: governance-lead
     status: open
   - id: GAP-007

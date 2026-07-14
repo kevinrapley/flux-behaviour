@@ -19,6 +19,7 @@ test('demo build renders the GOV.UK prototype pages', () => {
     const journey = readFileSync(join(outputRoot, 'journey/index.html'), 'utf8');
     const dashboard = readFileSync(join(outputRoot, 'dashboard/index.html'), 'utf8');
     const playground = readFileSync(join(outputRoot, 'playground/index.html'), 'utf8');
+    const developers = readFileSync(join(outputRoot, 'developers/index.html'), 'utf8');
 
     assert.match(index, /govuk-template/);
     assert.match(index, /window\.flux/);
@@ -42,6 +43,16 @@ test('demo build renders the GOV.UK prototype pages', () => {
     assert.match(playground, /"neutral":\s*50/);
     assert.match(playground, /Efficiency/);
     assert.match(playground, /never be read as judgements/i);
+
+    assert.match(developers, /Flux Behaviour developer documentation/);
+    assert.match(developers, /data-flux-tenant/);
+    assert.match(developers, /data-flux-role/);
+    assert.match(developers, /data-flux-sensitive/);
+    assert.match(developers, /POST<\/span> <code>\/api\/collect/);
+    assert.match(developers, /Tasks and funnels/);
+    assert.match(developers, /schema version <code>1\.2\.0<\/code>/);
+    assert.match(developers, /credentials: 'omit'/);
+    assert.doesNotMatch(developers, /data-flux-key="jane@example\.com"/);
   } finally {
     rmSync(outputRoot, { recursive: true, force: true });
   }

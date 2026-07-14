@@ -1,5 +1,9 @@
 # Recent Learnings
 
+## 2026-07-14 — Public developer documentation must be generated and reachable
+
+A complete source template is not a shipped developer experience. The route must be part of the static renderer, the generated artefact must be published, and the global navigation and homepage must link to it so a Pages fallback cannot disguise a missing page. Integration copy also needs to be checked against the current runtime rather than copied from an earlier product state: list the actual hosted attributes, event schema version, owner configuration workflow, authenticated API boundaries and unresolved release controls, while keeping manual consent and automatic-capture consent storage distinct.
+
 ## 2026-07-13 — Outcome authoring must preserve every semantic relationship
 
 An outcome is not necessarily a one-row success event: several action-and-element matches can resolve to the same transaction outcome. An editor must display and target each key event explicitly, remove the outcome only after its final match disappears, and cascade structural deletion through newly orphaned outcomes. Transaction bindings cannot be assumed to be event-owned because the model carries no such provenance; retaining them is safer than silently deleting publisher-declared page or entity meaning. Incremental authoring also needs same-transaction promotion from a success binding to an ordered step, and every entered or generated semantic key must fit the shared 160-character model-and-collector contract before publication.

@@ -15,15 +15,17 @@
 &lt;/script&gt;
 &lt;script type="module"
   src="https://your-flux-host/assets/flux/sdk/flux-browser.install.mjs"
-  data-flux-endpoint="https://your-collector.example/collect"&gt;&lt;/script&gt;</code></pre>
+  data-flux-endpoint="https://your-collector.example/collect"
+  data-flux-tenant="your-tenant"&gt;&lt;/script&gt;</code></pre>
+		<p class="govuk-body"><a class="govuk-link" href="/developers/">Read the complete developer documentation</a> for automatic capture, every <code>data-flux-*</code> attribute, dashboard setup and HTTP APIs.</p>
 
 		<h2 class="govuk-heading-l">Ask for consent, then send events</h2>
 		<p class="govuk-body">The tag drops every event until the person grants consent. Nothing is queued or stored before that point.</p>
 		<pre class="flux-code-block"><code>flux('consent', 'granted');
-flux('event', 'nav', 'page.loaded', { role: 'page', element_key: 'start' });
+flux('event', 'nav', 'page.loaded', { role: 'page', element_key: 'page.application.start' });
 flux('event', 'focus', 'field.blur', {
   role: 'field',
-  element_key: 'full-name',
+  element_key: 'field.application.full-name',
   duration_ms: 1200,
   edit_count: 3,
   value_length: 12

@@ -1,4 +1,11 @@
 records:
+  - id: CONF-030
+    rule: Public integration documentation must match the hosted SDK, publisher model, authenticated dashboard and exposed application routes
+    expected_evidence: A navigable public developer page explains tag placement, consent, supported data-flux attributes, owner configuration, event contract 1.2.0, privacy boundaries, API consumption, testing and troubleshooting
+    actual_evidence: The source-owned /developers/ page and homepage/navigation links document the manual and automatic hosted tags, every supported data-flux attribute, nine report areas, owner/viewer model workflow, collector and authenticated application endpoints, aggregate export controls and current pre-release blockers. Focused build tests protect the route and critical contract content.
+    status: present-with-release-blockers
+    owner: product-lead
+
   - id: CONF-029
     rule: Fields and service complexity must be tenant-owner configuration rather than product-hardcoded definitions
     expected_evidence: An authenticated owner can create, edit and delete question groups with 1–7 service complexity and required/optional fields with exact publisher bindings; saves publish immutable validated next versions and viewers remain read-only

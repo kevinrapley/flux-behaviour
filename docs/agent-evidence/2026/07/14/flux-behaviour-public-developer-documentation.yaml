@@ -1,0 +1,131 @@
+task_id: flux-behaviour-public-developer-documentation
+mode: repo-release
+repository: kevinrapley/flux-behaviour
+risk_level: high
+base_branch: main
+working_branch: feature/developer-documentation
+files_read:
+  - README.md
+  - AGENTS.md
+  - RECENT_LEARNINGS.md
+  - CONTRIBUTING.md
+  - SECURITY.md
+  - repository-contract.yaml
+  - github-settings.yaml
+  - conformance-matrix.yaml
+  - gap-register.yaml
+  - harm-register.yaml
+  - agent-evidence.yaml
+  - docs/instrumentation/tag-integration.md
+  - docs/product/production-runtime.md
+  - docs/product/publisher-service-model.md
+  - docs/product/dashboard-information-architecture-and-uncertainty.md
+  - docs/product/comparisons-and-aggregate-export.md
+  - docs/product/realtime-analytics.md
+  - docs/product/event-entity-reports.md
+  - docs/product/funnel-field-reports.md
+  - docs/product/cohort-analytics.md
+  - contracts/events/flux-event.schema.json
+  - src/sdk/flux-browser.mjs
+  - src/sdk/flux-browser.install.mjs
+  - src/sdk/flux-auto-capture.mjs
+  - src/sdk/flux-tag.mjs
+  - src/product/router.mjs
+  - demo/templates/layout.njk
+  - demo/templates/pages/index.njk
+  - demo/templates/pages/dashboard.njk
+  - scripts/demo/render-demo-pages.mjs
+  - tests/demo-build.test.mjs
+files_changed:
+  - demo/templates/pages/developers.njk
+  - demo/templates/layout.njk
+  - demo/templates/pages/index.njk
+  - demo/styles/demo.scss
+  - scripts/demo/render-demo-pages.mjs
+  - tests/demo-build.test.mjs
+  - docs/instrumentation/tag-integration.md
+  - public/developers/index.html
+  - public/index.html
+  - public/journey/index.html
+  - public/playground/index.html
+  - public/dashboard/index.html
+  - public/assets/styles/demo.css
+  - RECENT_LEARNINGS.md
+  - conformance-matrix.yaml
+  - gap-register.yaml
+  - harm-register.yaml
+  - agent-evidence.yaml
+  - docs/agent-evidence/2026/07/14/flux-behaviour-public-developer-documentation.yaml
+promotion_decisions:
+  - Publish one source-owned, generated developer route and expose it from both global navigation and the homepage.
+  - Document the runtime as implemented: event schema 1.2.0, every hosted data-flux attribute, manual and automatic consent behaviour, owner/viewer model workflows and all routed collector/auth/model/dashboard/export APIs.
+  - Treat collector POST as the public integration boundary and label Flux-session dashboard routes as authenticated application APIs rather than a tenant-generic reporting API.
+  - Keep current pre-release and governance blockers prominent instead of presenting the public documentation as general-availability approval.
+commands_run:
+  - command: npm ci
+    state: verified
+    status: passed
+    evidence: Installed all 60 locked dependencies in the clean worktree; npm reported zero vulnerabilities.
+  - command: node --test --test-name-pattern='demo build' tests/demo-build.test.mjs
+    state: verified
+    status: passed
+    evidence: Both focused demo build tests passed, including the generated developer route and critical contract assertions.
+  - command: FLUX_DEMO_COLLECTOR_ENDPOINT=https://flux-behaviour.pages.dev/api/collect npm run demo:build
+    state: verified
+    status: passed
+    evidence: Five production-shaped pages, hosted assets and the writing runtime built successfully; only existing GOV.UK Sass colour deprecation warnings were emitted.
+  - command: npm test
+    state: verified
+    status: passed
+    evidence: All 339 repository tests passed after the production-shaped rebuild.
+  - command: npm run validate
+    state: verified
+    status: passed
+    evidence: All 19 governed repository files were present.
+  - command: npm run security:secrets
+    state: verified
+    status: passed
+    evidence: Secret-pattern sanity scan passed.
+  - command: npm audit --audit-level=high
+    state: verified
+    status: passed
+    evidence: npm reported zero vulnerabilities.
+  - command: npm run sbom
+    state: verified
+    status: passed
+    evidence: CycloneDX SBOM generation completed successfully.
+  - command: git diff --check
+    state: verified
+    status: passed
+    evidence: No whitespace errors were found.
+  - command: local Chrome verification at 1440x1000 and 390x844
+    state: verified
+    status: passed
+    evidence: The homepage Developers link reached /developers/, the Developers navigation item was current, in-page API navigation worked, troubleshooting disclosure opened, desktop and mobile document widths matched their viewports, and the mobile page had no horizontal overflow.
+contracts_validated:
+  - contracts/events/flux-event.schema.json version 1.2.0
+  - hosted browser and automatic-capture public attributes
+  - authenticated tenant service-model GET and immutable-version PUT routes
+  - authenticated ResearchOps dashboard, complete-session and aggregate-export routes
+gaps_recorded:
+  - GAP-006 updated to include the new public developer documentation in the outstanding full accessibility audit.
+waivers_recorded: []
+artifacts_created:
+  - demo/templates/pages/developers.njk
+  - public/developers/index.html
+  - docs/agent-evidence/2026/07/14/flux-behaviour-public-developer-documentation.yaml
+recent_learnings:
+  - A source template is not a shipped developer experience until its route is rendered, published and linked from the public interface.
+  - Public integration copy must be checked against current runtime attributes, versioned contracts and authenticated route boundaries.
+security:
+  - The guide keeps OAuth and Flux secrets server-side, documents credentials omission for collection and uses secure session-cookie authentication only for application APIs.
+  - No secret, bearer credential or environment-specific protected configuration was added.
+privacy:
+  - The guide explains consent gating, revocation, sensitive-control exclusion, controlled semantic keys, content-free metadata and the prohibition on entered values and direct identifiers.
+  - Existing release blockers for retention, deletion, DPIA, rate limiting, incident controls and fairness validation remain explicit.
+accessibility:
+  - The route uses semantic headings, navigation, tables, lists, disclosures, code examples and GOV.UK components.
+  - Chrome checks at desktop and 390px mobile confirmed readable responsive layout and no horizontal overflow; GAP-006 retains the outstanding full audit.
+risks:
+  - Documentation can drift from runtime contracts; focused build assertions and the source instrumentation guide now protect the current version and critical public attributes.
+  - The public route improves implementation guidance but does not approve general availability or close any operational release blocker.
