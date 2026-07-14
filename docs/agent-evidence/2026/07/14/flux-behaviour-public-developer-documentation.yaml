@@ -38,6 +38,7 @@ files_read:
   - tests/demo-build.test.mjs
 files_changed:
   - demo/templates/pages/developers.njk
+  - demo/templates/pages/account.njk
   - demo/templates/layout.njk
   - demo/templates/pages/index.njk
   - demo/styles/demo.scss
@@ -45,6 +46,7 @@ files_changed:
   - tests/demo-build.test.mjs
   - docs/instrumentation/tag-integration.md
   - public/developers/index.html
+  - public/account/index.html
   - public/index.html
   - public/journey/index.html
   - public/playground/index.html
@@ -58,6 +60,7 @@ files_changed:
   - docs/agent-evidence/2026/07/14/flux-behaviour-public-developer-documentation.yaml
 promotion_decisions:
   - Publish one source-owned, generated developer route and expose it from both global navigation and the homepage.
+  - Keep every globally linked route source-owned by adding the account page to the static renderer.
   - Document the runtime as implemented: event schema 1.2.0, every hosted data-flux attribute, manual and automatic consent behaviour, owner/viewer model workflows and all routed collector/auth/model/dashboard/export APIs.
   - Treat collector POST as the public integration boundary and label Flux-session dashboard routes as authenticated application APIs rather than a tenant-generic reporting API.
   - Keep current pre-release and governance blockers prominent instead of presenting the public documentation as general-availability approval.
@@ -73,7 +76,11 @@ commands_run:
   - command: FLUX_DEMO_COLLECTOR_ENDPOINT=https://flux-behaviour.pages.dev/api/collect npm run demo:build
     state: verified
     status: passed
-    evidence: Five production-shaped pages, hosted assets and the writing runtime built successfully; only existing GOV.UK Sass colour deprecation warnings were emitted.
+    evidence: Six production-shaped pages, hosted assets and the writing runtime built successfully; only existing GOV.UK Sass colour deprecation warnings were emitted.
+  - command: node --test --test-name-pattern='demo build' tests/demo-build.test.mjs && node --test tests/account-google-sign-in.test.mjs
+    state: verified
+    status: passed
+    evidence: Review-remediation tests passed for publisher-compatible guidance, manual sensitive-event exclusion, persistent auto-capture revocation, the recognised assist.help action and the source-generated account route.
   - command: npm test
     state: verified
     status: passed
@@ -102,6 +109,10 @@ commands_run:
     state: verified
     status: passed
     evidence: The homepage Developers link reached /developers/, the Developers navigation item was current, in-page API navigation worked, troubleshooting disclosure opened, desktop and mobile document widths matched their viewports, and the mobile page had no horizontal overflow.
+  - command: local Chrome review-remediation verification of /developers/ and /account/ at 1440x1000 and 390x844
+    state: verified
+    status: passed
+    evidence: Both generated routes rendered with the expected current navigation, headings, readable controls and no placeholders or horizontal overflow; the account Developers link navigated to the developer guide.
 contracts_validated:
   - contracts/events/flux-event.schema.json version 1.2.0
   - hosted browser and automatic-capture public attributes
@@ -117,11 +128,12 @@ artifacts_created:
 recent_learnings:
   - A source template is not a shipped developer experience until its route is rendered, published and linked from the public interface.
   - Public integration copy must be checked against current runtime attributes, versioned contracts and authenticated route boundaries.
+  - Public key syntax must use the intersection of capture and publisher-model contracts, manual events need an explicit sensitive-data boundary, and external auto-capture revocation must replace persisted consent.
 security:
   - The guide keeps OAuth and Flux secrets server-side, documents credentials omission for collection and uses secure session-cookie authentication only for application APIs.
   - No secret, bearer credential or environment-specific protected configuration was added.
 privacy:
-  - The guide explains consent gating, revocation, sensitive-control exclusion, controlled semantic keys, content-free metadata and the prohibition on entered values and direct identifiers.
+  - The guide explains consent gating, persistent automatic-capture revocation, automatic-only sensitive-control exclusion, the separate manual-event prohibition, publisher-compatible controlled semantic keys, content-free metadata and the prohibition on entered values and direct identifiers.
   - Existing release blockers for retention, deletion, DPIA, rate limiting, incident controls and fairness validation remain explicit.
 accessibility:
   - The route uses semantic headings, navigation, tables, lists, disclosures, code examples and GOV.UK components.

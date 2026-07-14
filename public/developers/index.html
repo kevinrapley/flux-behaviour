@@ -237,7 +237,7 @@ document.querySelector('#reject-analytics').addEventListener('click', () =&gt; {
 			</table>
 
 			<h3 class="govuk-heading-m">Key format</h3>
-			<p class="govuk-body"><code>data-flux-key</code> must be 1 to 120 characters in the hosted automatic-capture module and may contain letters, numbers, dots, underscores, colons and hyphens. Use type-first keys such as <code>page.*</code>, <code>form.*</code>, <code>button.*</code> and <code>field.*</code>. The event and publisher-model contracts allow up to 160 characters, but using 120 or fewer keeps keys compatible with automatic capture.</p>
+			<p class="govuk-body"><code>data-flux-key</code> must be 1 to 120 characters in the hosted automatic-capture module. To keep a key compatible with both collection and the publisher service model, start it with a lowercase letter and use only lowercase letters, numbers, dots, underscores and hyphens. Each separator must be followed by a letter or number. Use type-first keys such as <code>page.*</code>, <code>form.*</code>, <code>button.*</code> and <code>field.*</code>. The event and publisher-model contracts allow up to 160 characters, but using 120 or fewer keeps keys compatible with automatic capture.</p>
 			<div class="flux-example-grid">
 				<div><h4 class="govuk-heading-s">Safe</h4><pre class="flux-code-block"><code>&lt;input
   name="contact-method"
@@ -255,10 +255,11 @@ document.querySelector('#reject-analytics').addEventListener('click', () =&gt; {
 			</div>
 
 			<h3 class="govuk-heading-m">Sensitive controls</h3>
-			<p class="govuk-body">Flux automatically excludes password, email, telephone, one-time-code, payment and authentication-scoped controls. Add <code>data-flux-sensitive="true"</code> when your own component contains sensitive content that cannot be identified safely from standard HTML.</p>
+			<p class="govuk-body">The automatic-capture module excludes password, email, telephone, one-time-code, payment and authentication-scoped controls. Add <code>data-flux-sensitive="true"</code> when your own component contains sensitive content that cannot be identified safely from standard HTML.</p>
 			<pre class="flux-code-block"><code>&lt;form data-flux-sensitive="true"&gt;
   &lt;!-- No descendant interactions are captured --&gt;
 &lt;/form&gt;</code></pre>
+			<div class="govuk-warning-text"><span class="govuk-warning-text__icon" aria-hidden="true">!</span><strong class="govuk-warning-text__text"><span class="govuk-visually-hidden">Warning</span>These exclusions apply only to automatic capture. Manual <code>flux('event', ...)</code> calls must never describe interactions with sensitive fields or include entered values, email addresses, telephone numbers, payment details, authentication data or other direct identifiers.</strong></div>
 
 			<h3 class="govuk-heading-m">Demo-only attributes</h3>
 			<p class="govuk-body"><code>data-flux-field</code>, <code>data-flux-help</code> and <code>data-flux-chart</code> belong to the repository demo pages. The hosted SDK does not treat them as public automatic-capture configuration. Use <code>data-flux-key</code> in a service integration.</p>
@@ -270,11 +271,16 @@ document.querySelector('#reject-analytics').addEventListener('click', () =&gt; {
 			<pre class="flux-code-block"><code>// A visitor accepts behavioural analytics
 flux('consent', 'granted');
 
-// A visitor later changes their choice
+// A visitor later changes their choice (manual capture)
+flux('consent', 'revoked');
+
+// When the automatic-capture module is loaded, also update
+// its persisted choice so a later page cannot restore consent
+localStorage.setItem('flux.behaviour.consent', 'no');
 flux('consent', 'revoked');</code></pre>
 			<ul class="govuk-list govuk-list--bullet">
 				<li>Do not call <code>granted</code> from a page-load default.</li>
-				<li>With manual capture, persist the visitor's choice in your consent manager, not in event payloads. Automatic capture stores its built-in banner choice under <code>flux.behaviour.consent</code>.</li>
+				<li>With manual capture, persist the visitor's choice in your consent manager, not in event payloads. Automatic capture stores its built-in banner choice under <code>flux.behaviour.consent</code>; set that value to <code>no</code> before calling <code>revoked</code> from an external preference control.</li>
 				<li>On each new page, restore only a previously recorded valid choice by calling the matching command.</li>
 				<li>Offer a way to revoke consent and call <code>revoked</code> immediately.</li>
 				<li>Do not queue pre-consent interactions for later submission.</li>
@@ -303,7 +309,7 @@ flux('consent', 'revoked');</code></pre>
 					<tr class="govuk-table__row"><th scope="row" class="govuk-table__header"><code>drop</code> / <code>file</code></th><td class="govuk-table__cell">Drop or chooser counts and size buckets, never names or contents.</td><td class="govuk-table__cell"><code>file.selected</code></td></tr>
 					<tr class="govuk-table__row"><th scope="row" class="govuk-table__header"><code>picker</code></th><td class="govuk-table__cell">Date, time and controlled picker interactions.</td><td class="govuk-table__cell"><code>date.opened</code></td></tr>
 					<tr class="govuk-table__row"><th scope="row" class="govuk-table__header"><code>trust</code></th><td class="govuk-table__cell">Consent, confirmation and assurance controls.</td><td class="govuk-table__cell"><code>consent.granted</code></td></tr>
-					<tr class="govuk-table__row"><th scope="row" class="govuk-table__header"><code>assist</code></th><td class="govuk-table__cell">Help and guidance use.</td><td class="govuk-table__cell"><code>help.opened</code></td></tr>
+					<tr class="govuk-table__row"><th scope="row" class="govuk-table__header"><code>assist</code></th><td class="govuk-table__cell">Help and guidance use.</td><td class="govuk-table__cell"><code>assist.help</code></td></tr>
 					<tr class="govuk-table__row"><th scope="row" class="govuk-table__header"><code>a11y</code></th><td class="govuk-table__cell">Skip links and interaction-method indicators.</td><td class="govuk-table__cell"><code>skiplink.used</code></td></tr>
 					<tr class="govuk-table__row"><th scope="row" class="govuk-table__header"><code>env</code></th><td class="govuk-table__cell">Controlled network or device context.</td><td class="govuk-table__cell"><code>network.offline</code></td></tr>
 				</tbody>

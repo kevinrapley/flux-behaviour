@@ -28,7 +28,12 @@ Consent is never assumed. The manual browser tag does not persist the consent de
 flux('consent', 'granted');
 ```
 
-every event command is dropped without being stored, queued or sent. `flux('consent', 'revoked')` stops emission immediately.
+every event command is dropped without being stored, queued or sent. `flux('consent', 'revoked')` stops emission immediately. When an external preference control revokes consent while the automatic-capture module is loaded, it must first set `flux.behaviour.consent` to `no`; otherwise the module can restore its previous `yes` choice on the next page.
+
+```js
+localStorage.setItem('flux.behaviour.consent', 'no');
+flux('consent', 'revoked');
+```
 
 ## Sending events
 
@@ -54,7 +59,9 @@ Contract version 1.2.0 adds richer interaction metadata and autocomplete milesto
 
 The hosted auto-capture module also owns the 30-minute inactivity boundary, final-destination Tab context, Enter/Return activation, browser-autocomplete signals, purpose-led structural fallbacks and the on-device UK-English analyser. Ordinary autofill emits only the semantic field key. Excluded sensitive autofill emits only an allow-listed category (`email`, `password`, `one-time-code`, `telephone`, `payment` or `other`) with no value, length or identity. Publishers provide the hosted include and controlled `data-flux-*` attributes; they do not copy the analytics engine, dictionary or narrative logic into their service repositories.
 
-Public attributes are `data-flux-endpoint`, `data-flux-tenant`, `data-flux-key`, `data-flux-role`, `data-flux-page`, `data-flux-sensitive`, `data-flux-writing-analysis` and `data-flux-autofocus`. The auto-capture consent banner also uses its internal `data-flux-consent` control. Attribute values must remain controlled configuration and must never contain entered content or direct identifiers.
+Public attributes are `data-flux-endpoint`, `data-flux-tenant`, `data-flux-key`, `data-flux-role`, `data-flux-page`, `data-flux-sensitive`, `data-flux-writing-analysis` and `data-flux-autofocus`. The auto-capture consent banner also uses its internal `data-flux-consent` control. Attribute values must remain controlled configuration and must never contain entered content or direct identifiers. For compatibility with the publisher service model, semantic keys start with a lowercase letter and contain only lowercase letters, numbers, dots, underscores and hyphens, with no trailing or repeated separators.
+
+Sensitive-control detection and `data-flux-sensitive="true"` apply to automatic capture only. A manual `flux('event', ...)` integration must never emit events for sensitive fields or include entered values, contact details, payment details, authentication data or other direct identifiers.
 
 Those controlled semantic keys are bound centrally in Flux's publisher service model. Services do not embed hierarchy, complexity, outcome interpretation or analytics queries in their own repositories. An interaction becomes a key event only when its exact action and semantic element match a published Flux configuration; a generic form submit is never assumed to be success.
 

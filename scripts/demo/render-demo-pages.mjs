@@ -53,6 +53,14 @@ const pages = [
     }
   },
   {
+    template: 'pages/account.njk',
+    output: 'account/index.html',
+    context: {
+      pageTitle: 'Sign in',
+      activeNavigation: 'account'
+    }
+  },
+  {
     template: 'pages/playground.njk',
     output: 'playground/index.html',
     context: {

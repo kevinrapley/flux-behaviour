@@ -2,7 +2,9 @@
 
 ## 2026-07-14 — Public developer documentation must be generated and reachable
 
-A complete source template is not a shipped developer experience. The route must be part of the static renderer, the generated artefact must be published, and the global navigation and homepage must link to it so a Pages fallback cannot disguise a missing page. Integration copy also needs to be checked against the current runtime rather than copied from an earlier product state: list the actual hosted attributes, event schema version, owner configuration workflow, authenticated API boundaries and unresolved release controls, while keeping manual consent and automatic-capture consent storage distinct.
+A complete source template is not a shipped developer experience. The route must be part of the static renderer, the generated artefact must be published, and every globally linked route—including sign-in—must have a source template so a clean build or Pages fallback cannot disguise a missing page. Integration copy also needs to be checked against the current runtime rather than copied from an earlier product state: list the actual hosted attributes, event schema version, owner configuration workflow, authenticated API boundaries and unresolved release controls, while keeping manual consent and automatic-capture consent storage distinct.
+
+Public key guidance must describe the intersection of capture and publisher-model contracts, not the more permissive collector syntax alone. Sensitive-field exclusion belongs to automatic capture; manual events need a separate explicit prohibition. Revocation through an external preference control must update the automatic module's persisted choice as well as calling the runtime command, or a later page can restore consent.
 
 ## 2026-07-13 — Outcome authoring must preserve every semantic relationship
 

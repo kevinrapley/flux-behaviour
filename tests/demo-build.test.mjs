@@ -20,6 +20,7 @@ test('demo build renders the GOV.UK prototype pages', () => {
     const dashboard = readFileSync(join(outputRoot, 'dashboard/index.html'), 'utf8');
     const playground = readFileSync(join(outputRoot, 'playground/index.html'), 'utf8');
     const developers = readFileSync(join(outputRoot, 'developers/index.html'), 'utf8');
+    const account = readFileSync(join(outputRoot, 'account/index.html'), 'utf8');
 
     assert.match(index, /govuk-template/);
     assert.match(index, /window\.flux/);
@@ -53,6 +54,14 @@ test('demo build renders the GOV.UK prototype pages', () => {
     assert.match(developers, /schema version <code>1\.2\.0<\/code>/);
     assert.match(developers, /credentials: 'omit'/);
     assert.doesNotMatch(developers, /data-flux-key="jane@example\.com"/);
+    assert.match(developers, /These exclusions apply only to automatic capture/);
+    assert.match(developers, /localStorage\.setItem\('flux\.behaviour\.consent', 'no'\)/);
+    assert.match(developers, /<code>assist\.help<\/code>/);
+
+    assert.match(account, /Sign in to Flux Behaviour/);
+    assert.match(account, /href="\/api\/auth\/google\/start"/);
+    assert.match(account, /href="\/developers\/"/);
+    assert.match(account, /href="\/account\/" aria-current="true"/);
   } finally {
     rmSync(outputRoot, { recursive: true, force: true });
   }

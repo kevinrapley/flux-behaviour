@@ -43,8 +43,8 @@
 						<li class="govuk-service-navigation__item{% if activeNavigation == 'dashboard' %} govuk-service-navigation__item--active{% endif %}">
 							<a class="govuk-service-navigation__link" href="/dashboard/"{% if activeNavigation == 'dashboard' %} aria-current="true"{% endif %}>Dashboard</a>
 						</li>
-						<li class="govuk-service-navigation__item">
-							<a class="govuk-service-navigation__link" href="/account/">Sign in</a>
+						<li class="govuk-service-navigation__item{% if activeNavigation == 'account' %} govuk-service-navigation__item--active{% endif %}">
+							<a class="govuk-service-navigation__link" href="/account/"{% if activeNavigation == 'account' %} aria-current="true"{% endif %}>Sign in</a>
 						</li>
 					</ul>
 				</nav>

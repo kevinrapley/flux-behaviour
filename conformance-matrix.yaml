@@ -2,7 +2,7 @@ records:
   - id: CONF-030
     rule: Public integration documentation must match the hosted SDK, publisher model, authenticated dashboard and exposed application routes
     expected_evidence: A navigable public developer page explains tag placement, consent, supported data-flux attributes, owner configuration, event contract 1.2.0, privacy boundaries, API consumption, testing and troubleshooting
-    actual_evidence: The source-owned /developers/ page and homepage/navigation links document the manual and automatic hosted tags, every supported data-flux attribute, nine report areas, owner/viewer model workflow, collector and authenticated application endpoints, aggregate export controls and current pre-release blockers. Focused build tests protect the route and critical contract content.
+    actual_evidence: The source-owned /developers/ page and homepage/navigation links document the manual and automatic hosted tags, the publisher-compatible lowercase semantic-key grammar, every supported data-flux attribute, manual-event sensitive-data prohibition, persisted auto-capture revocation, nine report areas, owner/viewer model workflow, collector and authenticated application endpoints, aggregate export controls and current pre-release blockers. Focused build tests protect the developer and source-generated account routes plus critical contract content.
     status: present-with-release-blockers
     owner: product-lead
 
