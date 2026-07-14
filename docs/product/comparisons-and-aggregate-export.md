@@ -6,4 +6,6 @@ Analysts can compare aggregate journeys by visit maturity, configured outcome pa
 
 CSV export is restricted to authenticated tenant members and an allow-list of aggregate dashboard reports. Each row includes the selected range and comparison, generation time, tenant, published model version, event schema version, suppression note and interpretation caveat. Exports contain metric rows only, are capped at 5,000 rows, neutralise spreadsheet formula prefixes and never expose raw events, narratives, metadata, visitor IDs, session IDs or entered values.
 
+The tenant-administration page also offers a general property export at `GET /api/admin/tenants/:tenant/export.csv`. It contains daily visitors, sessions and interactions for at most the preceding year, includes tenant and generation metadata, neutralises spreadsheet formula prefixes and excludes raw telemetry and identifiers. This lifecycle export is available to tenant owners and viewers; changing settings or access remains owner-only.
+
 The dashboard keeps native labels, date inputs, selects, links and semantic tables. Wide comparison tables are contained horizontal regions on narrow screens.

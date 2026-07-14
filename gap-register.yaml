@@ -1,11 +1,11 @@
 gaps:
   - id: GAP-019
-    title: Platform administration is API- and operator-led
+    title: Permanent tenant purge and platform-admin grants remain operator-controlled
     severity: medium
-    observed_state: Explicit platform administrators can atomically provision a tenant, unique installation tag and initial owner through an authenticated API, and tenant owners can retrieve the stable snippet. Platform-admin grants, later origin changes, membership changes and tag revocation remain controlled database/operator workflows.
-    expected_state: Authorised operators can audit and manage platform-admin grants, origins, memberships and tag lifecycle through governed interfaces with confirmation, immutable audit evidence and least privilege.
-    risk: Manual follow-on administration may be slower and more error-prone even though tenant creation itself cannot produce a tenant without a tag.
-    action: Design and assure governed platform-administration workflows without turning tenant ownership into platform-wide authority or treating public tag possession as authentication.
+    observed_state: Explicit platform administrators can create tenants with unique tags through /admin/. Owners can edit exact origins, retrieve the stable tag, manage owner/viewer access with final-owner protection, download aggregate data, and move tracking to trash or restore it with audit evidence. Trash immediately stops collection and records a 35-day recovery and purge-eligibility date. Platform-admin grants and permanent physical purge remain controlled operator workflows, and purge is not automated.
+    expected_state: Authorised operators can audit and manage platform-admin grants and execute an approved, evidenced permanent purge after the recovery period under the governed retention and deletion policy.
+    risk: Trashed tenants stop collecting but retained configuration and analytics are not automatically purged, while platform-admin authority still depends on direct operator administration.
+    action: Approve the retention and deletion policy, implement an idempotent scheduled purge with evidence and recovery-period enforcement, and add a governed platform-admin grant/revocation workflow without turning tenant ownership into platform-wide authority.
     owner: product-lead
     status: open
 

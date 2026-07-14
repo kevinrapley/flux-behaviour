@@ -12,13 +12,15 @@ Flux is service-improvement evidence. It is not surveillance tooling. It must no
 
 ## Current status
 
-Status: governed foundation with a D1-backed early product runtime; not production-ready. The consent-gated hosted SDK, metadata-only collector, versioned publisher service model, authenticated aggregate dashboard and ResearchOps integration have been promoted. Retention/deletion, production rate limiting, incident controls, DPIA, complete accessibility and corpus/fairness assurance remain release blockers.
+Status: governed foundation with a D1-backed early product runtime; not production-ready. The consent-gated hosted SDK, metadata-only collector, versioned publisher service model, authenticated aggregate dashboard, tenant-administration surface and ResearchOps integration have been promoted. Administrators can create tenants with unique tags, manage exact origins and access, export aggregates, and stop or restore tracking through a 35-day trash lifecycle. Permanent purge, production rate limiting, incident controls, DPIA, complete accessibility and corpus/fairness assurance remain release blockers.
 
 The repository also provides branch posture, CODEOWNERS, security policy, CI scaffolding, assurance records, a harm register, migration controls and local validation scripts.
 
 ## Adding Flux to a service
 
 Services add Flux like other analytics tags: a snippet plus a hosted module, configured with a collector endpoint and the tenant's unique public installation tag. Events are consent-gated, metadata-only and validated against the published contract in the browser before transport and again at the collector. See `docs/instrumentation/tag-integration.md`.
+
+Authorised administrators use `/admin/` to create and select tenants, configure origins and owner/viewer access, copy the installation tag, download aggregate data, and move tracking to trash or restore it. See `docs/product/tenant-administration.md`.
 
 ## Demo prototype
 

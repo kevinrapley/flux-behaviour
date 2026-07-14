@@ -1,5 +1,9 @@
 # Recent Learnings
 
+## 2026-07-14 — Tenant administration needs a governed lifecycle, not only provisioning
+
+A tenant is not administrable merely because it can be provisioned. A property-style lifecycle must keep creation, exact origins, access roles, aggregate export, trash and restoration tenant-scoped and auditable. Moving tracking to trash should revoke collection immediately without pretending historical records were physically deleted; at least one owner must remain, and permanent purge must stay explicitly blocked until the retention policy and purge process are governed.
+
 ## 2026-07-14 — Public tenant tags must remain routing identifiers, not credentials
 
 A publisher-installed identifier cannot be secret because it is visible in page HTML. Tenant isolation therefore needs two separate controls: an opaque unique tag for routing and an exact origin allow-list for collection authority. The collector must resolve the tag to the internal tenant before every visitor, session, event or model write, and direct internal-ID compatibility must be restricted to the one legacy integration that requires it.
