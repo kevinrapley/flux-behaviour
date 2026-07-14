@@ -2,6 +2,8 @@
 
 The Flux tag adds behavioural analytics to a website or service the same way other analytics tags do: a small snippet on every page, plus a hosted module.
 
+The rendered, public implementation guide is available at [flux-behaviour.pages.dev/developers/](https://flux-behaviour.pages.dev/developers/). It covers the hosted tags, every supported `data-flux-*` attribute, dashboard configuration and HTTP APIs.
+
 ## Install
 
 ```html
@@ -18,23 +20,30 @@ The Flux tag adds behavioural analytics to a website or service the same way oth
 
 Commands queued before the module loads are replayed in order once it installs. The module is `src/sdk/flux-browser.mjs`, wired by `installFluxBrowserTag(window)`; a host page or bundler provides the install entry point.
 
+The hosted `/assets/flux/*` module graph is returned with `Access-Control-Allow-Origin: *` so publisher origins can load it. A self-hosted CDN or reverse proxy must return an equivalent CORS header for the entry module and every relative import.
+
 ## Consent
 
-Consent is never assumed and is never persisted by the tag. Until the service calls:
+Consent is never assumed. The manual browser tag does not persist the consent decision; the automatic-capture module stores the choice made in its built-in banner under `flux.behaviour.consent`. Until the service calls:
 
 ```js
 flux('consent', 'granted');
 ```
 
-every event command is dropped without being stored, queued or sent. `flux('consent', 'revoked')` stops emission immediately.
+every event command is dropped without being stored, queued or sent. `flux('consent', 'revoked')` stops emission immediately. When an external preference control revokes consent while the automatic-capture module is loaded, it must first set `flux.behaviour.consent` to `no`; otherwise the module can restore its previous `yes` choice on the next page.
+
+```js
+localStorage.setItem('flux.behaviour.consent', 'no');
+flux('consent', 'revoked');
+```
 
 ## Sending events
 
 ```js
-flux('event', 'nav', 'page.loaded', { role: 'page', element_key: 'start' });
+flux('event', 'nav', 'page.loaded', { role: 'page', element_key: 'page.application.start' });
 flux('event', 'input', 'field.blur', {
   role: 'field',
-  element_key: 'full-name',
+  element_key: 'field.application.full-name',
   duration_ms: 1200,
   edit_count: 3,
   value_length: 12
@@ -52,6 +61,10 @@ Contract version 1.2.0 adds richer interaction metadata and autocomplete milesto
 
 The hosted auto-capture module also owns the 30-minute inactivity boundary, final-destination Tab context, Enter/Return activation, browser-autocomplete signals, purpose-led structural fallbacks and the on-device UK-English analyser. Ordinary autofill emits only the semantic field key. Excluded sensitive autofill emits only an allow-listed category (`email`, `password`, `one-time-code`, `telephone`, `payment` or `other`) with no value, length or identity. Publishers provide the hosted include and controlled `data-flux-*` attributes; they do not copy the analytics engine, dictionary or narrative logic into their service repositories.
 
+Public attributes are `data-flux-endpoint`, `data-flux-tenant`, `data-flux-key`, `data-flux-role`, `data-flux-page`, `data-flux-sensitive`, `data-flux-writing-analysis` and `data-flux-autofocus`. The auto-capture consent banner also uses its internal `data-flux-consent` control. Attribute values must remain controlled configuration and must never contain entered content or direct identifiers. For compatibility with the publisher service model, semantic keys start with a lowercase letter and contain only lowercase letters, numbers, dots, underscores and hyphens, with no trailing or repeated separators.
+
+Sensitive-control detection and `data-flux-sensitive="true"` apply to automatic capture only. A manual `flux('event', ...)` integration must never emit events for sensitive fields or include entered values, contact details, payment details, authentication data or other direct identifiers.
+
 Those controlled semantic keys are bound centrally in Flux's publisher service model. Services do not embed hierarchy, complexity, outcome interpretation or analytics queries in their own repositories. An interaction becomes a key event only when its exact action and semantic element match a published Flux configuration; a generic form submit is never assumed to be success.
 
 Every event is built against the published event contract (`contracts/events/flux-event.schema.json`) and validated locally before transport:
@@ -62,7 +75,7 @@ Every event is built against the published event contract (`contracts/events/flu
 
 ## Transport
 
-The default browser transport prefers `navigator.sendBeacon` (survives page unloads) and falls back to `fetch` with `keepalive: true` and `credentials: 'omit'`. Both send a single JSON event per request to match the collector contract and its boundary controls.
+The default browser transport uses `fetch` with `keepalive: true` and `credentials: 'omit'`, then falls back to `navigator.sendBeacon` if fetch is unavailable or fails. Both send a single JSON event per request to match the collector contract and its boundary controls.
 
 ## Failure behaviour
 

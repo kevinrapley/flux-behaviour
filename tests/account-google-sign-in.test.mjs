@@ -7,6 +7,10 @@ test('account page provides Google sign-in without exposing OTP fields', () => {
 
   assert.match(page, /href="\/api\/auth\/google\/start"/);
   assert.match(page, /Continue with Google/);
+  assert.match(page, /verified Google email address/);
+  assert.match(page, /provider account identifier/);
+  assert.match(page, /separate from pseudonymous behavioural analytics identifiers/);
+  assert.doesNotMatch(page, /No real user data is collected/);
   assert.doesNotMatch(page, /One-time code/);
   assert.doesNotMatch(page, /otp-login/);
 });

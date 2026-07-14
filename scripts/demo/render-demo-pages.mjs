@@ -45,6 +45,22 @@ const pages = [
     }
   },
   {
+    template: 'pages/developers.njk',
+    output: 'developers/index.html',
+    context: {
+      pageTitle: 'Developer documentation',
+      activeNavigation: 'developers'
+    }
+  },
+  {
+    template: 'pages/account.njk',
+    output: 'account/index.html',
+    context: {
+      pageTitle: 'Sign in',
+      activeNavigation: 'account'
+    }
+  },
+  {
     template: 'pages/playground.njk',
     output: 'playground/index.html',
     context: {

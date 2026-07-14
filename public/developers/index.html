@@ -1,0 +1,569 @@
+<!doctype html>
+<html class="govuk-template govuk-template--rebranded" lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Developer documentation – Flux Behaviour demo</title>
+	<link rel="stylesheet" href="/assets/styles/demo.css" media="all">
+
+</head>
+<body class="govuk-template__body">
+	<script>document.body.className += ' js-enabled' + ('noModule' in HTMLScriptElement.prototype ? ' govuk-frontend-supported' : '');</script>
+	<a href="#main-content" class="govuk-skip-link" data-module="govuk-skip-link">Skip to main content</a>
+
+	<header class="govuk-header" data-module="govuk-header">
+		<div class="govuk-header__container govuk-width-container">
+			<div class="govuk-header__logo">
+				<a href="/" class="govuk-header__link govuk-header__link--homepage">
+					<span class="govuk-header__logotype-text">Flux Behaviour</span>
+				</a>
+			</div>
+		</div>
+	</header>
+	<div class="govuk-service-navigation" data-module="govuk-service-navigation">
+		<div class="govuk-width-container">
+			<div class="govuk-service-navigation__container">
+				<span class="govuk-service-navigation__service-name">
+					<a href="/" class="govuk-service-navigation__link">Behavioural analytics demo</a>
+				</span>
+				<nav aria-label="Menu" class="govuk-service-navigation__wrapper">
+					<ul class="govuk-service-navigation__list">
+						<li class="govuk-service-navigation__item">
+							<a class="govuk-service-navigation__link" href="/">Get started</a>
+						</li>
+						<li class="govuk-service-navigation__item govuk-service-navigation__item--active">
+							<a class="govuk-service-navigation__link" href="/developers/" aria-current="true">Developers</a>
+						</li>
+						<li class="govuk-service-navigation__item">
+							<a class="govuk-service-navigation__link" href="/journey/">Demo journey</a>
+						</li>
+						<li class="govuk-service-navigation__item">
+							<a class="govuk-service-navigation__link" href="/playground/">Playground</a>
+						</li>
+						<li class="govuk-service-navigation__item">
+							<a class="govuk-service-navigation__link" href="/dashboard/">Dashboard</a>
+						</li>
+						<li class="govuk-service-navigation__item">
+							<a class="govuk-service-navigation__link" href="/account/">Sign in</a>
+						</li>
+					</ul>
+				</nav>
+			</div>
+		</div>
+	</div>
+	<div class="govuk-width-container">
+		<main class="govuk-main-wrapper" id="main-content" role="main">
+
+<div class="govuk-grid-row">
+	<div class="govuk-grid-column-full">
+		<span class="govuk-caption-xl">Flux Behaviour developer documentation</span>
+		<h1 class="govuk-heading-xl">Add behavioural analytics to a website or web service</h1>
+		<p class="govuk-body-l flux-docs-lede">Implement consent-led, metadata-only behavioural analytics, configure access, annotate safe interaction points and consume the Flux APIs.</p>
+		<div class="govuk-inset-text">
+			Flux is service-improvement evidence. It must not be used to judge a person or make eligibility, enforcement, fraud or other high-stakes decisions.
+		</div>
+	</div>
+</div>
+
+<div class="govuk-grid-row flux-docs-layout">
+	<div class="govuk-grid-column-one-quarter">
+		<nav class="flux-docs-nav" aria-label="Developer documentation">
+			<h2 class="govuk-heading-s">On this page</h2>
+			<ul class="govuk-list">
+				<li><a class="govuk-link" href="#overview">How Flux works</a></li>
+				<li><a class="govuk-link" href="#quickstart">Quick start</a></li>
+				<li><a class="govuk-link" href="#admin">Admin and workspace setup</a></li>
+				<li><a class="govuk-link" href="#install">Install the tag</a></li>
+				<li><a class="govuk-link" href="#attributes"><code>data-flux-*</code> attributes</a></li>
+				<li><a class="govuk-link" href="#consent">Consent</a></li>
+				<li><a class="govuk-link" href="#events">Events and metadata</a></li>
+				<li><a class="govuk-link" href="#spa">Single-page applications</a></li>
+				<li><a class="govuk-link" href="#api">HTTP APIs</a></li>
+				<li><a class="govuk-link" href="#security">Security and privacy</a></li>
+				<li><a class="govuk-link" href="#test">Test your installation</a></li>
+				<li><a class="govuk-link" href="#troubleshoot">Troubleshooting</a></li>
+			</ul>
+		</nav>
+	</div>
+
+	<div class="govuk-grid-column-three-quarters flux-docs-content">
+		<section id="overview">
+			<h2 class="govuk-heading-l">How Flux works</h2>
+			<p class="govuk-body">Flux records controlled interaction metadata only after a visitor grants consent. The browser tag validates each event before sending it to the tenant-scoped collector. The collector validates it again, checks that the browser origin is allowed for the tenant, and stores accepted events for the authorised dashboard.</p>
+			<ol class="govuk-list govuk-list--number flux-steps">
+				<li><strong>Configure your service.</strong> A Flux administrator creates or confirms your tenant, allowed web origins and dashboard access.</li>
+				<li><strong>Load the browser tag.</strong> Every instrumented page supplies the collector endpoint and tenant ID.</li>
+				<li><strong>Connect consent.</strong> Your consent choice calls <code>flux('consent', 'granted')</code> or <code>flux('consent', 'revoked')</code>.</li>
+				<li><strong>Mark safe elements.</strong> Use stable, non-identifying <code>data-flux-key</code> values or send deliberate events.</li>
+				<li><strong>Verify collection.</strong> Check the network response and then the signed-in journey dashboard.</li>
+			</ol>
+			<div class="govuk-notification-banner" role="region" aria-labelledby="docs-status-title">
+				<div class="govuk-notification-banner__header"><h3 class="govuk-notification-banner__title" id="docs-status-title">Current product status</h3></div>
+				<div class="govuk-notification-banner__content"><p class="govuk-body">Flux is pre-release. Collection and the ResearchOps dashboard exist, but production rate limiting, retention and deletion policy, DPIA and full accessibility evidence remain release blockers.</p></div>
+			</div>
+		</section>
+
+		<section id="quickstart">
+			<h2 class="govuk-heading-l">Quick start</h2>
+			<p class="govuk-body">This example uses manual consent and manual events. It is the recommended starting point because your service stays in control of consent wording and exactly which interactions are measured.</p>
+			<h3 class="govuk-heading-m">1. Get your configuration</h3>
+			<p class="govuk-body">Ask your Flux workspace administrator for:</p>
+			<ul class="govuk-list govuk-list--bullet">
+				<li>your tenant ID, for example <code>researchops</code>;</li>
+				<li>the collector URL, currently <code>https://flux-behaviour.pages.dev/api/collect</code>;</li>
+				<li>confirmation that every production, staging and local origin you will use is allow-listed;</li>
+				<li>a dashboard account if you need to verify or analyse events.</li>
+			</ul>
+
+			<h3 class="govuk-heading-m">2. Add the tag inside <code>&lt;head&gt;</code></h3>
+			<pre class="flux-code-block"><code>&lt;script&gt;
+  window.flux = window.flux || function () {
+    (window.flux.q = window.flux.q || []).push(arguments);
+  };
+&lt;/script&gt;
+&lt;script type="module"
+  src="https://flux-behaviour.pages.dev/assets/flux/sdk/flux-browser.install.mjs"
+  data-flux-endpoint="https://flux-behaviour.pages.dev/api/collect"
+  data-flux-tenant="YOUR_TENANT_ID"&gt;&lt;/script&gt;</code></pre>
+			<p class="govuk-body">The hosted <code>/assets/flux/*</code> modules are served with <code>Access-Control-Allow-Origin: *</code> so browsers can load the module graph from a publisher website. If you self-host or proxy the modules, return an equivalent CORS header for every imported Flux module, not only the entry file.</p>
+
+			<h3 class="govuk-heading-m">3. Connect your consent controls</h3>
+			<pre class="flux-code-block"><code>document.querySelector('#accept-analytics').addEventListener('click', () =&gt; {
+  flux('consent', 'granted');
+});
+
+document.querySelector('#reject-analytics').addEventListener('click', () =&gt; {
+  flux('consent', 'revoked');
+});</code></pre>
+
+			<h3 class="govuk-heading-m">4. Send a safe event</h3>
+			<pre class="flux-code-block"><code>flux('event', 'nav', 'page.loaded', {
+  role: 'page',
+  element_key: 'page.application.start'
+});</code></pre>
+			<p class="govuk-body">The queue function lets your page call <code>flux()</code> before the module finishes loading. Events sent before consent are dropped immediately; they are not held and replayed later.</p>
+		</section>
+
+		<section id="admin">
+			<h2 class="govuk-heading-l">Admin and workspace setup</h2>
+			<p class="govuk-body">Sign in at <a class="govuk-link" href="/account/">the Flux account page</a> with the Google account your workspace administrator has authorised. Account identity is kept separate from analytics visitor and session identifiers.</p>
+			<h3 class="govuk-heading-m">Report areas in the logged-in interface</h3>
+			<p class="govuk-body">All report areas use the same date range, comparison and aggregate-export controls. The default range is the last 30 days; you can also choose 24 hours, 7, 90 or 365 days, all time, or a custom UTC date range of up to 366 days.</p>
+			<table class="govuk-table">
+				<caption class="govuk-table__caption govuk-visually-hidden">Flux dashboard report areas</caption>
+				<thead class="govuk-table__head"><tr class="govuk-table__row"><th scope="col" class="govuk-table__header">Area</th><th scope="col" class="govuk-table__header">Use it to</th></tr></thead>
+				<tbody class="govuk-table__body">
+					<tr class="govuk-table__row"><th scope="row" class="govuk-table__header">Overview</th><td class="govuk-table__cell">Review visitors, journeys, interaction volume, completion, friction and uncertainty for the selected period.</td></tr>
+					<tr class="govuk-table__row"><th scope="row" class="govuk-table__header">Realtime</th><td class="govuk-table__cell">Check 5- and 30-minute aggregate activity and collector freshness. It never exposes a live view of individuals.</td></tr>
+					<tr class="govuk-table__row"><th scope="row" class="govuk-table__header">Journeys</th><td class="govuk-table__cell">Inspect recent pseudonymous journeys, controlled narratives and supported behavioural dimensions.</td></tr>
+					<tr class="govuk-table__row"><th scope="row" class="govuk-table__header">Tasks and funnels</th><td class="govuk-table__cell">Analyse ordered task completion and drop-off. Owners also configure funnels, tasks, steps and exact success events here.</td></tr>
+					<tr class="govuk-table__row"><th scope="row" class="govuk-table__header">Fields</th><td class="govuk-table__cell">Review privacy-safe field coverage, validation, corrections, dwell and length buckets. Owners configure question groups, complexity, required status and field bindings.</td></tr>
+					<tr class="govuk-table__row"><th scope="row" class="govuk-table__header">Events</th><td class="govuk-table__cell">Review ranked event, key-event and semantic element aggregates and their period movement.</td></tr>
+					<tr class="govuk-table__row"><th scope="row" class="govuk-table__header">Cohorts</th><td class="govuk-table__cell">Compare visit maturity, outcome paths and supported journey patterns. Groups smaller than five journeys are suppressed.</td></tr>
+					<tr class="govuk-table__row"><th scope="row" class="govuk-table__header">Model and explainability</th><td class="govuk-table__cell">See the published service-model version, semantic mappings, configured outcomes, key events and interpretation evidence.</td></tr>
+					<tr class="govuk-table__row"><th scope="row" class="govuk-table__header">Data quality and governance</th><td class="govuk-table__cell">Review freshness, mapping coverage, versions, export boundaries and known unknowns without hiding incomplete controls.</td></tr>
+				</tbody>
+			</table>
+
+			<h3 class="govuk-heading-m">Configure Tasks and funnels</h3>
+			<ol class="govuk-list govuk-list--number">
+				<li>Open <strong>Tasks and funnels</strong>, then expand <strong>Manage task and funnel configuration</strong>.</li>
+				<li>Create a funnel (transaction), add its tasks, then add the ordered steps a visitor normally completes.</li>
+				<li>Bind each step to the exact stable <code>data-flux-key</code> emitted by the publisher page.</li>
+				<li>Add success events using an exact Flux <code>action</code> and <code>data-flux-key</code> pair. A generic <code>flow.submit</code> is not treated as success unless you configure that exact event as an outcome.</li>
+				<li>Review the dependency summary before deleting a funnel, task or step, then save. Every save publishes a complete immutable next model version.</li>
+			</ol>
+
+			<h3 class="govuk-heading-m">Configure Fields</h3>
+			<ol class="govuk-list govuk-list--number">
+				<li>Open <strong>Fields</strong>, then expand <strong>Manage field configuration</strong>.</li>
+				<li>Add a question group below an ordered step and set publisher-declared complexity from 1 to 7.</li>
+				<li>Add fields, mark each required or optional, and bind it to its exact <code>field.*</code> publisher key.</li>
+				<li>Save and verify the new model version under <strong>Model and explainability</strong>.</li>
+			</ol>
+			<div class="govuk-inset-text">Tenant owners can edit configuration. Viewers can inspect the published structure and reports but cannot publish changes. Workspace creation, allowed origins and membership remain provisioned by the Flux operator in this pre-release service.</div>
+		</section>
+
+		<section id="install">
+			<h2 class="govuk-heading-l">Install the JavaScript tag</h2>
+			<h3 class="govuk-heading-m">Where to place it</h3>
+			<p class="govuk-body">Place the queue snippet and module script once on every page, preferably near the end of <code>&lt;head&gt;</code>. Module scripts are deferred by default, so they do not block HTML parsing. Keeping the queue immediately before the module means consent or event calls made by later page scripts are captured in order.</p>
+			<ul class="govuk-list govuk-list--bullet">
+				<li>Put it in your shared page layout or tag-management template.</li>
+				<li>Do not place it inside a component that may render more than once.</li>
+				<li>Use one tenant ID for the service represented by that page.</li>
+				<li>Keep the script URL and collector endpoint on HTTPS in production.</li>
+				<li>Allow the script host in <code>script-src</code> and collector in <code>connect-src</code> if you use Content Security Policy.</li>
+			</ul>
+
+			<h3 class="govuk-heading-m">Manual capture (recommended)</h3>
+			<p class="govuk-body">Load <code>flux-browser.install.mjs</code> when your application will own consent and explicitly call the events it needs.</p>
+			<pre class="flux-code-block"><code>&lt;script type="module"
+  src="https://flux-behaviour.pages.dev/assets/flux/sdk/flux-browser.install.mjs"
+  data-flux-endpoint="https://flux-behaviour.pages.dev/api/collect"
+  data-flux-tenant="licence-service"&gt;&lt;/script&gt;</code></pre>
+
+			<h3 class="govuk-heading-m">Automatic capture</h3>
+			<p class="govuk-body">Load <code>flux-auto-capture.mjs</code> to add the built-in consent banner and automatically observe page loads, safe controls, tab navigation, form submission and content-free field interaction metadata. Add explicit semantic keys wherever you need stable reporting; otherwise the module may use a structural <code>auto.*</code> fallback.</p>
+			<pre class="flux-code-block"><code>&lt;script type="module"
+  src="https://flux-behaviour.pages.dev/assets/flux/sdk/flux-auto-capture.mjs"
+  data-flux-endpoint="https://flux-behaviour.pages.dev/api/collect"
+  data-flux-tenant="licence-service"&gt;&lt;/script&gt;</code></pre>
+			<div class="govuk-inset-text">Review the built-in banner wording and consent storage with your privacy team before using automatic capture. Use manual capture when your service already has a consent manager.</div>
+
+			<h3 class="govuk-heading-m">Content Security Policy example</h3>
+			<pre class="flux-code-block"><code>Content-Security-Policy:
+  script-src 'self' https://flux-behaviour.pages.dev;
+  connect-src 'self' https://flux-behaviour.pages.dev;</code></pre>
+			<p class="govuk-body">The inline queue snippet may also require your existing nonce or hash policy. Do not weaken CSP with <code>'unsafe-inline'</code> solely for Flux.</p>
+		</section>
+
+		<section id="attributes">
+			<h2 class="govuk-heading-l"><code>data-flux-*</code> attributes</h2>
+			<p class="govuk-body">Public integration attributes are configuration, not a place to put user content. Attribute values may be sent as event metadata, so use controlled keys only.</p>
+			<table class="govuk-table flux-docs-table">
+				<caption class="govuk-table__caption govuk-heading-m">Public attributes</caption>
+				<thead class="govuk-table__head"><tr class="govuk-table__row"><th scope="col" class="govuk-table__header">Attribute</th><th scope="col" class="govuk-table__header">Use</th><th scope="col" class="govuk-table__header">Example</th></tr></thead>
+				<tbody class="govuk-table__body">
+					<tr class="govuk-table__row"><th scope="row" class="govuk-table__header"><code>data-flux-endpoint</code></th><td class="govuk-table__cell">Collector URL read from the module script. Required.</td><td class="govuk-table__cell"><code>https://flux-behaviour.pages.dev/api/collect</code></td></tr>
+					<tr class="govuk-table__row"><th scope="row" class="govuk-table__header"><code>data-flux-tenant</code></th><td class="govuk-table__cell">Tenant/workspace key. Required for the tenant-scoped collector.</td><td class="govuk-table__cell"><code>licence-service</code></td></tr>
+					<tr class="govuk-table__row"><th scope="row" class="govuk-table__header"><code>data-flux-key</code></th><td class="govuk-table__cell">Stable, non-identifying semantic key for a page, field, form or control. Recommended for every reportable element.</td><td class="govuk-table__cell"><code>field.application.contact-method</code></td></tr>
+					<tr class="govuk-table__row"><th scope="row" class="govuk-table__header"><code>data-flux-role</code></th><td class="govuk-table__cell">Overrides the inferred role with one of <code>field</code>, <code>form</code>, <code>control</code>, <code>page</code>, <code>service</code> or <code>environment</code>.</td><td class="govuk-table__cell"><code>control</code></td></tr>
+					<tr class="govuk-table__row"><th scope="row" class="govuk-table__header"><code>data-flux-page</code></th><td class="govuk-table__cell">A controlled page key on <code>&lt;body&gt;</code>, used for automatic <code>page.loaded</code>.</td><td class="govuk-table__cell"><code>page.application.start</code></td></tr>
+					<tr class="govuk-table__row"><th scope="row" class="govuk-table__header"><code>data-flux-sensitive</code></th><td class="govuk-table__cell">Set to <code>true</code> on an input, form or ancestor to exclude its descendant interaction capture.</td><td class="govuk-table__cell"><code>true</code></td></tr>
+					<tr class="govuk-table__row"><th scope="row" class="govuk-table__header"><code>data-flux-writing-analysis</code></th><td class="govuk-table__cell">Set to <code>false</code> to disable content-free on-device UK-English writing metrics for a field.</td><td class="govuk-table__cell"><code>false</code></td></tr>
+					<tr class="govuk-table__row"><th scope="row" class="govuk-table__header"><code>data-flux-autofocus</code></th><td class="govuk-table__cell">Set to <code>true</code> when focus is intentionally assigned by the page, so it is not mistaken for user-originated focus.</td><td class="govuk-table__cell"><code>true</code></td></tr>
+					<tr class="govuk-table__row"><th scope="row" class="govuk-table__header"><code>data-flux-consent</code></th><td class="govuk-table__cell">Used internally by the built-in automatic-capture consent banner. Values are <code>yes</code> or <code>no</code>. Prefer calling the consent command from your own controls.</td><td class="govuk-table__cell"><code>yes</code></td></tr>
+				</tbody>
+			</table>
+
+			<h3 class="govuk-heading-m">Key format</h3>
+			<p class="govuk-body">The hosted automatic-capture module accepts <code>data-flux-key</code> values from 1 to 120 characters, but a key must be at least 3 characters to bind it in the publisher service model. Use 3 to 120 characters for reportable service integrations. To keep a key compatible with both collection and the publisher service model, start it with a lowercase letter and use only lowercase letters, numbers, dots, underscores and hyphens. Each separator must be followed by a letter or number. Use type-first keys such as <code>page.*</code>, <code>form.*</code>, <code>button.*</code> and <code>field.*</code>. The event and publisher-model contracts allow up to 160 characters, but using 120 or fewer keeps keys compatible with automatic capture.</p>
+			<div class="flux-example-grid">
+				<div><h4 class="govuk-heading-s">Safe</h4><pre class="flux-code-block"><code>&lt;input
+  name="contact-method"
+  data-flux-key="field.application.contact-method"&gt;
+
+&lt;button data-flux-key="button.application.continue"
+  data-flux-role="control"&gt;
+  Continue
+&lt;/button&gt;</code></pre></div>
+				<div><h4 class="govuk-heading-s">Unsafe</h4><pre class="flux-code-block"><code>&lt;!-- Do not use values, emails or text --&gt;
+&lt;input data-flux-key="PERSONAL_EMAIL_ADDRESS"&gt;
+&lt;button data-flux-key="USER_ENTERED_TEXT"&gt;
+  Continue
+&lt;/button&gt;</code></pre></div>
+			</div>
+
+			<h3 class="govuk-heading-m">Sensitive controls</h3>
+			<p class="govuk-body">The automatic-capture module excludes password, email, telephone, one-time-code, payment and authentication-scoped controls. Add <code>data-flux-sensitive="true"</code> when your own component contains sensitive content that cannot be identified safely from standard HTML.</p>
+			<pre class="flux-code-block"><code>&lt;form data-flux-sensitive="true"&gt;
+  &lt;!-- No descendant interactions are captured --&gt;
+&lt;/form&gt;</code></pre>
+			<div class="govuk-warning-text"><span class="govuk-warning-text__icon" aria-hidden="true">!</span><strong class="govuk-warning-text__text"><span class="govuk-visually-hidden">Warning</span>These exclusions apply only to automatic capture. Manual <code>flux('event', ...)</code> calls must never describe interactions with sensitive fields or include entered values, email addresses, telephone numbers, payment details, authentication data or other direct identifiers.</strong></div>
+
+			<h3 class="govuk-heading-m">Demo-only attributes</h3>
+			<p class="govuk-body"><code>data-flux-field</code>, <code>data-flux-help</code> and <code>data-flux-chart</code> belong to the repository demo pages. The hosted SDK does not treat them as public automatic-capture configuration. Use <code>data-flux-key</code> in a service integration.</p>
+		</section>
+
+		<section id="consent">
+			<h2 class="govuk-heading-l">Consent lifecycle</h2>
+			<p class="govuk-body">Consent is a hard collection gate. Until granted, event commands are dropped and identifiers are not created. Revocation stops collection and clears the Flux visitor ID from local storage and session ID from session storage.</p>
+			<pre class="flux-code-block"><code>// A visitor accepts behavioural analytics
+flux('consent', 'granted');
+
+// A visitor later changes their choice (manual capture)
+flux('consent', 'revoked');
+
+// When the automatic-capture module is loaded, also update
+// its persisted choice so a later page cannot restore consent
+localStorage.setItem('flux.behaviour.consent', 'no');
+flux('consent', 'revoked');</code></pre>
+			<ul class="govuk-list govuk-list--bullet">
+				<li>Do not call <code>granted</code> from a page-load default.</li>
+				<li>With manual capture, persist the visitor's choice in your consent manager, not in event payloads. Automatic capture stores its built-in banner choice under <code>flux.behaviour.consent</code>; set that value to <code>no</code> before calling <code>revoked</code> from an external preference control.</li>
+				<li>On each new page, restore only a previously recorded valid choice by calling the matching command.</li>
+				<li>Offer a way to revoke consent and call <code>revoked</code> immediately.</li>
+				<li>Do not queue pre-consent interactions for later submission.</li>
+			</ul>
+		</section>
+
+		<section id="events">
+			<h2 class="govuk-heading-l">Events and metadata</h2>
+			<h3 class="govuk-heading-m">Command format</h3>
+			<pre class="flux-code-block"><code>flux('event', EVENT_CLASS, ACTION, {
+  role: ROLE,
+  element_key: SAFE_STABLE_KEY,
+  // optional allow-listed metadata
+});</code></pre>
+			<p class="govuk-body">The SDK supplies schema version, pseudonymous visitor and session IDs, tenant ID, consent state, SDK origin and timestamp. Unknown detail fields are stripped. Events that still fail the event contract are dropped.</p>
+
+			<h3 class="govuk-heading-m">Event classes</h3>
+			<table class="govuk-table flux-docs-table">
+				<thead class="govuk-table__head"><tr class="govuk-table__row"><th scope="col" class="govuk-table__header">Class</th><th scope="col" class="govuk-table__header">Use it for</th><th scope="col" class="govuk-table__header">Example action</th></tr></thead>
+				<tbody class="govuk-table__body">
+					<tr class="govuk-table__row"><th scope="row" class="govuk-table__header"><code>focus</code></th><td class="govuk-table__cell">Focus entry, exit and dwell.</td><td class="govuk-table__cell"><code>field.focus</code></td></tr>
+					<tr class="govuk-table__row"><th scope="row" class="govuk-table__header"><code>input</code></th><td class="govuk-table__cell">Content-free input counts, blur and validation.</td><td class="govuk-table__cell"><code>field.blur</code></td></tr>
+					<tr class="govuk-table__row"><th scope="row" class="govuk-table__header"><code>nav</code></th><td class="govuk-table__cell">Page, step, click and form navigation.</td><td class="govuk-table__cell"><code>page.loaded</code></td></tr>
+					<tr class="govuk-table__row"><th scope="row" class="govuk-table__header"><code>kbd</code></th><td class="govuk-table__cell">Non-content keyboard interaction patterns.</td><td class="govuk-table__cell"><code>navigation.tab</code></td></tr>
+					<tr class="govuk-table__row"><th scope="row" class="govuk-table__header"><code>clipboard</code></th><td class="govuk-table__cell">Copy/paste counts, never clipboard text.</td><td class="govuk-table__cell"><code>field.paste</code></td></tr>
+					<tr class="govuk-table__row"><th scope="row" class="govuk-table__header"><code>drop</code> / <code>file</code></th><td class="govuk-table__cell">Drop or chooser counts and size buckets, never names or contents.</td><td class="govuk-table__cell"><code>file.selected</code></td></tr>
+					<tr class="govuk-table__row"><th scope="row" class="govuk-table__header"><code>picker</code></th><td class="govuk-table__cell">Date, time and controlled picker interactions.</td><td class="govuk-table__cell"><code>date.opened</code></td></tr>
+					<tr class="govuk-table__row"><th scope="row" class="govuk-table__header"><code>trust</code></th><td class="govuk-table__cell">Consent, confirmation and assurance controls.</td><td class="govuk-table__cell"><code>consent.granted</code></td></tr>
+					<tr class="govuk-table__row"><th scope="row" class="govuk-table__header"><code>assist</code></th><td class="govuk-table__cell">Help and guidance use.</td><td class="govuk-table__cell"><code>assist.help</code></td></tr>
+					<tr class="govuk-table__row"><th scope="row" class="govuk-table__header"><code>a11y</code></th><td class="govuk-table__cell">Skip links and interaction-method indicators.</td><td class="govuk-table__cell"><code>skiplink.used</code></td></tr>
+					<tr class="govuk-table__row"><th scope="row" class="govuk-table__header"><code>env</code></th><td class="govuk-table__cell">Controlled network or device context.</td><td class="govuk-table__cell"><code>network.offline</code></td></tr>
+				</tbody>
+			</table>
+
+			<h3 class="govuk-heading-m">Roles</h3>
+			<p class="govuk-body">Use one of <code>field</code>, <code>form</code>, <code>control</code>, <code>page</code>, <code>service</code> or <code>environment</code>.</p>
+
+			<h3 class="govuk-heading-m">Optional metadata</h3>
+			<table class="govuk-table flux-docs-table">
+				<thead class="govuk-table__head"><tr class="govuk-table__row"><th scope="col" class="govuk-table__header">Field</th><th scope="col" class="govuk-table__header">Meaning</th></tr></thead>
+				<tbody class="govuk-table__body">
+					<tr class="govuk-table__row"><th scope="row" class="govuk-table__header"><code>duration_ms</code></th><td class="govuk-table__cell">Bounded interaction or dwell duration.</td></tr>
+					<tr class="govuk-table__row"><th scope="row" class="govuk-table__header"><code>value_length</code></th><td class="govuk-table__cell">Character count only, never the value.</td></tr>
+					<tr class="govuk-table__row"><th scope="row" class="govuk-table__header"><code>edit_count</code>, <code>key_press_count</code>, <code>backspace_count</code>, <code>paste_count</code></th><td class="govuk-table__cell">Bounded interaction counts. Key identity and clipboard content are never recorded.</td></tr>
+					<tr class="govuk-table__row"><th scope="row" class="govuk-table__header"><code>dwell_before_input_ms</code>, <code>typing_duration_ms</code></th><td class="govuk-table__cell">Bounded time before first edit and active typing duration.</td></tr>
+					<tr class="govuk-table__row"><th scope="row" class="govuk-table__header"><code>chars_per_minute</code>, <code>words_per_minute</code>, <code>revisit_count</code></th><td class="govuk-table__cell">Derived typing pace and refocus count.</td></tr>
+					<tr class="govuk-table__row"><th scope="row" class="govuk-table__header">Writing counts</th><td class="govuk-table__cell"><code>word_count</code>, spelling and grammar issue counts, letter-case counts and the fixed <code>en-GB</code> analyzer label. Analysis runs on the device; words and text never leave the page.</td></tr>
+					<tr class="govuk-table__row"><th scope="row" class="govuk-table__header"><code>navigation_direction</code></th><td class="govuk-table__cell"><code>forward</code>, <code>back</code>, <code>skip</code> or <code>unknown</code>.</td></tr>
+					<tr class="govuk-table__row"><th scope="row" class="govuk-table__header"><code>pointer_type</code></th><td class="govuk-table__cell"><code>mouse</code>, <code>pen</code>, <code>touch</code>, <code>keyboard</code> or <code>unknown</code>.</td></tr>
+					<tr class="govuk-table__row"><th scope="row" class="govuk-table__header"><code>reason</code></th><td class="govuk-table__cell">A contract-controlled reason: <code>empty_field</code>, <code>control_nonresponsive</code>, <code>validation_error</code>, <code>help_requested</code> or <code>unknown</code>.</td></tr>
+					<tr class="govuk-table__row"><th scope="row" class="govuk-table__header"><code>file_count</code>, <code>file_size_bucket</code></th><td class="govuk-table__cell">File count and <code>none</code>/<code>small</code>/<code>medium</code>/<code>large</code>/<code>unknown</code> bucket only.</td></tr>
+				</tbody>
+			</table>
+
+			<h3 class="govuk-heading-m">Example: field completion</h3>
+			<pre class="flux-code-block"><code>flux('event', 'input', 'field.blur', {
+  role: 'field',
+  element_key: 'field.application.contact-method',
+  duration_ms: 4200,
+  edit_count: 1,
+  value_length: 5,
+  pointer_type: 'keyboard'
+});</code></pre>
+			<p class="govuk-body">Never add a <code>value</code>, label text, email, field name containing personal data, clipboard content, file name or raw error message.</p>
+		</section>
+
+		<section id="spa">
+			<h2 class="govuk-heading-l">Single-page applications</h2>
+			<p class="govuk-body">Install the tag once in the application shell. Route changes do not reload it, so send a controlled page event after your router confirms navigation.</p>
+			<pre class="flux-code-block"><code>router.afterEach((to, from) =&gt; {
+  flux('event', 'nav', 'page.loaded', {
+    role: 'page',
+    element_key: to.meta.fluxKey,
+    navigation_direction: 'forward'
+  });
+});</code></pre>
+			<p class="govuk-body">Define <code>to.meta.fluxKey</code> in route configuration. Do not derive it from path parameters, search terms, account IDs or user-entered URLs. If components mount repeatedly, make sure handlers are removed on unmount so one interaction produces one event.</p>
+		</section>
+
+		<section id="api">
+			<h2 class="govuk-heading-l">HTTP APIs</h2>
+			<p class="govuk-body">The current API is deliberately small. The browser collector is the public integration boundary. Authentication and dashboard routes support the Flux web interface; they are documented here so integrators understand the complete request flow, but they are not a general-purpose reporting API.</p>
+			<p class="govuk-body"><strong>Base URL:</strong> <code>https://flux-behaviour.pages.dev</code></p>
+
+			<h3 class="govuk-heading-m"><span class="flux-method">POST</span> <code>/api/collect</code></h3>
+			<p class="govuk-body">Accepts one schema version <code>1.2.0</code> event per request. Prefer the SDK: it creates identifiers after consent, strips unknown fields and validates before transport.</p>
+			<pre class="flux-code-block"><code>const response = await fetch(
+  'https://flux-behaviour.pages.dev/api/collect',
+  {
+    method: 'POST',
+    credentials: 'omit',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      schema_version: '1.2.0',
+      session_id: 'session-7fce44fdaef1434398c07c48',
+      visitor_id: 'visitor-7a06bb4a92fa49e5a23877ad',
+      tenant_id: 'licence-service',
+      consent: 'yes',
+      origin: 'sdk',
+      event_class: 'nav',
+      action: 'page.loaded',
+      role: 'page',
+      element_key: 'page.application.start',
+      timestamp_ms: Date.now()
+    })
+  }
+);
+
+if (!response.ok) {
+  console.warn('Flux event was not accepted', response.status);
+}</code></pre>
+			<p class="govuk-body"><strong>Success:</strong> <code>202 Accepted</code></p>
+			<pre class="flux-code-block"><code>{
+  "ok": true,
+  "accepted": true,
+  "returning_visitor": false
+}</code></pre>
+			<table class="govuk-table">
+				<caption class="govuk-table__caption govuk-heading-s">Collector responses</caption>
+				<thead class="govuk-table__head"><tr class="govuk-table__row"><th scope="col" class="govuk-table__header">Status</th><th scope="col" class="govuk-table__header">Meaning</th></tr></thead>
+				<tbody class="govuk-table__body">
+					<tr class="govuk-table__row"><th scope="row" class="govuk-table__header"><code>202</code></th><td class="govuk-table__cell">Event validated and was accepted for storage.</td></tr>
+					<tr class="govuk-table__row"><th scope="row" class="govuk-table__header"><code>400 invalid_event</code></th><td class="govuk-table__cell">JSON was malformed or did not satisfy the event contract.</td></tr>
+					<tr class="govuk-table__row"><th scope="row" class="govuk-table__header"><code>403 origin_not_allowed</code></th><td class="govuk-table__cell">Tenant is unknown or the browser <code>Origin</code> is not configured.</td></tr>
+					<tr class="govuk-table__row"><th scope="row" class="govuk-table__header"><code>503 storage_unavailable</code></th><td class="govuk-table__cell">The service does not have its D1 binding available.</td></tr>
+				</tbody>
+			</table>
+
+			<h3 class="govuk-heading-m"><span class="flux-method flux-method--options">OPTIONS</span> <code>/api/collect</code></h3>
+			<p class="govuk-body">Browsers send a CORS preflight for cross-origin collection. An allowed origin receives <code>204 No Content</code> with <code>POST, OPTIONS</code> and <code>content-type</code> allowed. You normally do not call this yourself.</p>
+
+			<h3 class="govuk-heading-m"><span class="flux-method flux-method--get">GET</span> <code>/api/auth/google/start</code></h3>
+			<p class="govuk-body">Starts the interactive Google sign-in flow. Navigate the browser to this route; do not call it with <code>fetch()</code>. It redirects to Google and sets a short-lived, signed, secure state cookie. It returns <code>503 google_sign_in_unconfigured</code> until the protected OAuth configuration is present.</p>
+
+			<h3 class="govuk-heading-m"><span class="flux-method flux-method--get">GET</span> <code>/api/auth/google/callback</code></h3>
+			<p class="govuk-body">OAuth callback used by Google. The service validates state, resolves the verified Google account to a Flux account and sets the signed <code>flux_session</code> cookie. Applications must not construct or call this URL directly.</p>
+
+			<h3 class="govuk-heading-m"><span class="flux-method flux-method--get">GET</span> <code>/api/service-model/:tenant</code></h3>
+			<p class="govuk-body">Returns the currently published immutable service model, manifest hash and your tenant role. This requires a valid Flux session and tenant membership.</p>
+			<pre class="flux-code-block"><code>const response = await fetch('/api/service-model/licence-service', {
+  credentials: 'include'
+});
+
+const { model, manifest_hash, role } = await response.json();</code></pre>
+
+			<h3 class="govuk-heading-m"><span class="flux-method flux-method--put">PUT</span> <code>/api/service-model/:tenant</code></h3>
+			<p class="govuk-body">Publishes a complete next service-model version. The authenticated account must be a tenant owner, the JSON <code>tenant_id</code> must match the path, and an existing version cannot be overwritten. Prefer the dashboard editors unless you manage models as governed configuration.</p>
+			<pre class="flux-code-block"><code>const response = await fetch('/api/service-model/licence-service', {
+  method: 'PUT',
+  credentials: 'include',
+  headers: { 'content-type': 'application/json' },
+  body: JSON.stringify(nextCompleteModel)
+});
+
+if (response.status === 409) {
+  // Read the latest model, reconcile, then publish a new version.
+}</code></pre>
+			<p class="govuk-body"><code>201</code> publishes the version; <code>400</code> means the complete model is invalid; <code>403</code> means the account is not an owner; and <code>409</code> prevents version overwrite.</p>
+
+			<h3 class="govuk-heading-m"><span class="flux-method flux-method--get">GET</span> <code>/api/dashboard/researchops</code></h3>
+			<p class="govuk-body">Returns the authenticated ResearchOps dashboard dataset: overview, trend, realtime, journeys, cohorts, lifecycle, service-model, event, entity, funnel, field, comparison, uncertainty and governance reports. It requires the secure Flux session cookie and is tenant-specific, not a general-purpose public reporting API.</p>
+			<pre class="flux-code-block"><code>const response = await fetch('/api/dashboard/researchops', {
+  credentials: 'include'
+});
+
+if (response.status === 401) {
+  location.assign('/account/');
+}
+
+const data = await response.json();</code></pre>
+			<p class="govuk-body"><code>401 unauthorised</code> means the session is missing or expired. <code>403 forbidden</code> means the signed-in account does not have ResearchOps access.</p>
+			<p class="govuk-body">Use <code>range=24h|7d|30d|90d|1y|all</code>, or <code>range=custom&amp;start=YYYY-MM-DD&amp;end=YYYY-MM-DD</code>. Use <code>compare=period|visit_maturity|outcome|task|interaction_mode</code>. The default is <code>range=30d&amp;compare=period</code>.</p>
+
+			<h3 class="govuk-heading-m"><span class="flux-method flux-method--get">GET</span> <code>/api/dashboard/researchops/session/:sessionId</code></h3>
+			<p class="govuk-body">Loads one authorised pseudonymous journey and its chronological, controlled event presentation for intentional journey inspection. Use the session IDs returned by the dashboard endpoint; do not expose this route in an unauthenticated client.</p>
+
+			<h3 class="govuk-heading-m"><span class="flux-method flux-method--get">GET</span> <code>/api/dashboard/researchops/export.csv</code></h3>
+			<p class="govuk-body">Downloads an authenticated aggregate CSV. Set <code>report</code> to <code>overview</code>, <code>events</code>, <code>key_events</code>, <code>elements</code>, <code>entities</code>, <code>funnels</code>, <code>fields</code> or <code>comparison</code>. Range and comparison parameters match the dashboard endpoint.</p>
+			<pre class="flux-code-block"><code>const url = new URL(
+  '/api/dashboard/researchops/export.csv',
+  location.origin
+);
+url.search = new URLSearchParams({
+  report: 'funnels',
+  range: '30d',
+  compare: 'period'
+});
+location.assign(url);</code></pre>
+			<p class="govuk-body">Exports are capped at 5,000 aggregate metric rows, neutralise spreadsheet formula prefixes and never include raw events, narratives, metadata, visitor IDs, session IDs or entered values. Comparison groups smaller than five journeys are suppressed.</p>
+
+			<h3 class="govuk-heading-m">Versioning and limits</h3>
+			<ul class="govuk-list govuk-list--bullet">
+				<li>The event contract version is in every event as <code>schema_version</code>; the current value is <code>1.2.0</code>.</li>
+				<li>Breaking event changes require a new schema version.</li>
+				<li>Send one event per collector request. Batch payloads are not supported.</li>
+				<li>The SDK does not retry failed events or buffer them offline.</li>
+				<li>Authenticated application APIs use the secure Flux session cookie. Do not copy or construct that cookie.</li>
+				<li>No public API-key authentication, pagination, webhooks or tenant-generic reporting API is available yet.</li>
+			</ul>
+		</section>
+
+		<section id="security">
+			<h2 class="govuk-heading-l">Security and privacy requirements</h2>
+			<ul class="govuk-task-list">
+				<li class="govuk-task-list__item"><div class="govuk-task-list__name-and-hint"><div class="govuk-task-list__name">Collect only after explicit consent</div><div class="govuk-task-list__hint">Treat revocation as immediate and clear identifiers.</div></div></li>
+				<li class="govuk-task-list__item"><div class="govuk-task-list__name-and-hint"><div class="govuk-task-list__name">Use stable controlled keys</div><div class="govuk-task-list__hint">Never use labels, URL parameters, account data or user-entered text as <code>element_key</code>.</div></div></li>
+				<li class="govuk-task-list__item"><div class="govuk-task-list__name-and-hint"><div class="govuk-task-list__name">Do not send credentials to the collector</div><div class="govuk-task-list__hint">The browser transport uses <code>credentials: 'omit'</code>. Do not add cookies or authorisation headers.</div></div></li>
+				<li class="govuk-task-list__item"><div class="govuk-task-list__name-and-hint"><div class="govuk-task-list__name">Keep secrets server-side</div><div class="govuk-task-list__hint">OAuth client secrets and Flux auth secrets belong in the platform secret manager, never HTML or JavaScript.</div></div></li>
+				<li class="govuk-task-list__item"><div class="govuk-task-list__name-and-hint"><div class="govuk-task-list__name">Complete service governance</div><div class="govuk-task-list__hint">Agree purpose, retention, deletion, accessibility, incident handling and DPIA before live use.</div></div></li>
+			</ul>
+		</section>
+
+		<section id="test">
+			<h2 class="govuk-heading-l">Test your installation</h2>
+			<ol class="govuk-list govuk-list--number">
+				<li>Open a staging page with browser developer tools.</li>
+				<li>Before consent, interact with keyed controls and confirm there are no requests to <code>/api/collect</code>.</li>
+				<li>Grant consent and trigger one deliberate event.</li>
+				<li>In the Network panel, confirm a <code>POST</code> to the configured collector returns <code>202</code>.</li>
+				<li>Inspect the request JSON. Confirm it contains controlled keys and counts only—no typed values, labels, email addresses, URL query values, clipboard text or file names.</li>
+				<li>Revoke consent, trigger another interaction and confirm no request is sent.</li>
+				<li>Confirm <code>flux.behaviour.visitor_id</code> and <code>flux.behaviour.session_id</code> are absent after revocation.</li>
+				<li>Sign in to the Flux dashboard and confirm the accepted event appears in the recent journey narrative.</li>
+				<li>Repeat with keyboard-only navigation and at supported responsive widths.</li>
+			</ol>
+			<p class="govuk-body">For a local checkout of this repository, run <code>npm run demo:serve</code> and open <code>http://localhost:4321/developers/</code>. The repository test suite uses <code>npm test</code>.</p>
+		</section>
+
+		<section id="troubleshoot">
+			<h2 class="govuk-heading-l">Troubleshooting</h2>
+			<details class="govuk-details"><summary class="govuk-details__summary"><span class="govuk-details__summary-text">No collector request appears</span></summary><div class="govuk-details__text">Confirm consent was granted, the event has a valid class, action, role and key, and both script attributes are present. Pre-consent and invalid events are intentionally dropped.</div></details>
+			<details class="govuk-details"><summary class="govuk-details__summary"><span class="govuk-details__summary-text">The collector returns 403</span></summary><div class="govuk-details__text">Compare the browser's exact <code>Origin</code> header with the origins registered for the tenant. Scheme, host and port must match. An origin must not include a path.</div></details>
+			<details class="govuk-details"><summary class="govuk-details__summary"><span class="govuk-details__summary-text">The collector returns 400</span></summary><div class="govuk-details__text">If you call the API directly, validate against schema version <code>1.2.0</code> and supply every required field. Prefer the SDK, which builds and validates the envelope.</div></details>
+			<details class="govuk-details"><summary class="govuk-details__summary"><span class="govuk-details__summary-text">Events appear more than once</span></summary><div class="govuk-details__text">Make sure the tag is installed once and SPA components do not register duplicate handlers. Do not combine automatic capture with a manual event for the same interaction unless both records are intentional.</div></details>
+			<details class="govuk-details"><summary class="govuk-details__summary"><span class="govuk-details__summary-text">Google sign-in is unavailable</span></summary><div class="govuk-details__text">The runtime returns <code>google_sign_in_unconfigured</code> until the OAuth client and protected secrets are configured. If sign-in succeeds but access is forbidden, ask the workspace administrator to link the verified Google account to the tenant.</div></details>
+			<details class="govuk-details"><summary class="govuk-details__summary"><span class="govuk-details__summary-text">An event is missing from the dashboard</span></summary><div class="govuk-details__text">The tag is deliberately fire-and-forget and does not retry. First confirm the collector returned <code>202</code>. The current product does not provide delivery-loss metrics.</div></details>
+		</section>
+
+		<section>
+			<h2 class="govuk-heading-l">Implementation checklist</h2>
+			<ul class="govuk-list govuk-list--bullet">
+				<li>Tenant and all required origins confirmed</li>
+				<li>Dashboard access confirmed for named team members</li>
+				<li>Tag installed once in the shared layout</li>
+				<li>CSP updated without weakening the policy</li>
+				<li>Consent grant, restore and revoke flows connected</li>
+				<li>Only stable, non-identifying keys used</li>
+				<li>Pre-consent, post-consent and revocation tested</li>
+				<li>Collector response and dashboard narrative verified</li>
+				<li>Privacy, retention, accessibility and release approval recorded</li>
+			</ul>
+		</section>
+	</div>
+</div>
+
+		</main>
+	</div>
+	<footer class="govuk-footer">
+		<div class="govuk-width-container">
+			<div class="govuk-footer__meta">
+				<div class="govuk-footer__meta-item govuk-footer__meta-item--grow">
+					<h2 class="govuk-visually-hidden">Support links</h2>
+					<ul class="govuk-footer__inline-list">
+						<li class="govuk-footer__inline-list-item">
+							<a class="govuk-footer__link" href="https://github.com/kevinrapley/flux-behaviour">Source repository</a>
+						</li>
+						<li class="govuk-footer__inline-list-item">
+							<a class="govuk-footer__link" href="https://github.com/ONSdigital/Charts">ONS Charts</a>
+						</li>
+					</ul>
+					<span class="govuk-footer__licence-description">
+						Demo prototype. No real user data is collected. Events are consented, metadata-only and follow the Flux event contract.
+					</span>
+				</div>
+			</div>
+		</div>
+	</footer>
+	<script type="module" src="/assets/govuk/govuk-frontend.min.js"></script>
+	<script type="module">
+		import { initAll } from '/assets/govuk/govuk-frontend.min.js';
+		initAll();
+	</script>
+
+</body>
+</html>

@@ -1,4 +1,11 @@
 records:
+  - id: CONF-030
+    rule: Public integration documentation must match the hosted SDK, publisher model, authenticated dashboard and exposed application routes
+    expected_evidence: A navigable public developer page explains tag placement, consent, supported data-flux attributes, owner configuration, event contract 1.2.0, privacy boundaries, API consumption, testing and troubleshooting
+    actual_evidence: The source-owned /developers/ page and homepage/navigation links document the manual and automatic hosted tags, cross-origin module response requirements, the publisher-compatible lowercase semantic-key grammar and 3-character binding minimum, every supported data-flux attribute, manual-event sensitive-data prohibition, persisted auto-capture revocation, nine report areas, owner/viewer model workflow, collector and authenticated application endpoints, aggregate export controls and current pre-release blockers. The source-generated account route discloses stored Google identity separately from analytics identifiers. Focused build tests protect both routes, critical contract content and the generated Pages header policy.
+    status: present-with-release-blockers
+    owner: product-lead
+
   - id: CONF-029
     rule: Fields and service complexity must be tenant-owner configuration rather than product-hardcoded definitions
     expected_evidence: An authenticated owner can create, edit and delete question groups with 1–7 service complexity and required/optional fields with exact publisher bindings; saves publish immutable validated next versions and viewers remain read-only
@@ -79,7 +86,7 @@ records:
   - id: CONF-017
     rule: Publisher services consume a hosted Flux capture engine rather than copying analytics logic or linguistic resources
     expected_evidence: Flux owns the versioned auto-capture module, session lifecycle, keyboard semantics, autocomplete privacy milestone, UK-English analyser and dictionary build; publisher integration is an include plus controlled attributes
-    actual_evidence: src/sdk/flux-auto-capture.mjs and src/writing provide the hosted runtime, with regression tests for WPM, session-scoped final Tab destinations, key-accurate activation, autocomplete privacy, OTP outcomes, inactivity rollover and publisher-controlled semantic keys.
+    actual_evidence: src/sdk/flux-auto-capture.mjs and src/writing provide the hosted runtime; demo/static/_headers supplies cross-origin response policy for the complete hosted Flux module graph; regression tests cover the generated policy, WPM, session-scoped final Tab destinations, key-accurate activation, autocomplete privacy, OTP outcomes, inactivity rollover and publisher-controlled semantic keys.
     status: present-with-release-blockers
     owner: product-lead
 
