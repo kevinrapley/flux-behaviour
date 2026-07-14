@@ -1,5 +1,5 @@
 task_id: flux-behaviour-tenant-installation-tags
-mode: repo-change
+mode: repo-build
 repository: kevinrapley/flux-behaviour
 risk_level: high
 base_branch: main
@@ -94,6 +94,10 @@ commands_run:
     state: verified
     status: passed
     evidence: No whitespace errors were found.
+  - command: validate-agent-evidence.py docs/agent-evidence/2026/07/14/flux-behaviour-tenant-installation-tags.yaml
+    state: verified
+    status: passed
+    evidence: Diamond Standard 2.9.1 agent-evidence validation passed using the bundled Python runtime and a temporary PyYAML dependency.
   - command: local Chrome verification of /developers/ at 1440x1000 and emulated 390x844
     state: verified
     status: passed
