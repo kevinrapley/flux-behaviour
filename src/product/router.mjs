@@ -66,14 +66,20 @@ async function removeTenantAccess(request, env, tenantId, targetAccountId) {
   if (!(await canAdministerTenant(env.FLUX_DB, accountId, tenantId))) return json({ ok: false, error: 'forbidden' }, 403);
   const target = await env.FLUX_DB.prepare('SELECT role FROM account_tenants WHERE tenant_id = ? AND account_id = ?').bind(tenantId, targetAccountId).first();
   if (!target) return json({ ok: false, error: 'access_not_found' }, 404);
-  if (target.role === 'owner') {
-    const owners = await env.FLUX_DB.prepare("SELECT COUNT(*) AS count FROM account_tenants WHERE tenant_id = ? AND role = 'owner'").bind(tenantId).first();
-    if (Number(owners?.count ?? 0) <= 1) return json({ ok: false, error: 'last_owner_required' }, 409);
+  const removal = await env.FLUX_DB.prepare(`DELETE FROM account_tenants
+    WHERE account_id = ? AND tenant_id = ?
+      AND (role != 'owner' OR (
+        SELECT COUNT(*) FROM account_tenants AS owners
+        WHERE owners.tenant_id = ? AND owners.role = 'owner'
+      ) > 1)`).bind(targetAccountId, tenantId, tenantId).run();
+  if (Number(removal.meta?.changes ?? 0) === 0) {
+    return target.role === 'owner'
+      ? json({ ok: false, error: 'last_owner_required' }, 409)
+      : json({ ok: false, error: 'access_not_found' }, 404);
   }
   const now = Date.now();
   await env.FLUX_DB.batch([
-    env.FLUX_DB.prepare('DELETE FROM account_tenants WHERE account_id = ? AND tenant_id = ?').bind(targetAccountId, tenantId),
-    env.FLUX_DB.prepare("INSERT INTO tenant_admin_audit (id, tenant_id, actor_account_id, action, created_at_ms) VALUES (?, ?, ?, 'access_updated', ?)").bind(`audit-${crypto.randomUUID()}`, tenantId, accountId, now)
+    env.FLUX_DB.prepare("INSERT INTO tenant_admin_audit (id, tenant_id, actor_account_id, action, target_account_id, access_operation, resulting_role, created_at_ms) VALUES (?, ?, ?, 'access_updated', ?, 'removed', NULL, ?)").bind(`audit-${crypto.randomUUID()}`, tenantId, accountId, targetAccountId, now)
   ]);
   return json({ ok: true, tenant_id: tenantId, account_id: targetAccountId });
 }
@@ -90,17 +96,19 @@ async function updateTenantAccess(request, env, tenantId) {
   if (!email || !['owner', 'viewer'].includes(body?.role)) return json({ ok: false, error: 'invalid_access' }, 400);
   const target = await env.FLUX_DB.prepare('SELECT id FROM accounts WHERE email = ?').bind(email).first();
   if (!target) return json({ ok: false, error: 'account_not_found' }, 404);
-  if (body.role === 'viewer') {
-    const existingAccess = await env.FLUX_DB.prepare('SELECT role FROM account_tenants WHERE tenant_id = ? AND account_id = ?').bind(tenantId, target.id).first();
-    if (existingAccess?.role === 'owner') {
-      const owners = await env.FLUX_DB.prepare("SELECT COUNT(*) AS count FROM account_tenants WHERE tenant_id = ? AND role = 'owner'").bind(tenantId).first();
-      if (Number(owners?.count ?? 0) <= 1) return json({ ok: false, error: 'last_owner_required' }, 409);
-    }
+  const existingAccess = await env.FLUX_DB.prepare('SELECT role FROM account_tenants WHERE tenant_id = ? AND account_id = ?').bind(tenantId, target.id).first();
+  const mutation = await env.FLUX_DB.prepare(`INSERT INTO account_tenants (account_id, tenant_id, role) VALUES (?, ?, ?)
+    ON CONFLICT(account_id, tenant_id) DO UPDATE SET role = excluded.role
+    WHERE account_tenants.role != 'owner'
+      OR excluded.role = 'owner'
+      OR (SELECT COUNT(*) FROM account_tenants AS owners
+        WHERE owners.tenant_id = excluded.tenant_id AND owners.role = 'owner') > 1`).bind(target.id, tenantId, body.role).run();
+  if (Number(mutation.meta?.changes ?? 0) === 0 && existingAccess?.role === 'owner' && body.role === 'viewer') {
+    return json({ ok: false, error: 'last_owner_required' }, 409);
   }
   const now = Date.now();
   await env.FLUX_DB.batch([
-    env.FLUX_DB.prepare('INSERT INTO account_tenants (account_id, tenant_id, role) VALUES (?, ?, ?) ON CONFLICT(account_id, tenant_id) DO UPDATE SET role = excluded.role').bind(target.id, tenantId, body.role),
-    env.FLUX_DB.prepare("INSERT INTO tenant_admin_audit (id, tenant_id, actor_account_id, action, created_at_ms) VALUES (?, ?, ?, 'access_updated', ?)").bind(`audit-${crypto.randomUUID()}`, tenantId, accountId, now)
+    env.FLUX_DB.prepare("INSERT INTO tenant_admin_audit (id, tenant_id, actor_account_id, action, target_account_id, access_operation, resulting_role, created_at_ms) VALUES (?, ?, ?, 'access_updated', ?, ?, ?, ?)").bind(`audit-${crypto.randomUUID()}`, tenantId, accountId, target.id, existingAccess ? 'role_updated' : 'granted', body.role, now)
   ]);
   return json({ ok: true, tenant_id: tenantId, account_id: target.id, role: body.role });
 }
@@ -125,13 +133,29 @@ async function exportAdminTenant(request, env, tenantId) {
   if (!tenant) return json({ ok: false, error: 'tenant_not_found' }, 404);
   const endAtMs = Date.now();
   const startAtMs = endAtMs - (365 * 24 * 60 * 60 * 1000);
-  const result = await env.FLUX_DB.prepare(`SELECT date(s.started_at_ms / 1000, 'unixepoch') AS day,
-      COUNT(DISTINCT s.visitor_id) AS visitors, COUNT(DISTINCT s.id) AS sessions,
-      COUNT(DISTINCT e.id) AS interactions
-    FROM sessions s
-    LEFT JOIN events e ON e.session_id = s.id AND e.tenant_id = s.tenant_id
-    WHERE s.tenant_id = ? AND s.started_at_ms >= ? AND s.started_at_ms < ?
-    GROUP BY day ORDER BY day ASC`).bind(tenantId, startAtMs, endAtMs).all();
+  const result = await env.FLUX_DB.prepare(`WITH session_daily AS (
+      SELECT date(started_at_ms / 1000, 'unixepoch') AS day,
+        COUNT(DISTINCT visitor_id) AS visitors, COUNT(DISTINCT id) AS sessions
+      FROM sessions
+      WHERE tenant_id = ? AND started_at_ms >= ? AND started_at_ms < ?
+      GROUP BY day
+    ), event_daily AS (
+      SELECT date(COALESCE(accepted_at_ms, occurred_at_ms) / 1000, 'unixepoch') AS day,
+        COUNT(*) AS interactions
+      FROM events
+      WHERE tenant_id = ? AND COALESCE(accepted_at_ms, occurred_at_ms) >= ?
+        AND COALESCE(accepted_at_ms, occurred_at_ms) < ?
+      GROUP BY day
+    ), days AS (
+      SELECT day FROM session_daily UNION SELECT day FROM event_daily
+    )
+    SELECT days.day, COALESCE(session_daily.visitors, 0) AS visitors,
+      COALESCE(session_daily.sessions, 0) AS sessions,
+      COALESCE(event_daily.interactions, 0) AS interactions
+    FROM days
+    LEFT JOIN session_daily ON session_daily.day = days.day
+    LEFT JOIN event_daily ON event_daily.day = days.day
+    ORDER BY days.day ASC`).bind(tenantId, startAtMs, endAtMs, tenantId, startAtMs, endAtMs).all();
   await env.FLUX_DB.batch([
     env.FLUX_DB.prepare('INSERT INTO tenant_admin_audit (id, tenant_id, actor_account_id, action, created_at_ms) VALUES (?, ?, ?, ?, ?)').bind(`audit-${crypto.randomUUID()}`, tenantId, accountId, 'exported', endAtMs)
   ]);
@@ -149,10 +173,12 @@ async function restoreAdminTenant(request, env, tenantId) {
   const accountId = await authenticatedAccountId(request, env);
   if (!accountId) return json({ ok: false, error: 'unauthorised' }, 401);
   if (!(await canAdministerTenant(env.FLUX_DB, accountId, tenantId))) return json({ ok: false, error: 'forbidden' }, 403);
-  const tenant = await env.FLUX_DB.prepare('SELECT id, deleted_at_ms FROM tenants WHERE id = ?').bind(tenantId).first();
+  const tenant = await env.FLUX_DB.prepare('SELECT id, deleted_at_ms, purge_after_ms FROM tenants WHERE id = ?').bind(tenantId).first();
   if (!tenant) return json({ ok: false, error: 'tenant_not_found' }, 404);
   if (tenant.deleted_at_ms == null) return json({ ok: false, error: 'tenant_not_trashed' }, 409);
-  return json(await restoreTenantTracking(env.FLUX_DB, tenantId, accountId));
+  const now = Date.now();
+  if (!Number.isFinite(Number(tenant.purge_after_ms)) || now >= Number(tenant.purge_after_ms)) return json({ ok: false, error: 'recovery_window_expired' }, 409);
+  return json(await restoreTenantTracking(env.FLUX_DB, tenantId, accountId, { now: () => now }));
 }
 
 async function trashAdminTenant(request, env, tenantId) {
@@ -223,7 +249,7 @@ async function listAdminTenants(request, env) {
       created_at_ms: tenant.created_at_ms,
       deleted_at_ms: tenant.deleted_at_ms,
       purge_after_ms: tenant.purge_after_ms,
-      tag_id: tenant.tag_id,
+      tag_id: platformAdmin || tenant.role === 'owner' ? tenant.tag_id : null,
       role: tenant.role,
       status: tenant.deleted_at_ms == null ? 'active' : 'trashed'
     }))

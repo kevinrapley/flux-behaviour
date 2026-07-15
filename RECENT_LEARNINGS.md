@@ -2,7 +2,7 @@
 
 ## 2026-07-14 — Tenant administration needs a governed lifecycle, not only provisioning
 
-A tenant is not administrable merely because it can be provisioned. A property-style lifecycle must keep creation, exact origins, access roles, aggregate export, trash and restoration tenant-scoped and auditable. Moving tracking to trash should revoke collection immediately without pretending historical records were physically deleted; at least one owner must remain, and permanent purge must stay explicitly blocked until the retention policy and purge process are governed.
+A tenant is not administrable merely because it can be provisioned. A property-style lifecycle must keep creation, exact origins, access roles, aggregate export, trash and restoration tenant-scoped and auditable. Moving tracking to trash should revoke collection immediately without pretending historical records were physically deleted; recovery must stop at the declared deadline, at least one owner must remain through an atomic write condition rather than a race-prone preflight count, and permanent purge must stay explicitly blocked until the retention policy and purge process are governed. Daily exports must independently bound sessions by session start and interactions by server acceptance time so cross-midnight journeys do not distort the evidence.
 
 ## 2026-07-14 — Public tenant tags must remain routing identifiers, not credentials
 

@@ -7,6 +7,9 @@ CREATE TABLE IF NOT EXISTS tenant_admin_audit (
   tenant_id TEXT NOT NULL REFERENCES tenants(id),
   actor_account_id TEXT NOT NULL REFERENCES accounts(id),
   action TEXT NOT NULL CHECK(action IN ('created', 'updated', 'access_updated', 'moved_to_trash', 'restored', 'exported')),
+  target_account_id TEXT REFERENCES accounts(id),
+  access_operation TEXT CHECK(access_operation IN ('granted', 'role_updated', 'removed')),
+  resulting_role TEXT CHECK(resulting_role IN ('owner', 'viewer')),
   created_at_ms INTEGER NOT NULL
 );
 

@@ -87,6 +87,8 @@ test('demo build renders the GOV.UK prototype pages', () => {
     assert.match(admin, /Move tracking to trash/);
     assert.match(admin, /assets\/flux\/admin\/tenant-admin\.mjs/);
     assert.match(admin, /href="\/admin\/" aria-current="true"/);
+    assert.match(admin, /Account email addresses are used only to manage Flux administration access/);
+    assert.doesNotMatch(admin, /No real user data is collected/);
   } finally {
     rmSync(outputRoot, { recursive: true, force: true });
   }

@@ -21,7 +21,7 @@ Viewers can read governed reporting and download aggregate data, but cannot chan
 
 ## Trash and recovery
 
-Deleting tenant tracking is a recoverable move to trash. The owner must type the exact tenant ID before Flux accepts the request. Flux immediately revokes the installation tag, excludes the tenant from collection-origin resolution and rejects new events. Configuration, membership and historical analytics remain available for restoration for 35 days; restoration reactivates the same unique tag.
+Deleting tenant tracking is a recoverable move to trash. The owner must type the exact tenant ID before Flux accepts the request. Flux immediately revokes the installation tag, excludes the tenant from collection-origin resolution and rejects new events. Configuration, membership and historical analytics remain available for restoration for 35 days; restoration reactivates the same unique tag. Restore requests at or after the recovery deadline are rejected even while permanent purge remains pending.
 
 Flux records the date on which permanent purge becomes eligible, but does not yet automate physical deletion. The retention and deletion policy is still a release blocker, so neither the interface nor API claims that analytics records were permanently erased.
 
@@ -37,7 +37,7 @@ Flux records the date on which permanent purge becomes eligible, but does not ye
 - `DELETE /api/admin/tenants/:tenant` moves tracking to trash after exact-ID confirmation.
 - `POST /api/admin/tenants/:tenant/restore` restores tracking during the recovery window.
 
-All routes require an authenticated Flux session, enforce tenant scope and write lifecycle or configuration changes to `tenant_admin_audit`.
+All routes require an authenticated Flux session and enforce tenant scope. Lifecycle and configuration changes are written to `tenant_admin_audit`; access records include the affected account, whether access was granted, changed or removed, and the resulting role where one remains. Owner removal and demotion use conditional database writes so concurrent requests cannot remove the final owner.
 
 ## Google Analytics pattern and Flux boundaries
 

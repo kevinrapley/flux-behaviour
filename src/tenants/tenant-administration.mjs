@@ -37,8 +37,11 @@ export async function restoreTenantTracking(db, tenantId, actorAccountId, depend
   const now = (dependencies.now ?? Date.now)();
   const auditId = `audit-${(dependencies.randomUUID ?? (() => crypto.randomUUID()))()}`;
   await db.batch([
-    db.prepare('UPDATE tenants SET deleted_at_ms = NULL, purge_after_ms = NULL, deleted_by_account_id = NULL WHERE id = ? AND deleted_at_ms IS NOT NULL').bind(tenantId),
-    db.prepare('UPDATE tenant_installation_tags SET revoked_at_ms = NULL WHERE tenant_id = ?').bind(tenantId),
+    db.prepare(`UPDATE tenant_installation_tags SET revoked_at_ms = NULL
+      WHERE tenant_id = ? AND EXISTS (
+        SELECT 1 FROM tenants WHERE id = ? AND deleted_at_ms IS NOT NULL AND purge_after_ms > ?
+      )`).bind(tenantId, tenantId, now),
+    db.prepare('UPDATE tenants SET deleted_at_ms = NULL, purge_after_ms = NULL, deleted_by_account_id = NULL WHERE id = ? AND deleted_at_ms IS NOT NULL AND purge_after_ms > ?').bind(tenantId, now),
     db.prepare('INSERT INTO tenant_admin_audit (id, tenant_id, actor_account_id, action, created_at_ms) VALUES (?, ?, ?, ?, ?)').bind(auditId, tenantId, actorAccountId, 'restored', now)
   ]);
   return { ok: true, status: 'active' };

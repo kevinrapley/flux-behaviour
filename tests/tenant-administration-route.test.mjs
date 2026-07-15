@@ -41,6 +41,25 @@ test('platform administrators can list active and trashed tenants', async () => 
   assert.deepEqual(body.tenants[0].allowed_origins, ['https://active.example']);
 });
 
+test('tenant viewers do not receive installation tags from the administration list', async () => {
+  const secret = 'test-secret';
+  const db = {
+    prepare(sql) {
+      return {
+        bind() { return this; },
+        async first() { return sql.includes('platform_admins') ? null : { role: 'viewer' }; },
+        async all() { return { results: [{ id: 'licence-service', name: 'Licence service', allowed_origins_json: '["https://licence.example"]', created_at_ms: 1, deleted_at_ms: null, purge_after_ms: null, tag_id: 'flux-private-to-owners', role: 'viewer' }] }; }
+      };
+    }
+  };
+  const response = await handleProductRequest(new Request('https://flux.example/api/admin/tenants', {
+    headers: { cookie: await sessionCookie('viewer-1', secret) }
+  }), { FLUX_DB: db, FLUX_AUTH_SECRET: secret });
+
+  assert.equal(response.status, 200);
+  assert.equal((await response.json()).tenants[0].tag_id, null);
+});
+
 test('tenant owners can update property details and exact allowed origins', async () => {
   const secret = 'test-secret';
   const batches = [];
@@ -55,7 +74,8 @@ test('tenant owners can update property details and exact allowed origins', asyn
           if (sql.includes('account_tenants')) return { role: 'owner' };
           if (sql.includes('FROM tenants')) return { id: 'licence-service', deleted_at_ms: null };
           return null;
-        }
+        },
+        async run() { return { meta: { changes: 1 } }; }
       };
     },
     async batch(statements) { batches.push(statements); return statements.map(() => ({ success: true })); }
@@ -118,11 +138,12 @@ test('tenant owners can restore trashed tracking with its existing tag', async (
     prepare(sql) {
       return {
         sql,
-        bind() { return this; },
+        values: [],
+        bind(...values) { this.values = values; return this; },
         async first() {
           if (sql.includes('platform_admins')) return null;
           if (sql.includes('account_tenants')) return { role: 'owner' };
-          if (sql.includes('FROM tenants')) return { id: 'licence-service', deleted_at_ms: 1 };
+          if (sql.includes('FROM tenants')) return { id: 'licence-service', deleted_at_ms: 1, purge_after_ms: Date.now() + 60_000 };
           return null;
         }
       };
@@ -136,7 +157,34 @@ test('tenant owners can restore trashed tracking with its existing tag', async (
 
   assert.equal(response.status, 200);
   assert.deepEqual(await response.json(), { ok: true, status: 'active' });
-  assert.match(batches[0][1].sql, /revoked_at_ms = NULL/);
+  assert.match(batches[0][0].sql, /revoked_at_ms = NULL/);
+  assert.match(batches[0][1].sql, /purge_after_ms > \?/);
+});
+
+test('tenant administration refuses restore after the 35-day recovery deadline', async () => {
+  const secret = 'test-secret';
+  let batchCalls = 0;
+  const db = {
+    prepare(sql) {
+      return {
+        bind() { return this; },
+        async first() {
+          if (sql.includes('platform_admins')) return null;
+          if (sql.includes('account_tenants')) return { role: 'owner' };
+          if (sql.includes('FROM tenants')) return { id: 'licence-service', deleted_at_ms: 1, purge_after_ms: Date.now() - 1 };
+          return null;
+        }
+      };
+    },
+    async batch() { batchCalls += 1; }
+  };
+  const response = await handleProductRequest(new Request('https://flux.example/api/admin/tenants/licence-service/restore', {
+    method: 'POST', headers: { cookie: await sessionCookie('owner-1', secret) }
+  }), { FLUX_DB: db, FLUX_AUTH_SECRET: secret });
+
+  assert.equal(response.status, 409);
+  assert.deepEqual(await response.json(), { ok: false, error: 'recovery_window_expired' });
+  assert.equal(batchCalls, 0);
 });
 
 test('tenant members can export bounded aggregate daily data without raw identifiers', async () => {
@@ -153,6 +201,7 @@ test('tenant members can export bounded aggregate daily data without raw identif
           return null;
         },
         async all() {
+          db.lastAllSql = sql;
           return { results: [{ day: '2026-07-14', visitors: 8, sessions: 10, interactions: 42 }] };
         }
       };
@@ -168,6 +217,8 @@ test('tenant members can export bounded aggregate daily data without raw identif
   assert.match(response.headers.get('content-disposition'), /flux-licence-service-aggregate/);
   assert.match(csv, /2026-07-14,8,10,42/);
   assert.doesNotMatch(csv, /visitor_id|session_id|event_id/);
+  assert.match(db.lastAllSql, /COALESCE\(accepted_at_ms, occurred_at_ms\)/);
+  assert.match(db.lastAllSql, /event_daily/);
   assert.match(batches[0][0].sql, /action, created_at_ms/);
 });
 
@@ -210,7 +261,8 @@ test('tenant owners can grant an existing account a property role', async () => 
           if (sql.includes('FROM accounts')) return { id: 'viewer-1' };
           if (sql.includes('FROM tenants')) return { id: 'licence-service', deleted_at_ms: null };
           return null;
-        }
+        },
+        async run() { return { meta: { changes: 1 } }; }
       };
     },
     async batch(statements) { batches.push(statements); return statements.map(() => ({ success: true })); }
@@ -223,8 +275,9 @@ test('tenant owners can grant an existing account a property role', async () => 
 
   assert.equal(response.status, 200);
   assert.deepEqual(await response.json(), { ok: true, tenant_id: 'licence-service', account_id: 'viewer-1', role: 'viewer' });
-  assert.match(batches[0][0].sql, /ON CONFLICT\(account_id, tenant_id\) DO UPDATE SET role = excluded\.role/);
-  assert.match(batches[0][1].sql, /access_updated/);
+  assert.match(batches[0][0].sql, /access_updated/);
+  assert.match(batches[0][0].sql, /target_account_id, access_operation, resulting_role/);
+  assert.deepEqual(batches[0][0].values.slice(3, 6), ['viewer-1', 'granted', 'viewer']);
 });
 
 test('tenant administration refuses to demote the final owner', async () => {
@@ -242,7 +295,8 @@ test('tenant administration refuses to demote the final owner', async () => {
           if (sql.includes('COUNT(*)')) return { count: 1 };
           if (sql.includes('account_id = ? AND tenant_id = ?')) return { role: 'owner' };
           return null;
-        }
+        },
+        async run() { return { meta: { changes: 0 } }; }
       };
     },
     async batch() { batchCalls += 1; }
@@ -265,13 +319,15 @@ test('tenant owners can remove viewer access without orphaning the property', as
     prepare(sql) {
       return {
         sql,
-        bind() { return this; },
+        values: [],
+        bind(...values) { this.values = values; return this; },
         async first() {
           if (sql.includes('platform_admins')) return null;
           if (sql.includes('account_id = ? AND tenant_id = ?') && sql.includes('SELECT role')) return { role: 'owner' };
           if (sql.includes('tenant_id = ? AND account_id = ?')) return { role: 'viewer' };
           return null;
-        }
+        },
+        async run() { return { meta: { changes: 1 } }; }
       };
     },
     async batch(statements) { batches.push(statements); return statements.map(() => ({ success: true })); }
@@ -283,7 +339,9 @@ test('tenant owners can remove viewer access without orphaning the property', as
 
   assert.equal(response.status, 200);
   assert.deepEqual(await response.json(), { ok: true, tenant_id: 'licence-service', account_id: 'viewer-1' });
-  assert.match(batches[0][0].sql, /DELETE FROM account_tenants/);
+  assert.match(batches[0][0].sql, /target_account_id, access_operation, resulting_role/);
+  assert.match(batches[0][0].sql, /'removed', NULL/);
+  assert.equal(batches[0][0].values[3], 'viewer-1');
 });
 
 test('tenant administration refuses to remove the final owner', async () => {
@@ -299,12 +357,73 @@ test('tenant administration refuses to remove the final owner', async () => {
           if (sql.includes('tenant_id = ? AND account_id = ?')) return { role: 'owner' };
           if (sql.includes('COUNT(*)')) return { count: 1 };
           return null;
-        }
+        },
+        async run() { return { meta: { changes: 0 } }; }
       };
     },
     async batch() { batchCalls += 1; }
   };
   const response = await handleProductRequest(new Request('https://flux.example/api/admin/tenants/licence-service/access/owner-1', {
+    method: 'DELETE', headers: { cookie: await sessionCookie('owner-1', secret) }
+  }), { FLUX_DB: db, FLUX_AUTH_SECRET: secret });
+
+  assert.equal(response.status, 409);
+  assert.deepEqual(await response.json(), { ok: false, error: 'last_owner_required' });
+  assert.equal(batchCalls, 0);
+});
+
+test('tenant administration preserves an owner when concurrent demotion wins the race', async () => {
+  const secret = 'test-secret';
+  let batchCalls = 0;
+  const db = {
+    prepare(sql) {
+      return {
+        bind() { return this; },
+        async first() {
+          if (sql.includes('platform_admins')) return null;
+          if (sql.includes('FROM tenants')) return { id: 'licence-service', deleted_at_ms: null };
+          if (sql.includes('FROM accounts')) return { id: 'owner-2' };
+          if (sql.includes('tenant_id = ? AND account_id = ?')) return { role: 'owner' };
+          if (sql.includes('COUNT(*)')) return { count: 2 };
+          if (sql.includes('account_id = ? AND tenant_id = ?')) return { role: 'owner' };
+          return null;
+        },
+        async run() { return { meta: { changes: 0 } }; }
+      };
+    },
+    async batch() { batchCalls += 1; return []; }
+  };
+  const response = await handleProductRequest(new Request('https://flux.example/api/admin/tenants/licence-service/access', {
+    method: 'PUT',
+    headers: { cookie: await sessionCookie('owner-1', secret), 'content-type': 'application/json' },
+    body: JSON.stringify({ email: 'owner-2@example.gov.uk', role: 'viewer' })
+  }), { FLUX_DB: db, FLUX_AUTH_SECRET: secret });
+
+  assert.equal(response.status, 409);
+  assert.deepEqual(await response.json(), { ok: false, error: 'last_owner_required' });
+  assert.equal(batchCalls, 0);
+});
+
+test('tenant administration preserves an owner when concurrent removal wins the race', async () => {
+  const secret = 'test-secret';
+  let batchCalls = 0;
+  const db = {
+    prepare(sql) {
+      return {
+        bind() { return this; },
+        async first() {
+          if (sql.includes('platform_admins')) return null;
+          if (sql.includes('account_id = ? AND tenant_id = ?') && sql.includes('SELECT role')) return { role: 'owner' };
+          if (sql.includes('tenant_id = ? AND account_id = ?')) return { role: 'owner' };
+          if (sql.includes('COUNT(*)')) return { count: 2 };
+          return null;
+        },
+        async run() { return { meta: { changes: 0 } }; }
+      };
+    },
+    async batch() { batchCalls += 1; return []; }
+  };
+  const response = await handleProductRequest(new Request('https://flux.example/api/admin/tenants/licence-service/access/owner-2', {
     method: 'DELETE', headers: { cookie: await sessionCookie('owner-1', secret) }
   }), { FLUX_DB: db, FLUX_AUTH_SECRET: secret });
 

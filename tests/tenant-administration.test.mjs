@@ -43,8 +43,9 @@ test('restoring a tenant clears trash state and reactivates its existing tag', a
   const result = await restoreTenantTracking(db, 'licence-service', 'admin-1', { now: () => 1_750_000_000_000, randomUUID: () => '22222222-2222-4222-8222-222222222222' });
 
   assert.deepEqual(result, { ok: true, status: 'active' });
-  assert.match(db.batches[0][0].sql, /deleted_at_ms = NULL/);
-  assert.match(db.batches[0][1].sql, /revoked_at_ms = NULL/);
+  assert.match(db.batches[0][0].sql, /revoked_at_ms = NULL/);
+  assert.match(db.batches[0][0].sql, /purge_after_ms > \?/);
+  assert.match(db.batches[0][1].sql, /deleted_at_ms = NULL/);
 });
 
 test('tenant settings accept controlled names and exact origins only', () => {

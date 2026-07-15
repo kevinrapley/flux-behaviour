@@ -73,7 +73,7 @@
 						</li>
 					</ul>
 					<span class="govuk-footer__licence-description">
-						{% if activeNavigation == 'account' %}Dashboard account identity is stored separately from analytics identifiers. Behavioural events are consented, metadata-only and follow the Flux event contract.{% else %}Demo prototype. No real user data is collected. Events are consented, metadata-only and follow the Flux event contract.{% endif %}
+						{% if activeNavigation == 'account' %}Dashboard account identity is stored separately from analytics identifiers. Behavioural events are consented, metadata-only and follow the Flux event contract.{% elif activeNavigation == 'admin' %}Account email addresses are used only to manage Flux administration access and are stored separately from analytics identifiers. Behavioural events remain consented and metadata-only.{% else %}Demo prototype. No real user data is collected. Events are consented, metadata-only and follow the Flux event contract.{% endif %}
 					</span>
 				</div>
 			</div>

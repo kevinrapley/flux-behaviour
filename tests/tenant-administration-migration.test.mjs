@@ -10,6 +10,9 @@ test('tenant administration stores reversible trash state and an audit trail', (
   assert.match(migration, /ALTER TABLE tenants ADD COLUMN deleted_by_account_id TEXT/);
   assert.match(migration, /CREATE TABLE IF NOT EXISTS tenant_admin_audit/);
   assert.match(migration, /action TEXT NOT NULL/);
+  assert.match(migration, /target_account_id TEXT REFERENCES accounts\(id\)/);
+  assert.match(migration, /access_operation TEXT/);
+  assert.match(migration, /resulting_role TEXT/);
   assert.match(migration, /created_at_ms INTEGER NOT NULL/);
   assert.doesNotMatch(migration, /DELETE FROM (?:events|sessions|visitors|tenants)/);
 });
