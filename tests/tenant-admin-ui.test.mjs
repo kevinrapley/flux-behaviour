@@ -36,7 +36,7 @@ test('admin client maps tenant settings, access and trash lifecycle to scoped AP
   await client.update('licence-service', { name: 'Licence', allowed_origins: ['https://service.example'] });
   await client.access('licence-service');
   await client.grant('licence-service', { email: 'viewer@example.gov.uk', role: 'viewer' });
-  await client.removeAccess('licence-service', 'viewer-1');
+  await client.removeAccess('licence-service', 'google:123');
   await client.trash('licence-service');
   await client.restore('licence-service');
 
@@ -45,7 +45,7 @@ test('admin client maps tenant settings, access and trash lifecycle to scoped AP
     ['/api/admin/tenants/licence-service', 'PATCH'],
     ['/api/admin/tenants/licence-service/access', 'GET'],
     ['/api/admin/tenants/licence-service/access', 'PUT'],
-    ['/api/admin/tenants/licence-service/access/viewer-1', 'DELETE'],
+    ['/api/admin/tenants/licence-service/access/google%3A123', 'DELETE'],
     ['/api/admin/tenants/licence-service', 'DELETE'],
     ['/api/admin/tenants/licence-service/restore', 'POST']
   ]);

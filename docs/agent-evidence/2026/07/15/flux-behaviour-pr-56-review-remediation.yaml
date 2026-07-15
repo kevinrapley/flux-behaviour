@@ -14,6 +14,7 @@ files_read:
   - src/tenants/tenant-administration.mjs
   - demo/templates/layout.njk
   - tests/tenant-administration-route.test.mjs
+  - tests/tenant-admin-ui.test.mjs
   - tests/tenant-administration.test.mjs
   - tests/tenant-administration-migration.test.mjs
   - tests/demo-build.test.mjs
@@ -23,6 +24,7 @@ files_changed:
   - src/tenants/tenant-administration.mjs
   - demo/templates/layout.njk
   - tests/tenant-administration-route.test.mjs
+  - tests/tenant-admin-ui.test.mjs
   - tests/tenant-administration.test.mjs
   - tests/tenant-administration-migration.test.mjs
   - tests/demo-build.test.mjs
@@ -40,11 +42,25 @@ promotion_decisions:
   - Bound and group interactions by server acceptance time independently of session-start aggregates.
   - Omit installation tags from viewer tenant-list responses and disclose administration account-email processing.
   - Record the affected account, access operation and resulting role for each membership mutation.
+  - Decode and validate account path parameters so provider-scoped IDs remain removable through the browser client.
+  - Commit each membership mutation and its conditional audit insert in one D1 batch transaction.
 commands_run:
   - command: fetch_comments.py for PR 56
     state: verified
     status: passed
     evidence: Six unresolved actionable Codex review threads were retrieved with their current resolution and line context.
+  - command: fetch_comments.py after Codex re-review of db789d8
+    state: verified
+    status: passed
+    evidence: Two further unresolved threads identified encoded account path handling and non-atomic membership audit writes.
+  - command: focused encoded-account and atomic-batch red-green tests
+    state: verified
+    status: passed
+    evidence: All three focused assertions failed against db789d8 and passed after route decoding and transactional batch remediation.
+  - command: SQLite transactional changes()-conditioned membership and audit exercise
+    state: verified
+    status: passed
+    evidence: Successful owner demotion and viewer removal each created one target-specific audit row, while the blocked final-owner demotion created neither a membership change nor an audit row; foreign-key checks returned no failures.
   - command: focused tenant administration and demo build red-green tests
     state: verified
     status: passed
@@ -65,6 +81,10 @@ commands_run:
     state: verified
     status: passed
     evidence: All 377 repository tests passed.
+  - command: npm test after the second Codex review remediation
+    state: verified
+    status: passed
+    evidence: All 380 repository tests passed, including encoded account removal and atomic membership-audit batch coverage.
   - command: npm run validate
     state: verified
     status: passed
@@ -96,6 +116,8 @@ contracts_validated:
   - owner-only installation-tag disclosure
   - target-specific access audit evidence
   - accurate administration identity disclosure
+  - decoded contract-valid account identifiers
+  - atomic membership mutation and audit evidence
 gaps_recorded:
   - GAP-019 continues to record permanent purge automation and platform-admin grant administration as remaining work.
 waivers_recorded: []
@@ -104,9 +126,11 @@ artifacts_created:
 recent_learnings:
   - A final-owner preflight count is insufficient because concurrent mutations can both pass; the invariant belongs in the conditional write.
   - Daily event evidence must use server acceptance boundaries independently of session-start dates.
+  - A governed membership change and its audit evidence must share the same D1 batch transaction.
+  - Encoded URL path segments must be decoded before applying the account identifier contract.
 security:
   - Viewer responses no longer expose installation tags, and concurrent membership changes cannot orphan tenant ownership.
-  - Access audit evidence identifies the affected account, operation and resulting role without joining account identity to visitor analytics.
+  - Access audit evidence identifies the affected account, operation and resulting role without joining account identity to visitor analytics, and it rolls back with its membership mutation if either batch statement fails.
 privacy:
   - The admin footer now accurately discloses account-email use while preserving the separation from analytics identifiers.
   - Aggregate exports still exclude raw events and identifiers while assigning interactions to their server-accepted day.
@@ -114,4 +138,4 @@ accessibility:
   - The administration page retains the existing semantic GOV.UK footer and status structure; only the privacy disclosure text changed.
 risks:
   - Permanent physical purge remains unimplemented and governed by GAP-019; expired tenants remain non-restorable while awaiting that process.
-  - The membership mutation and its audit insert are separate D1 operations because the runtime exposes no interactive transaction API; the ownership invariant itself is atomic.
+  - Conditional audit insertion relies on SQLite changes() observing the immediately preceding mutation inside the ordered D1 batch; focused SQL and route tests protect this assumption.

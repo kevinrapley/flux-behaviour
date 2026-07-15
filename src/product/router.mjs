@@ -44,8 +44,12 @@ export async function handleProductRequest(request, env) {
   const tenantAccessRoute = path.match(/^\/api\/admin\/tenants\/([a-z][a-z0-9-]{2,79})\/access$/);
   if (tenantAccessRoute && request.method === 'GET') return listTenantAccess(request, env, tenantAccessRoute[1]);
   if (tenantAccessRoute && request.method === 'PUT') return updateTenantAccess(request, env, tenantAccessRoute[1]);
-  const tenantAccessMemberRoute = path.match(/^\/api\/admin\/tenants\/([a-z][a-z0-9-]{2,79})\/access\/([A-Za-z0-9._:-]{1,128})$/);
-  if (tenantAccessMemberRoute && request.method === 'DELETE') return removeTenantAccess(request, env, tenantAccessMemberRoute[1], tenantAccessMemberRoute[2]);
+  const tenantAccessMemberRoute = path.match(/^\/api\/admin\/tenants\/([a-z][a-z0-9-]{2,79})\/access\/([^/]{1,384})$/);
+  if (tenantAccessMemberRoute && request.method === 'DELETE') {
+    const targetAccountId = decodeAccountId(tenantAccessMemberRoute[2]);
+    if (!targetAccountId) return json({ ok: false, error: 'not_found' }, 404);
+    return removeTenantAccess(request, env, tenantAccessMemberRoute[1], targetAccountId);
+  }
   const tenantAdminRoute = path.match(/^\/api\/admin\/tenants\/([a-z][a-z0-9-]{2,79})$/);
   if (tenantAdminRoute && request.method === 'PATCH') return updateAdminTenant(request, env, tenantAdminRoute[1]);
   if (tenantAdminRoute && request.method === 'DELETE') return trashAdminTenant(request, env, tenantAdminRoute[1]);
@@ -66,21 +70,21 @@ async function removeTenantAccess(request, env, tenantId, targetAccountId) {
   if (!(await canAdministerTenant(env.FLUX_DB, accountId, tenantId))) return json({ ok: false, error: 'forbidden' }, 403);
   const target = await env.FLUX_DB.prepare('SELECT role FROM account_tenants WHERE tenant_id = ? AND account_id = ?').bind(tenantId, targetAccountId).first();
   if (!target) return json({ ok: false, error: 'access_not_found' }, 404);
-  const removal = await env.FLUX_DB.prepare(`DELETE FROM account_tenants
-    WHERE account_id = ? AND tenant_id = ?
-      AND (role != 'owner' OR (
-        SELECT COUNT(*) FROM account_tenants AS owners
-        WHERE owners.tenant_id = ? AND owners.role = 'owner'
-      ) > 1)`).bind(targetAccountId, tenantId, tenantId).run();
+  const now = Date.now();
+  const [removal] = await env.FLUX_DB.batch([
+    env.FLUX_DB.prepare(`DELETE FROM account_tenants
+      WHERE account_id = ? AND tenant_id = ?
+        AND (role != 'owner' OR (
+          SELECT COUNT(*) FROM account_tenants AS owners
+          WHERE owners.tenant_id = ? AND owners.role = 'owner'
+        ) > 1)`).bind(targetAccountId, tenantId, tenantId),
+    env.FLUX_DB.prepare("INSERT INTO tenant_admin_audit (id, tenant_id, actor_account_id, action, target_account_id, access_operation, resulting_role, created_at_ms) SELECT ?, ?, ?, 'access_updated', ?, 'removed', NULL, ? WHERE changes() > 0").bind(`audit-${crypto.randomUUID()}`, tenantId, accountId, targetAccountId, now)
+  ]);
   if (Number(removal.meta?.changes ?? 0) === 0) {
     return target.role === 'owner'
       ? json({ ok: false, error: 'last_owner_required' }, 409)
       : json({ ok: false, error: 'access_not_found' }, 404);
   }
-  const now = Date.now();
-  await env.FLUX_DB.batch([
-    env.FLUX_DB.prepare("INSERT INTO tenant_admin_audit (id, tenant_id, actor_account_id, action, target_account_id, access_operation, resulting_role, created_at_ms) VALUES (?, ?, ?, 'access_updated', ?, 'removed', NULL, ?)").bind(`audit-${crypto.randomUUID()}`, tenantId, accountId, targetAccountId, now)
-  ]);
   return json({ ok: true, tenant_id: tenantId, account_id: targetAccountId });
 }
 
@@ -97,19 +101,19 @@ async function updateTenantAccess(request, env, tenantId) {
   const target = await env.FLUX_DB.prepare('SELECT id FROM accounts WHERE email = ?').bind(email).first();
   if (!target) return json({ ok: false, error: 'account_not_found' }, 404);
   const existingAccess = await env.FLUX_DB.prepare('SELECT role FROM account_tenants WHERE tenant_id = ? AND account_id = ?').bind(tenantId, target.id).first();
-  const mutation = await env.FLUX_DB.prepare(`INSERT INTO account_tenants (account_id, tenant_id, role) VALUES (?, ?, ?)
-    ON CONFLICT(account_id, tenant_id) DO UPDATE SET role = excluded.role
-    WHERE account_tenants.role != 'owner'
-      OR excluded.role = 'owner'
-      OR (SELECT COUNT(*) FROM account_tenants AS owners
-        WHERE owners.tenant_id = excluded.tenant_id AND owners.role = 'owner') > 1`).bind(target.id, tenantId, body.role).run();
+  const now = Date.now();
+  const [mutation] = await env.FLUX_DB.batch([
+    env.FLUX_DB.prepare(`INSERT INTO account_tenants (account_id, tenant_id, role) VALUES (?, ?, ?)
+      ON CONFLICT(account_id, tenant_id) DO UPDATE SET role = excluded.role
+      WHERE account_tenants.role != 'owner'
+        OR excluded.role = 'owner'
+        OR (SELECT COUNT(*) FROM account_tenants AS owners
+          WHERE owners.tenant_id = excluded.tenant_id AND owners.role = 'owner') > 1`).bind(target.id, tenantId, body.role),
+    env.FLUX_DB.prepare("INSERT INTO tenant_admin_audit (id, tenant_id, actor_account_id, action, target_account_id, access_operation, resulting_role, created_at_ms) SELECT ?, ?, ?, 'access_updated', ?, ?, ?, ? WHERE changes() > 0").bind(`audit-${crypto.randomUUID()}`, tenantId, accountId, target.id, existingAccess ? 'role_updated' : 'granted', body.role, now)
+  ]);
   if (Number(mutation.meta?.changes ?? 0) === 0 && existingAccess?.role === 'owner' && body.role === 'viewer') {
     return json({ ok: false, error: 'last_owner_required' }, 409);
   }
-  const now = Date.now();
-  await env.FLUX_DB.batch([
-    env.FLUX_DB.prepare("INSERT INTO tenant_admin_audit (id, tenant_id, actor_account_id, action, target_account_id, access_operation, resulting_role, created_at_ms) VALUES (?, ?, ?, 'access_updated', ?, ?, ?, ?)").bind(`audit-${crypto.randomUUID()}`, tenantId, accountId, target.id, existingAccess ? 'role_updated' : 'granted', body.role, now)
-  ]);
   return json({ ok: true, tenant_id: tenantId, account_id: target.id, role: body.role });
 }
 
@@ -748,6 +752,7 @@ function json(value, status = 200) { return new Response(JSON.stringify(value), 
 async function safeJson(request) { try { return await request.json(); } catch { return null; } }
 async function safeResponseJson(response) { try { return await response.json(); } catch { return null; } }
 function normaliseEmail(value) { const email = typeof value === 'string' ? value.trim().toLowerCase() : ''; return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : null; }
+function decodeAccountId(value) { try { const decoded = decodeURIComponent(value); return /^[A-Za-z0-9._:-]{1,128}$/.test(decoded) ? decoded : null; } catch { return null; } }
 function readCookie(request, name) { return request.headers.get('cookie')?.match(new RegExp(`(?:^|; )${name}=([^;]+)`))?.[1] ?? null; }
 async function authenticatedAccountId(request, env) {
   if (!env.FLUX_AUTH_SECRET) return null;

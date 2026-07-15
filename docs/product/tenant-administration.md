@@ -37,7 +37,7 @@ Flux records the date on which permanent purge becomes eligible, but does not ye
 - `DELETE /api/admin/tenants/:tenant` moves tracking to trash after exact-ID confirmation.
 - `POST /api/admin/tenants/:tenant/restore` restores tracking during the recovery window.
 
-All routes require an authenticated Flux session and enforce tenant scope. Lifecycle and configuration changes are written to `tenant_admin_audit`; access records include the affected account, whether access was granted, changed or removed, and the resulting role where one remains. Owner removal and demotion use conditional database writes so concurrent requests cannot remove the final owner.
+All routes require an authenticated Flux session and enforce tenant scope. Lifecycle and configuration changes are written to `tenant_admin_audit`; access records include the affected account, whether access was granted, changed or removed, and the resulting role where one remains. Each access mutation and its audit row execute in one transactional D1 batch. Owner removal and demotion use conditional database writes so concurrent requests cannot remove the final owner. Contract-valid account IDs are decoded and validated at the route boundary before membership lookup.
 
 ## Google Analytics pattern and Flux boundaries
 
@@ -56,3 +56,4 @@ References:
 - [Google Analytics Admin API REST resources](https://developers.google.com/analytics/devguides/config/admin/v1/rest)
 - [Google Analytics Data API overview](https://developers.google.com/analytics/devguides/reporting/data/v1)
 - [Google Analytics Trash Can](https://support.google.com/analytics/answer/9305587?hl=en)
+- [Cloudflare D1 transactional batches](https://developers.cloudflare.com/d1/worker-api/d1-database/#batch)
