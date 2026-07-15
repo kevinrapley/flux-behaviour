@@ -14,7 +14,9 @@ Provisioning uses one D1 batch to create:
 
 The tag has the form `flux-` followed by 32 lowercase hexadecimal characters. Database primary-key and unique-tenant constraints enforce one-to-one mapping. A failure leaves no partially provisioned tenant.
 
-Tenant owners can call `GET /api/tenant/:tenant/installation` to retrieve the same stable active tag and a complete hosted-module snippet. Viewers cannot retrieve it. Rotation and revocation are not exposed as self-service operations in the pre-release product; a tag whose `revoked_at_ms` is set is rejected by collection.
+Tenant owners can use `/admin/` or call `GET /api/tenant/:tenant/installation` to retrieve the same stable active tag and a complete hosted-module snippet. Viewers cannot retrieve it. The administration surface lets owners change the name and exact origins, manage owner/viewer access, download aggregate data, and move tracking to trash or restore it. It prevents removal or demotion of the final owner.
+
+Moving a tenant to trash immediately revokes its tag and stops collection. Flux records a 35-day recovery window and preserves its configuration and historical analytics during that window; restoring reactivates the same tag. Permanent purge is not automated while the governed retention and deletion policy remains a release blocker, so the displayed date is purge eligibility rather than a claim that physical deletion has occurred.
 
 ## Collection boundary
 

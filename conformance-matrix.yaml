@@ -1,4 +1,11 @@
 records:
+  - id: CONF-031
+    rule: Tenant administration must provide scoped creation, configuration, access, aggregate export and recoverable tracking deletion without weakening privacy boundaries
+    expected_evidence: An authenticated property-style surface and APIs create unique-tag tenants, edit exact origins, preserve a final owner, export no raw telemetry, stop collection on trash, restore within 35 days and audit mutations
+    actual_evidence: The /admin/ source page, src/admin/tenant-admin.mjs, migration 0008, tenant-administration helpers and authenticated router routes implement tenant selection, atomic creation, settings, owner/viewer access with atomic final-owner guards and target-specific audit evidence committed in the same D1 batch, decoded contract-valid account IDs, one-year aggregate CSV that dates interactions by server acceptance time, exact-confirmation trash and same-tag restoration only before the recovery deadline. Viewer list responses omit installation tags, admin account-email purpose is disclosed, and trashed tenants are excluded from tag and origin resolution immediately; permanent purge remains an explicit release blocker.
+    status: present-with-release-blockers
+    owner: product-lead
+
   - id: CONF-030
     rule: Public integration documentation must match the hosted SDK, publisher model, authenticated dashboard and exposed application routes
     expected_evidence: A navigable public developer page explains tag placement, consent, supported data-flux attributes, owner configuration, event contract 1.2.0, privacy boundaries, API consumption, testing and troubleshooting

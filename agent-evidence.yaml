@@ -27,6 +27,14 @@ agent_evidence_registry:
     root_file: Keep this file as the registry and canonical format reference only.
     naming: Use the task_id as the filename, with .yaml extension.
   entries:
+    - task_id: flux-behaviour-pr-56-review-remediation
+      date: 2026-07-15
+      path: docs/agent-evidence/2026/07/15/flux-behaviour-pr-56-review-remediation.yaml
+      status: externalised
+    - task_id: flux-behaviour-tenant-administration
+      date: 2026-07-14
+      path: docs/agent-evidence/2026/07/14/flux-behaviour-tenant-administration.yaml
+      status: externalised
     - task_id: flux-behaviour-tenant-installation-tags
       date: 2026-07-14
       path: docs/agent-evidence/2026/07/14/flux-behaviour-tenant-installation-tags.yaml

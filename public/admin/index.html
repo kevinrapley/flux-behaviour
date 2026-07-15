@@ -1,0 +1,159 @@
+<!doctype html>
+<html class="govuk-template govuk-template--rebranded" lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Tenant administration – Flux Behaviour demo</title>
+	<link rel="stylesheet" href="/assets/styles/demo.css" media="all">
+
+</head>
+<body class="govuk-template__body">
+	<script>document.body.className += ' js-enabled' + ('noModule' in HTMLScriptElement.prototype ? ' govuk-frontend-supported' : '');</script>
+	<a href="#main-content" class="govuk-skip-link" data-module="govuk-skip-link">Skip to main content</a>
+
+	<header class="govuk-header" data-module="govuk-header">
+		<div class="govuk-header__container govuk-width-container">
+			<div class="govuk-header__logo">
+				<a href="/" class="govuk-header__link govuk-header__link--homepage">
+					<span class="govuk-header__logotype-text">Flux Behaviour</span>
+				</a>
+			</div>
+		</div>
+	</header>
+	<div class="govuk-service-navigation" data-module="govuk-service-navigation">
+		<div class="govuk-width-container">
+			<div class="govuk-service-navigation__container">
+				<span class="govuk-service-navigation__service-name">
+					<a href="/" class="govuk-service-navigation__link">Behavioural analytics demo</a>
+				</span>
+				<nav aria-label="Menu" class="govuk-service-navigation__wrapper">
+					<ul class="govuk-service-navigation__list">
+						<li class="govuk-service-navigation__item">
+							<a class="govuk-service-navigation__link" href="/">Get started</a>
+						</li>
+						<li class="govuk-service-navigation__item">
+							<a class="govuk-service-navigation__link" href="/developers/">Developers</a>
+						</li>
+						<li class="govuk-service-navigation__item">
+							<a class="govuk-service-navigation__link" href="/journey/">Demo journey</a>
+						</li>
+						<li class="govuk-service-navigation__item">
+							<a class="govuk-service-navigation__link" href="/playground/">Playground</a>
+						</li>
+						<li class="govuk-service-navigation__item">
+							<a class="govuk-service-navigation__link" href="/dashboard/">Dashboard</a>
+						</li>
+						<li class="govuk-service-navigation__item govuk-service-navigation__item--active">
+							<a class="govuk-service-navigation__link" href="/admin/" aria-current="true">Admin</a>
+						</li>
+						<li class="govuk-service-navigation__item">
+							<a class="govuk-service-navigation__link" href="/account/">Sign in</a>
+						</li>
+					</ul>
+				</nav>
+			</div>
+		</div>
+	</div>
+	<div class="govuk-width-container">
+		<main class="govuk-main-wrapper" id="main-content" role="main">
+
+<div class="govuk-grid-row">
+	<div class="govuk-grid-column-full">
+		<span class="govuk-caption-xl">Flux Behaviour</span>
+		<h1 class="govuk-heading-xl">Tenant administration</h1>
+		<p class="govuk-body-l">Create and manage the services that send behavioural analytics to Flux.</p>
+		<div class="govuk-inset-text">Like a Google Analytics property, each Flux tenant has its own installation tag, allowed origins, access roles, aggregate exports and trash lifecycle. Flux never offers raw behavioural telemetry export.</div>
+		<div class="govuk-notification-banner" data-flux-admin-message hidden role="status" aria-live="polite"><div class="govuk-notification-banner__content"><p class="govuk-body" data-flux-admin-message-text></p></div></div>
+	</div>
+</div>
+
+<div class="govuk-grid-row flux-admin-layout">
+	<div class="govuk-grid-column-one-third">
+		<h2 class="govuk-heading-m">Tenants</h2>
+		<div class="govuk-form-group">
+			<label class="govuk-label" for="flux-admin-tenant">Choose a tenant</label>
+			<select class="govuk-select" id="flux-admin-tenant" data-flux-admin-tenant></select>
+		</div>
+		<section data-flux-platform-create hidden>
+			<h2 class="govuk-heading-m">Create a new tenant</h2>
+			<form data-flux-create-form>
+				<div class="govuk-form-group"><label class="govuk-label" for="new-tenant-id">Tenant ID</label><div class="govuk-hint">Lowercase letters, numbers and hyphens.</div><input class="govuk-input" id="new-tenant-id" name="tenant_id" required pattern="[a-z][a-z0-9-]{2,79}"></div>
+				<div class="govuk-form-group"><label class="govuk-label" for="new-tenant-name">Name</label><input class="govuk-input" id="new-tenant-name" name="name" required maxlength="120"></div>
+				<div class="govuk-form-group"><label class="govuk-label" for="new-tenant-origins">Allowed origins</label><div class="govuk-hint">One exact HTTPS origin per line.</div><textarea class="govuk-textarea" id="new-tenant-origins" name="allowed_origins" rows="4" required></textarea></div>
+				<button class="govuk-button" type="submit">Create tenant</button>
+			</form>
+		</section>
+	</div>
+	<div class="govuk-grid-column-two-thirds" data-flux-tenant-panel hidden>
+		<p class="govuk-body"><strong>Status:</strong> <span class="govuk-tag" data-flux-tenant-status></span></p>
+		<section data-flux-active-settings>
+			<div data-flux-owner-settings>
+			<h2 class="govuk-heading-l">Property details and allowed origins</h2>
+			<form data-flux-settings-form>
+				<div class="govuk-form-group"><label class="govuk-label" for="tenant-name">Name</label><input class="govuk-input" id="tenant-name" name="name" required maxlength="120"></div>
+				<div class="govuk-form-group"><label class="govuk-label" for="tenant-origins">Allowed origins</label><div class="govuk-hint">Scheme, host and port must match the publisher page exactly.</div><textarea class="govuk-textarea" id="tenant-origins" name="allowed_origins" rows="5" required></textarea></div>
+				<button class="govuk-button" type="submit">Save property details</button>
+			</form>
+
+			<h2 class="govuk-heading-l">Installation tag</h2>
+			<p class="govuk-body">This public routing tag belongs only to this tenant. Origin checks remain mandatory.</p>
+			<pre class="flux-code-block"><code data-flux-installation-tag></code></pre>
+
+			<h2 class="govuk-heading-l">Property access</h2>
+			<p class="govuk-body">Owners manage settings and access. Viewers can read reports and export governed aggregates.</p>
+			<div data-flux-access-list></div>
+			<form data-flux-access-form>
+				<div class="govuk-form-group"><label class="govuk-label" for="access-email">Existing Flux account email</label><input class="govuk-input" id="access-email" name="email" type="email" required></div>
+				<div class="govuk-form-group"><label class="govuk-label" for="access-role">Role</label><select class="govuk-select" id="access-role" name="role"><option value="viewer">Viewer</option><option value="owner">Owner</option></select></div>
+				<button class="govuk-button govuk-button--secondary" type="submit">Add or update access</button>
+			</form>
+			</div>
+
+			<h2 class="govuk-heading-l">Export aggregate data</h2>
+			<p class="govuk-body">Download daily visitor, session and interaction counts for the last year. The CSV contains no raw events or pseudonymous identifiers.</p>
+			<a class="govuk-button govuk-button--secondary" data-flux-export href="#">Download aggregate CSV</a>
+
+			<div data-flux-owner-trash><h2 class="govuk-heading-l">Move tracking to trash</h2>
+			<div class="govuk-warning-text"><span class="govuk-warning-text__icon" aria-hidden="true">!</span><strong class="govuk-warning-text__text"><span class="govuk-visually-hidden">Warning</span>Collection stops immediately. Historical aggregate data and configuration are preserved for 35 days.</strong></div>
+			<form data-flux-trash-form><div class="govuk-form-group"><label class="govuk-label" for="trash-confirmation">Enter the tenant ID to confirm</label><input class="govuk-input" id="trash-confirmation" name="confirmation" required></div><button class="govuk-button govuk-button--warning" type="submit">Move tracking to trash</button></form></div>
+		</section>
+		<section data-flux-trash-settings hidden>
+			<h2 class="govuk-heading-l">Tracking is in trash</h2>
+			<p class="govuk-body">Flux is not accepting new events for this tenant. Restore it before the displayed eligibility date to reactivate the same installation tag and configuration.</p>
+			<p class="govuk-body"><strong>Permanent-purge eligibility date:</strong> <span data-flux-purge-date></span></p>
+			<p class="govuk-hint">Permanent purge is not automated until the governed retention and deletion policy is approved.</p>
+			<button class="govuk-button" type="button" data-flux-restore>Restore tracking</button>
+		</section>
+	</div>
+</div>
+
+		</main>
+	</div>
+	<footer class="govuk-footer">
+		<div class="govuk-width-container">
+			<div class="govuk-footer__meta">
+				<div class="govuk-footer__meta-item govuk-footer__meta-item--grow">
+					<h2 class="govuk-visually-hidden">Support links</h2>
+					<ul class="govuk-footer__inline-list">
+						<li class="govuk-footer__inline-list-item">
+							<a class="govuk-footer__link" href="https://github.com/kevinrapley/flux-behaviour">Source repository</a>
+						</li>
+						<li class="govuk-footer__inline-list-item">
+							<a class="govuk-footer__link" href="https://github.com/ONSdigital/Charts">ONS Charts</a>
+						</li>
+					</ul>
+					<span class="govuk-footer__licence-description">
+						Account email addresses are used only to manage Flux administration access and are stored separately from analytics identifiers. Behavioural events remain consented and metadata-only.
+					</span>
+				</div>
+			</div>
+		</div>
+	</footer>
+	<script type="module" src="/assets/govuk/govuk-frontend.min.js"></script>
+	<script type="module">
+		import { initAll } from '/assets/govuk/govuk-frontend.min.js';
+		initAll();
+	</script>
+	<script type="module" src="/assets/flux/admin/tenant-admin.mjs"></script>
+</body>
+</html>

@@ -43,6 +43,9 @@
 						<li class="govuk-service-navigation__item{% if activeNavigation == 'dashboard' %} govuk-service-navigation__item--active{% endif %}">
 							<a class="govuk-service-navigation__link" href="/dashboard/"{% if activeNavigation == 'dashboard' %} aria-current="true"{% endif %}>Dashboard</a>
 						</li>
+						<li class="govuk-service-navigation__item{% if activeNavigation == 'admin' %} govuk-service-navigation__item--active{% endif %}">
+							<a class="govuk-service-navigation__link" href="/admin/"{% if activeNavigation == 'admin' %} aria-current="true"{% endif %}>Admin</a>
+						</li>
 						<li class="govuk-service-navigation__item{% if activeNavigation == 'account' %} govuk-service-navigation__item--active{% endif %}">
 							<a class="govuk-service-navigation__link" href="/account/"{% if activeNavigation == 'account' %} aria-current="true"{% endif %}>Sign in</a>
 						</li>
@@ -70,7 +73,7 @@
 						</li>
 					</ul>
 					<span class="govuk-footer__licence-description">
-						{% if activeNavigation == 'account' %}Dashboard account identity is stored separately from analytics identifiers. Behavioural events are consented, metadata-only and follow the Flux event contract.{% else %}Demo prototype. No real user data is collected. Events are consented, metadata-only and follow the Flux event contract.{% endif %}
+						{% if activeNavigation == 'account' %}Dashboard account identity is stored separately from analytics identifiers. Behavioural events are consented, metadata-only and follow the Flux event contract.{% elif activeNavigation == 'admin' %}Account email addresses are used only to manage Flux administration access and are stored separately from analytics identifiers. Behavioural events remain consented and metadata-only.{% else %}Demo prototype. No real user data is collected. Events are consented, metadata-only and follow the Flux event contract.{% endif %}
 					</span>
 				</div>
 			</div>

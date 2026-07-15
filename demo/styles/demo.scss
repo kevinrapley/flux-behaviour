@@ -18,6 +18,28 @@
 	}
 }
 
+.flux-admin-layout {
+	min-width: 0;
+
+	.govuk-grid-column-one-third,
+	.govuk-grid-column-two-thirds,
+	.govuk-form-group,
+	[data-flux-access-list] li {
+		min-width: 0;
+		overflow-wrap: anywhere;
+	}
+
+	.govuk-input,
+	.govuk-select,
+	.govuk-textarea {
+		max-width: 100%;
+	}
+}
+
+.flux-admin-access-remove {
+	margin-bottom: govuk.govuk-spacing(2);
+}
+
 .flux-docs-lede {
 	max-width: 42em;
 }

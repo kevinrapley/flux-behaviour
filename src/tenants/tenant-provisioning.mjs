@@ -26,6 +26,12 @@ export async function provisionTenant(db, input, dependencies = {}) {
       input.ownerAccountId,
       input.tenantId,
       'owner'
+    ),
+    db.prepare("INSERT INTO tenant_admin_audit (id, tenant_id, actor_account_id, action, created_at_ms) VALUES (?, ?, ?, 'created', ?)").bind(
+      `audit-${(dependencies.randomUUID ?? (() => crypto.randomUUID()))()}`,
+      input.tenantId,
+      input.ownerAccountId,
+      now
     )
   ];
   await db.batch(statements);

@@ -21,6 +21,7 @@ test('demo build renders the GOV.UK prototype pages', () => {
     const playground = readFileSync(join(outputRoot, 'playground/index.html'), 'utf8');
     const developers = readFileSync(join(outputRoot, 'developers/index.html'), 'utf8');
     const account = readFileSync(join(outputRoot, 'account/index.html'), 'utf8');
+    const admin = readFileSync(join(outputRoot, 'admin/index.html'), 'utf8');
 
     assert.match(index, /govuk-template/);
     assert.match(index, /window\.flux/);
@@ -63,6 +64,12 @@ test('demo build renders the GOV.UK prototype pages', () => {
     assert.match(developers, /POST<\/span> <code>\/api\/admin\/tenants/);
     assert.match(developers, /GET<\/span> <code>\/api\/tenant\/:tenant\/installation/);
     assert.match(developers, /ResearchOps legacy installation continues to use/);
+    assert.match(developers, /GET|PATCH/);
+    assert.match(developers, /<code>\/api\/admin\/tenants\/:tenant<\/code>/);
+    assert.match(developers, /<code>\/api\/admin\/tenants\/:tenant\/access<\/code>/);
+    assert.match(developers, /<code>\/api\/admin\/tenants\/:tenant\/export\.csv<\/code>/);
+    assert.match(developers, /Move tracking to trash/);
+    assert.match(developers, /35 days/);
 
     assert.match(account, /Sign in to Flux Behaviour/);
     assert.match(account, /href="\/api\/auth\/google\/start"/);
@@ -71,6 +78,17 @@ test('demo build renders the GOV.UK prototype pages', () => {
     assert.match(account, /verified Google email address/);
     assert.match(account, /provider account identifier/);
     assert.doesNotMatch(account, /No real user data is collected/);
+
+    assert.match(admin, /Tenant administration/);
+    assert.match(admin, /Create a new tenant/);
+    assert.match(admin, /Property details and allowed origins/);
+    assert.match(admin, /Property access/);
+    assert.match(admin, /Export aggregate data/);
+    assert.match(admin, /Move tracking to trash/);
+    assert.match(admin, /assets\/flux\/admin\/tenant-admin\.mjs/);
+    assert.match(admin, /href="\/admin\/" aria-current="true"/);
+    assert.match(admin, /Account email addresses are used only to manage Flux administration access/);
+    assert.doesNotMatch(admin, /No real user data is collected/);
   } finally {
     rmSync(outputRoot, { recursive: true, force: true });
   }

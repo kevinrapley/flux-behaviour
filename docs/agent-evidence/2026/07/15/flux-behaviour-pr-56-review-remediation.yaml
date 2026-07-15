@@ -1,0 +1,141 @@
+task_id: flux-behaviour-pr-56-review-remediation
+mode: repo-build
+repository: kevinrapley/flux-behaviour
+risk_level: high
+base_branch: main
+working_branch: feature/tenant-administration
+files_read:
+  - AGENTS.md
+  - migrations/0001_flux_behaviour.sql
+  - migrations/0005_event_ingestion_time.sql
+  - migrations/0007_tenant_installation_tags.sql
+  - migrations/0008_tenant_administration.sql
+  - src/product/router.mjs
+  - src/tenants/tenant-administration.mjs
+  - demo/templates/layout.njk
+  - tests/tenant-administration-route.test.mjs
+  - tests/tenant-admin-ui.test.mjs
+  - tests/tenant-administration.test.mjs
+  - tests/tenant-administration-migration.test.mjs
+  - tests/demo-build.test.mjs
+files_changed:
+  - migrations/0008_tenant_administration.sql
+  - src/product/router.mjs
+  - src/tenants/tenant-administration.mjs
+  - demo/templates/layout.njk
+  - tests/tenant-administration-route.test.mjs
+  - tests/tenant-admin-ui.test.mjs
+  - tests/tenant-administration.test.mjs
+  - tests/tenant-administration-migration.test.mjs
+  - tests/demo-build.test.mjs
+  - public/admin/index.html
+  - docs/product/tenant-administration.md
+  - RECENT_LEARNINGS.md
+  - conformance-matrix.yaml
+  - gap-register.yaml
+  - harm-register.yaml
+  - agent-evidence.yaml
+  - docs/agent-evidence/2026/07/15/flux-behaviour-pr-56-review-remediation.yaml
+promotion_decisions:
+  - Reject restoration at or after the declared recovery deadline even when physical purge remains pending.
+  - Preserve the final owner with conditional database writes whose owner count is evaluated atomically with removal or demotion.
+  - Bound and group interactions by server acceptance time independently of session-start aggregates.
+  - Omit installation tags from viewer tenant-list responses and disclose administration account-email processing.
+  - Record the affected account, access operation and resulting role for each membership mutation.
+  - Decode and validate account path parameters so provider-scoped IDs remain removable through the browser client.
+  - Commit each membership mutation and its conditional audit insert in one D1 batch transaction.
+commands_run:
+  - command: fetch_comments.py for PR 56
+    state: verified
+    status: passed
+    evidence: Six unresolved actionable Codex review threads were retrieved with their current resolution and line context.
+  - command: fetch_comments.py after Codex re-review of db789d8
+    state: verified
+    status: passed
+    evidence: Two further unresolved threads identified encoded account path handling and non-atomic membership audit writes.
+  - command: focused encoded-account and atomic-batch red-green tests
+    state: verified
+    status: passed
+    evidence: All three focused assertions failed against db789d8 and passed after route decoding and transactional batch remediation.
+  - command: SQLite transactional changes()-conditioned membership and audit exercise
+    state: verified
+    status: passed
+    evidence: Successful owner demotion and viewer removal each created one target-specific audit row, while the blocked final-owner demotion created neither a membership change nor an audit row; foreign-key checks returned no failures.
+  - command: focused tenant administration and demo build red-green tests
+    state: verified
+    status: passed
+    evidence: Each review finding produced a failing regression assertion before implementation; all 22 focused tests passed after remediation.
+  - command: SQLite application of migrations 0001, 0005, 0007 and 0008 with conditional owner-demotion exercise
+    state: verified
+    status: passed
+    evidence: The first of two owners could be demoted, the final owner mutation reported zero changes, the target-specific audit columns existed and foreign-key checks returned no failures.
+  - command: SQLite cross-midnight tenant-export query exercise
+    state: verified
+    status: passed
+    evidence: An event accepted inside the selected day was counted on that day even though its session began and client occurrence timestamp fell before the range.
+  - command: FLUX_DEMO_COLLECTOR_ENDPOINT=https://flux-behaviour.pages.dev/api/collect npm run demo:build
+    state: verified
+    status: passed
+    evidence: Seven production-shaped pages and assets rebuilt; only existing GOV.UK Sass colour deprecation warnings were emitted.
+  - command: npm test
+    state: verified
+    status: passed
+    evidence: All 377 repository tests passed.
+  - command: npm test after the second Codex review remediation
+    state: verified
+    status: passed
+    evidence: All 380 repository tests passed, including encoded account removal and atomic membership-audit batch coverage.
+  - command: npm run validate
+    state: verified
+    status: passed
+    evidence: All 19 governed repository files were present.
+  - command: npm run security:secrets
+    state: verified
+    status: passed
+    evidence: Secret-pattern sanity scan passed.
+  - command: npm audit --audit-level=high
+    state: verified
+    status: passed
+    evidence: npm reported zero vulnerabilities.
+  - command: npm run sbom
+    state: verified
+    status: passed
+    evidence: CycloneDX SBOM generation completed successfully.
+  - command: governed YAML parse and Diamond agent-evidence validation
+    state: verified
+    status: passed
+    evidence: Governed YAML parsed successfully and the Diamond Standard evidence validator accepted this record.
+  - command: git diff --check
+    state: verified
+    status: passed
+    evidence: No whitespace errors were found.
+contracts_validated:
+  - enforced 35-day restoration cutoff
+  - concurrency-safe final-owner preservation
+  - acceptance-day interaction export
+  - owner-only installation-tag disclosure
+  - target-specific access audit evidence
+  - accurate administration identity disclosure
+  - decoded contract-valid account identifiers
+  - atomic membership mutation and audit evidence
+gaps_recorded:
+  - GAP-019 continues to record permanent purge automation and platform-admin grant administration as remaining work.
+waivers_recorded: []
+artifacts_created:
+  - docs/agent-evidence/2026/07/15/flux-behaviour-pr-56-review-remediation.yaml
+recent_learnings:
+  - A final-owner preflight count is insufficient because concurrent mutations can both pass; the invariant belongs in the conditional write.
+  - Daily event evidence must use server acceptance boundaries independently of session-start dates.
+  - A governed membership change and its audit evidence must share the same D1 batch transaction.
+  - Encoded URL path segments must be decoded before applying the account identifier contract.
+security:
+  - Viewer responses no longer expose installation tags, and concurrent membership changes cannot orphan tenant ownership.
+  - Access audit evidence identifies the affected account, operation and resulting role without joining account identity to visitor analytics, and it rolls back with its membership mutation if either batch statement fails.
+privacy:
+  - The admin footer now accurately discloses account-email use while preserving the separation from analytics identifiers.
+  - Aggregate exports still exclude raw events and identifiers while assigning interactions to their server-accepted day.
+accessibility:
+  - The administration page retains the existing semantic GOV.UK footer and status structure; only the privacy disclosure text changed.
+risks:
+  - Permanent physical purge remains unimplemented and governed by GAP-019; expired tenants remain non-restorable while awaiting that process.
+  - Conditional audit insertion relies on SQLite changes() observing the immediately preceding mutation inside the ordered D1 batch; focused SQL and route tests protect this assumption.

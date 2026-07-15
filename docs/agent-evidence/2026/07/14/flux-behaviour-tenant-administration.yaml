@@ -1,0 +1,142 @@
+task_id: flux-behaviour-tenant-administration
+mode: repo-build
+repository: kevinrapley/flux-behaviour
+risk_level: high
+base_branch: main
+working_branch: feature/tenant-administration
+files_read:
+  - README.md
+  - AGENTS.md
+  - RECENT_LEARNINGS.md
+  - CONTRIBUTING.md
+  - SECURITY.md
+  - repository-contract.yaml
+  - github-settings.yaml
+  - conformance-matrix.yaml
+  - gap-register.yaml
+  - harm-register.yaml
+  - agent-evidence.yaml
+  - docs/product/production-runtime.md
+  - docs/product/tenant-installation-tags.md
+  - docs/product/comparisons-and-aggregate-export.md
+  - demo/templates/pages/developers.njk
+  - src/product/router.mjs
+  - src/tenants/tenant-provisioning.mjs
+  - src/tenants/tenant-tags.mjs
+  - migrations/0001_flux_behaviour.sql
+  - migrations/0007_tenant_installation_tags.sql
+files_changed:
+  - migrations/0008_tenant_administration.sql
+  - src/tenants/tenant-administration.mjs
+  - src/tenants/tenant-provisioning.mjs
+  - src/tenants/tenant-tags.mjs
+  - src/product/router.mjs
+  - src/admin/tenant-admin.mjs
+  - demo/templates/pages/admin.njk
+  - demo/templates/pages/developers.njk
+  - demo/templates/layout.njk
+  - demo/styles/demo.scss
+  - scripts/demo/render-demo-pages.mjs
+  - scripts/demo/copy-demo-assets.mjs
+  - tests/tenant-administration-migration.test.mjs
+  - tests/tenant-administration.test.mjs
+  - tests/tenant-administration-route.test.mjs
+  - tests/tenant-admin-ui.test.mjs
+  - tests/tenant-provisioning.test.mjs
+  - tests/tenant-tag-resolution.test.mjs
+  - tests/demo-build.test.mjs
+  - docs/product/tenant-administration.md
+  - docs/product/tenant-installation-tags.md
+  - docs/product/production-runtime.md
+  - docs/product/comparisons-and-aggregate-export.md
+  - README.md
+  - RECENT_LEARNINGS.md
+  - conformance-matrix.yaml
+  - gap-register.yaml
+  - harm-register.yaml
+  - agent-evidence.yaml
+  - docs/agent-evidence/2026/07/14/flux-behaviour-tenant-administration.yaml
+promotion_decisions:
+  - Adapt the Google Analytics property pattern as a Flux tenant selector with scoped settings, access, export and trash lifecycle.
+  - Keep tenant creation restricted to explicit platform administrators and preserve one unique stable installation tag per tenant.
+  - Let owners administer exact origins and owner/viewer access while refusing removal or demotion of the final owner.
+  - Treat delete as immediate collection shutdown plus a 35-day recoverable trash state, not as unimplemented permanent physical deletion.
+  - Keep every tenant export aggregate-only and exclude raw events, narratives and pseudonymous identifiers.
+commands_run:
+  - command: npm ci
+    state: verified
+    status: passed
+    evidence: Installed all 60 locked dependencies in the isolated worktree; npm reported zero vulnerabilities.
+  - command: focused tenant administration red-green tests
+    state: verified
+    status: passed
+    evidence: Migration, trash/restore, settings, aggregate CSV, API routes, final-owner safeguards, tenant tag resolution, UI client and generated-page slices passed after their expected failing states.
+  - command: sqlite3 application of migrations 0001, 0007 and 0008 with schema and foreign-key inspection
+    state: verified
+    status: passed
+    evidence: Tenant lifecycle columns, installation tags and tenant_admin_audit were created and PRAGMA foreign_key_check returned no failures.
+  - command: FLUX_DEMO_COLLECTOR_ENDPOINT=https://flux-behaviour.pages.dev/api/collect npm run demo:build
+    state: verified
+    status: passed
+    evidence: Seven production-shaped pages and hosted assets built successfully; only existing GOV.UK Sass colour deprecation warnings were emitted.
+  - command: npm test
+    state: verified
+    status: passed
+    evidence: All 373 repository tests passed.
+  - command: npm run validate
+    state: verified
+    status: passed
+    evidence: All 19 governed repository files were present.
+  - command: npm run security:secrets
+    state: verified
+    status: passed
+    evidence: Secret-pattern sanity scan passed.
+  - command: npm audit --audit-level=high
+    state: verified
+    status: passed
+    evidence: npm reported zero vulnerabilities.
+  - command: npm run sbom
+    state: verified
+    status: passed
+    evidence: CycloneDX SBOM generation completed successfully.
+  - command: git diff --check
+    state: verified
+    status: passed
+    evidence: No whitespace errors were found before final validation.
+  - command: local Playwright/Chrome verification of /admin/ at 1440x1100 and 390x844
+    state: verified
+    status: passed
+    evidence: Active and trashed selection, restore, settings save, exact-ID rejection and API error states rendered correctly; long names, origins and emails remained contained with no mobile document overflow after remediation.
+contracts_validated:
+  - unique stable installation tag per tenant
+  - explicit platform-admin tenant creation
+  - owner-scoped settings and access administration
+  - final-owner preservation
+  - aggregate-only bounded export
+  - immediate collection shutdown on trash
+  - 35-day same-tag restoration window
+gaps_recorded:
+  - GAP-019 records permanent purge automation and platform-admin grant administration as remaining work.
+waivers_recorded: []
+artifacts_created:
+  - migrations/0008_tenant_administration.sql
+  - demo/templates/pages/admin.njk
+  - src/admin/tenant-admin.mjs
+  - docs/product/tenant-administration.md
+  - docs/agent-evidence/2026/07/14/flux-behaviour-tenant-administration.yaml
+recent_learnings:
+  - Tenant administration must combine property configuration, least-privilege access, governed export and recoverable lifecycle controls.
+  - Trash can stop collection immediately without making an unsupported physical-deletion claim.
+security:
+  - Every mutation requires authenticated owner or explicit platform-admin authority and remains tenant-scoped.
+  - Exact allowed origins remain collection authority; the public installation tag is not treated as a credential.
+  - Final-owner guards prevent orphaned administration, and no secret or environment-specific protected configuration was added.
+privacy:
+  - Administration exports contain daily aggregate counts only and exclude raw events, narratives, metadata and pseudonymous identifiers.
+  - Trashing revokes collection immediately while honestly retaining historical evidence until a governed permanent-purge policy exists.
+accessibility:
+  - The administration surface uses semantic GOV.UK labels, fields, status messaging, warning text and native controls.
+  - Desktop and 390px mobile browser checks covered long content, active/trash states, restore/save/error interactions and document overflow.
+risks:
+  - Physical purge is not automated; the interface and documentation identify the date as purge eligibility and GAP-019 remains open.
+  - Platform-admin grants remain an operator workflow and tenant ownership does not confer platform-wide authority.

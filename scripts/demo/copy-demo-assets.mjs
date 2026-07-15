@@ -8,6 +8,7 @@ const directoryTargets = [
   ['node_modules/govuk-frontend/dist/govuk/assets', 'assets/govuk/assets'],
   ['src/sdk', 'assets/flux/sdk'],
   ['src/dashboard', 'assets/flux/dashboard'],
+  ['src/admin', 'assets/flux/admin'],
   ['src/events', 'assets/flux/events'],
   ['demo/assets', 'assets/demo']
 ];
